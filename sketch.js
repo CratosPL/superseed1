@@ -1000,11 +1000,12 @@ if (orbitType === 0) {
   // === TUTAJ DODAJEMY CZARNĄ DZIURĘ ===
   if (gameState === "playing" && level >= 4 && random(1) < 0.005 && !activeEvent) {
     activeEvent = "blackHole";
-    eventTimeLeft = 10000; // 10 sekund trwania
-    eventX = random(100, GAME_WIDTH - 100); // Pozycja X czarnej dziury
-    eventY = random(100, GAME_HEIGHT - 100); // Pozycja Y czarnej dziury
+    eventTimeLeft = 10000;
+    eventX = random(100, GAME_WIDTH - 100);
+    eventY = random(100, GAME_HEIGHT - 100);
+    blackHoleSoundPlayed = false; // Reset flagi przy starcie zdarzenia
   }
-
+  
   // Obsługa efektów czarnej dziury
 if (activeEvent === "blackHole") {
   eventTimeLeft -= deltaTime;
@@ -1013,6 +1014,13 @@ if (activeEvent === "blackHole") {
   fill(0, 0, 0, 200); // Czarny kolor z lekką przezroczystością
   let blackHoleSize = 200 + sin(millis() * 0.005) * 20; // Pulsujący rozmiar
   ellipse(eventX, eventY, blackHoleSize, blackHoleSize);
+
+  // Odtwarzanie dźwięku przy starcie
+  if (!blackHoleSoundPlayed && soundInitialized) {
+    holeSound.play();
+    blackHoleSoundPlayed = true; // Oznacz, że dźwięk został odtworzony
+    console.log("Black hole sound played"); // Debugowanie
+  }
 
   // Wciąganie przeszkód i power-upów
   obstacles = obstacles.filter(o => {
