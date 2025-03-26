@@ -89,23 +89,23 @@ let powerUpDurations = {
   star: 5000
 };
 
-// Constants
-const GAME_WIDTH = 1200;
-const GAME_HEIGHT = 1000;
-const RESTART_BUTTON_WIDTH = 200;
-const RESTART_BUTTON_HEIGHT = 50;
-const SYMBOL_SIZE = 18;
-const GAME_SYMBOL_SIZE = 40;
-const TABLE_CELL_WIDTH = 500;
-const TABLE_CELL_HEIGHT = 50;
-const TABLE_START_X = (GAME_WIDTH - TABLE_CELL_WIDTH * 2) / 2;
-const TABLE_START_Y = 300;
-const HOW_TO_PLAY_BUTTON_WIDTH = 100;
-const HOW_TO_PLAY_BUTTON_HEIGHT = 40;
-const TUTORIAL_BUTTON_WIDTH = 200;
-const TUTORIAL_BUTTON_HEIGHT = 50;
-const TUTORIAL_MENU_BUTTON_WIDTH = 200;
-const TUTORIAL_MENU_BUTTON_HEIGHT = 50;
+// Global Variables (zastępują sekcję Constants)
+let GAME_WIDTH = 1200;
+let GAME_HEIGHT = 1000;
+let RESTART_BUTTON_WIDTH = 200;
+let RESTART_BUTTON_HEIGHT = 50;
+let SYMBOL_SIZE = 18;
+let GAME_SYMBOL_SIZE = 40;
+let TABLE_CELL_WIDTH = 500;
+let TABLE_CELL_HEIGHT = 50;
+let TABLE_START_X = (GAME_WIDTH - TABLE_CELL_WIDTH * 2) / 2;
+let TABLE_START_Y = 300;
+let HOW_TO_PLAY_BUTTON_WIDTH = 100;
+let HOW_TO_PLAY_BUTTON_HEIGHT = 40;
+let TUTORIAL_BUTTON_WIDTH = 200;
+let TUTORIAL_BUTTON_HEIGHT = 50;
+let TUTORIAL_MENU_BUTTON_WIDTH = 200;
+let TUTORIAL_MENU_BUTTON_HEIGHT = 50;
 
 // Classes
 class Particle {
@@ -422,6 +422,26 @@ function preload() {
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  
+  // Dynamiczne dostosowanie wymiarów gry do ekranu
+  let scaleFactor = min(windowWidth / 1200, windowHeight / 1000); // Skalowanie względem domyślnych 1200x1000
+  GAME_WIDTH = windowWidth;
+  GAME_HEIGHT = windowHeight;
+  RESTART_BUTTON_WIDTH = 200 * scaleFactor;
+  RESTART_BUTTON_HEIGHT = 50 * scaleFactor;
+  SYMBOL_SIZE = 18 * scaleFactor;
+  GAME_SYMBOL_SIZE = 40 * scaleFactor;
+  TABLE_CELL_WIDTH = 500 * scaleFactor;
+  TABLE_CELL_HEIGHT = 50 * scaleFactor;
+  TABLE_START_X = (GAME_WIDTH - TABLE_CELL_WIDTH * 2) / 2;
+  TABLE_START_Y = 300 * scaleFactor;
+  HOW_TO_PLAY_BUTTON_WIDTH = 100 * scaleFactor;
+  HOW_TO_PLAY_BUTTON_HEIGHT = 40 * scaleFactor;
+  TUTORIAL_BUTTON_WIDTH = 200 * scaleFactor;
+  TUTORIAL_BUTTON_HEIGHT = 50 * scaleFactor;
+  TUTORIAL_MENU_BUTTON_WIDTH = 200 * scaleFactor;
+  TUTORIAL_MENU_BUTTON_HEIGHT = 50 * scaleFactor;
+
   textAlign(CENTER, CENTER);
   textFont("Open Sans");
   logoX = GAME_WIDTH / 2;
@@ -431,7 +451,7 @@ function setup() {
   }
   clickSound.setVolume(1.0);
   backgroundMusic.setVolume(0.3);
-  backgroundMusic2.setVolume(0.3); // Taka sama głośność jak dla backgroundMusic
+  backgroundMusic2.setVolume(0.3);
   powerUpSound.setVolume(0.5);
   meteorSound.setVolume(0.5);
   levelSound.setVolume(0.5);
@@ -440,6 +460,15 @@ function setup() {
   let savedLeaderboard = localStorage.getItem('leaderboard');
   leaderboard = savedLeaderboard ? JSON.parse(savedLeaderboard) : [];
   lastClickTime = millis();
+}
+
+function touchStarted() {
+  if (!soundInitialized) {
+    soundInitialized = true;
+    backgroundMusic.loop();
+  }
+  mousePressed(); // Reużyj logiki myszy
+  return false;
 }
 
 function drawBackground(pulseProgress) {
