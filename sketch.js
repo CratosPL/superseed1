@@ -82,6 +82,7 @@ let tutorialPulseProgress = 0;
 let tutorialLastPulse = 0;
 let musicSwitched = false;
 
+
 let hasSeenIntro = localStorage.getItem('hasSeenIntro') === 'true'; // Czy intro już widziane
 let introState = 0; // Aktualny ekran intro (0, 1, 2)
 let introTimer = 0; // Timer do przechodzenia między ekranami
@@ -584,13 +585,13 @@ function draw() {
         GAME_HEIGHT - 150
       );
     }
-  // Scene 3: "The Reward Awaits"
+  // Scene 3: "The Reward Awaits" – NFT jako karta z obracającym się logo i nazwą gry
 else if (introState === 2) {
-  image(nagrodaBg, 0, 0, GAME_WIDTH, GAME_HEIGHT); // Tło dla sceny 3
+  image(nagrodaBg, 0, 0, GAME_WIDTH, GAME_HEIGHT); // Tło MidJourney
 
-  // Cząsteczki - generowane wokół środka holografu
+  // Cząsteczki wokół karty
   if (random(1) < 0.2) {
-    particles.push(new Particle(GAME_WIDTH / 2, GAME_HEIGHT - 250, { r: seedColor.r, g: seedColor.g, b: seedColor.b }));
+    particles.push(new Particle(GAME_WIDTH / 2, GAME_HEIGHT / 2, { r: seedColor.r, g: seedColor.g, b: seedColor.b }));
   }
   for (let i = particles.length - 1; i >= 0; i--) {
     particles[i].update();
@@ -598,54 +599,106 @@ else if (introState === 2) {
     if (particles[i].isDead()) particles.splice(i, 1);
   }
 
-  // Logo Superseed (whiteLogo) - wyśrodkowane na osi X i przesunięte do góry
+  // Logo Superseed (whiteLogo) na górze
   let logoWidth = 300;
   let logoHeight = 150;
   image(whiteLogo, GAME_WIDTH / 2 - logoWidth / 2, 50, logoWidth, logoHeight);
 
-  // Hologram z nowym logo smallsuperseedintro.png - tuż nad tekstem
+  // Karta NFT – Superseed Cosmic Core
   push();
-  translate(GAME_WIDTH / 2, GAME_HEIGHT - 250); // Pozycja trofeum
-  rotate(currentTime * 0.001); // Powolna rotacja
-  let pulseScale = 1 + sin(currentTime * 0.005) * 0.1; // Pulsowanie
+  translate(GAME_WIDTH / 2, GAME_HEIGHT / 2);
+  rotate(sin(currentTime * 0.001) * 0.1); // Lekka rotacja całej karty
+  let pulseScale = 1 + sin(currentTime * 0.005) * 0.05; // Subtelne pulsowanie
 
-  // Holograficzne koło jako baza
+  // Rozmiar karty (proporcje 2:3)
+  let cardWidth = 300 * pulseScale;
+  let cardHeight = 450 * pulseScale;
+
+  // Tło karty z gradientem
+  let gradient = drawingContext.createLinearGradient(-cardWidth / 2, -cardHeight / 2, cardWidth / 2, cardHeight / 2);
+  gradient.addColorStop(0, `rgba(${seedColor.r}, ${seedColor.g}, ${seedColor.b}, 0.8)`);
+  gradient.addColorStop(1, "rgba(14, 39, 59, 0.9)");
+  drawingContext.fillStyle = gradient;
+  drawingContext.shadowBlur = 20;
+  drawingContext.shadowColor = `rgba(255, 215, 0, 0.5)`;
+  rect(-cardWidth / 2, -cardHeight / 2, cardWidth, cardHeight, 20); // Zaokrąglone rogi
+
+  // Ramka karty
   noFill();
-  stroke(255, 215, 0, 150); // Złoty kolor
+  stroke(255, 215, 0, 200); // Złoty kolor
   strokeWeight(4);
-  ellipse(0, 0, 240 * pulseScale, 240 * pulseScale);
+  rect(-cardWidth / 2 + 5, -cardHeight / 2 + 5, cardWidth - 10, cardHeight - 10, 15);
+  stroke(seedColor.r, seedColor.g, seedColor.b, 150);
+  strokeWeight(2);
+  rect(-cardWidth / 2 + 10, -cardHeight / 2 + 10, cardWidth - 20, cardHeight - 20, 10);
 
-  // Wewnętrzne logo smallsuperseedintro.png - w pełni widoczne
-  if (smallSuperseedIntro) {
-    // Rysujemy nowe logo z holograficznym odcieniem
-    tint(255, 215, 0, 200); // Złoty odcień holograficzny
-    imageMode(CENTER); // Upewniamy się, że obraz jest wyśrodkowany
-    image(smallSuperseedIntro, 0, 0, 200 * pulseScale, 200 * pulseScale); // Kwadratowy rozmiar, zakładając proporcje 1:1
-  } else {
-    // Fallback, jeśli obraz nie jest dostępny
-    fill(255, 215, 0, 200);
-    ellipse(0, 0, 200 * pulseScale); // Okrągły fallback
-    fill(0);
-    textSize(20);
-    text("Superseed", 0, 0);
+  // Logo smallsuperseedintro z rotacją
+  push();
+  translate(0, -50); // Przesunięcie logo w górę karty
+  rotate(currentTime * 0.001); // Rotacja logo
+  tint(255, 215, 0, 200); // Złoty odcień holograficzny
+  imageMode(CENTER);
+  image(smallSuperseedIntro, 0, 0, cardWidth * 0.7, cardWidth * 0.7); // Logo w górnej części karty
+  pop();
+
+  // Linie obwodów blockchain (dekoracja)
+  noFill();
+  stroke(93, 208, 207, 100);
+  strokeWeight(1);
+  for (let i = 0; i < 5; i++) {
+    let y = map(i, 0, 4, -cardHeight / 2 + 20, cardHeight / 2 - 20);
+    line(-cardWidth / 2 + 20, y, cardWidth / 2 - 20, y);
   }
+
+  // Nazwa gry nad tytułem NFT
+  stroke(14, 39, 59, 200); // Tangaroa (#0E273B) jako obwódka
+  strokeWeight(1);
+  fill(147, 208, 207); // Superseed Light Green (#93D0CF)
+  textSize(16);
+  textStyle(NORMAL); // Bez pogrubienia, aby nie dominować nad tytułem
+  textAlign(CENTER, CENTER);
+  text("Superseed Cosmic Network", 0, cardHeight / 2 - 90);
+
+  // Nazwa NFT na dole karty
+  stroke(14, 39, 59, 200); // Tangaroa (#0E273B) jako obwódka
+  strokeWeight(1);
+  fill(255, 215, 0); // Złoty kolor
+  textSize(24);
+  textStyle(BOLD);
+  text("Superseed Cosmic Core", 0, cardHeight / 2 - 60);
+
+  // Subtelny napis "NFT"
+  stroke(14, 39, 59, 200); // Tangaroa (#0E273B) jako obwódka
+  strokeWeight(1);
+  fill(255, 255, 255, 150);
+  textSize(16);
+  text("NFT", 0, cardHeight / 2 - 30);
+
+  drawingContext.shadowBlur = 0;
   noStroke();
   pop();
 
-  // Tekst z informacją o wirtualnej nagrodzie - wyśrodkowany
-  fill(255, 215, 0);
+  // Tekst poniżej karty – Superseed Light Green z ciemną obwódką Tangaroa
+  stroke(14, 39, 59, 200); // Tangaroa (#0E273B) jako obwódka
+  strokeWeight(1);
+  fill(147, 208, 207); // Superseed Light Green (#93D0CF)
   textSize(24);
-  textAlign(CENTER, CENTER); // Upewniamy się, że tekst jest wyśrodkowany
+  textStyle(BOLD); // Pogrubienie dla lepszej czytelności
+  textAlign(CENTER, CENTER);
   text(
-    "Reach Orbit 10, sync the Mainnet,\nand claim your place among the stars.\nA Virtual Tesla awaits the ultimate builder!",
+    "Reach Orbit 10, sync the Mainnet,\nand claim your Superseed Cosmic Core NFT\non the Supersync Network!",
     GAME_WIDTH / 2,
     GAME_HEIGHT - 150
   );
+  noStroke();
 
-  // Tekst #SuperseedGrok3 - wyśrodkowany
-  fill(128, 131, 134, 150);
+  // Hashtag – Superseed Light Green z ciemną obwódką Tangaroa
+  stroke(14, 39, 59, 200); // Tangaroa (#0E273B) jako obwódka
+  strokeWeight(1);
+  fill(147, 208, 207); // Superseed Light Green (#93D0CF)
   textSize(16);
   text("#SuperseedGrok3", GAME_WIDTH / 2, GAME_HEIGHT - 50);
+  noStroke();
 }
 
   // Add "NEXT" button
@@ -1787,22 +1840,149 @@ if (activeEvent === "blackHole") {
   textAlign(CENTER, CENTER); // Ustawienie wyśrodkowania
   text("SHARE SCORE", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 260 + RESTART_BUTTON_HEIGHT / 2);
 
-  } else if (gameState === "win") {
-    fill(seedColor.r, seedColor.g, seedColor.b);
-    textSize(48);
-    textStyle(BOLD);
-    text(`Mainnet Orbit Achieved!\nOrbit ${level} - Press Space or Click`, GAME_WIDTH / 2, GAME_HEIGHT / 2);
-    for (let i = 0; i < 5; i++) {
-      particles.push(new Particle(GAME_WIDTH / 2, GAME_HEIGHT / 2, { r: seedColor.r, g: seedColor.g, b: seedColor.b }));
-    }
-  } else if (gameState === "endgame") {
-    fill(seedColor.r, seedColor.g, seedColor.b);
-    textSize(48);
-    textStyle(BOLD);
-    text(`Mainnet Fully Synced!\nEnter to Win a Tesla! (virtual:) #SuperseedGrok3`, GAME_WIDTH / 2, GAME_HEIGHT / 2);
-  }
+} else if (gameState === "win") {
+  // Tło z gradientem dla spójności
+  let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
+  gradient.addColorStop(0, "#0E273B");
+  gradient.addColorStop(1, "#93D0CF");
+  drawingContext.fillStyle = gradient;
+  rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+  // Tekst główny
+  fill(seedColor.r, seedColor.g, seedColor.b);
+  textSize(48);
+  textStyle(BOLD);
+  text(`Mainnet Orbit Achieved!\nOrbit ${level} - Press Space or Click`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 100);
+
+  // Mini podgląd Cosmic Core
+  push();
+  translate(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 50);
+  rotate(millis() * 0.001);
+  let pulseScale = 1 + sin(millis() * 0.005) * 0.1;
+  drawingContext.shadowBlur = 20;
+  drawingContext.shadowColor = `rgba(${seedColor.r}, ${seedColor.g}, ${seedColor.b}, 0.5)`;
+  fill(seedColor.r, seedColor.g, seedColor.b, 150);
+  ellipse(0, 0, 150 * pulseScale, 150 * pulseScale);
+  tint(255, 215, 0, 200);
+  image(smallSuperseedIntro, 0, 0, 120 * pulseScale, 120 * pulseScale);
+  drawingContext.shadowBlur = 0;
   pop();
+
+  // Cząsteczki
+  for (let i = 0; i < 5; i++) {
+    particles.push(new Particle(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 50, { r: seedColor.r, g: seedColor.g, b: seedColor.b }));
+  }
+} else if (gameState === "endgame") {
+  // Tło z gradientem
+  let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
+  gradient.addColorStop(0, "#0E273B");
+  gradient.addColorStop(1, "#93D0CF");
+  drawingContext.fillStyle = gradient;
+  rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+  // Karta NFT – Superseed Cosmic Core
+  push();
+  translate(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50); // Przesunięcie w górę, aby zmieścić przyciski
+  rotate(sin(millis() * 0.001) * 0.1); // Lekka rotacja całej karty
+  let pulseScale = 1 + sin(millis() * 0.005) * 0.05; // Subtelne pulsowanie
+
+  // Rozmiar karty (proporcje 2:3)
+  let cardWidth = 300 * pulseScale;
+  let cardHeight = 450 * pulseScale;
+
+  // Tło karty z gradientem
+  let cardGradient = drawingContext.createLinearGradient(-cardWidth / 2, -cardHeight / 2, cardWidth / 2, cardHeight / 2);
+  cardGradient.addColorStop(0, `rgba(${seedColor.r}, ${seedColor.g}, ${seedColor.b}, 0.8)`);
+  cardGradient.addColorStop(1, "rgba(14, 39, 59, 0.9)");
+  drawingContext.fillStyle = cardGradient;
+  drawingContext.shadowBlur = 20;
+  drawingContext.shadowColor = `rgba(255, 215, 0, 0.5)`;
+  rect(-cardWidth / 2, -cardHeight / 2, cardWidth, cardHeight, 20); // Zaokrąglone rogi
+
+  // Ramka karty
+  noFill();
+  stroke(255, 215, 0, 200); // Złoty kolor
+  strokeWeight(4);
+  rect(-cardWidth / 2 + 5, -cardHeight / 2 + 5, cardWidth - 10, cardHeight - 10, 15);
+  stroke(seedColor.r, seedColor.g, seedColor.b, 150);
+  strokeWeight(2);
+  rect(-cardWidth / 2 + 10, -cardHeight / 2 + 10, cardWidth - 20, cardHeight - 20, 10);
+
+  // Logo smallsuperseedintro z rotacją
+  push();
+  translate(0, -50); // Przesunięcie logo w górę karty
+  rotate(millis() * 0.001); // Rotacja logo
+  tint(255, 215, 0, 200); // Złoty odcień holograficzny
+  imageMode(CENTER);
+  image(smallSuperseedIntro, 0, 0, cardWidth * 0.7, cardWidth * 0.7); // Logo w górnej części karty
+  pop();
+
+  // Linie obwodów blockchain (dekoracja)
+  noFill();
+  stroke(93, 208, 207, 100);
+  strokeWeight(1);
+  for (let i = 0; i < 5; i++) {
+    let y = map(i, 0, 4, -cardHeight / 2 + 20, cardHeight / 2 - 20);
+    line(-cardWidth / 2 + 20, y, cardWidth / 2 - 20, y);
+  }
+
+  // Nazwa gry nad tytułem NFT
+  stroke(14, 39, 59, 200); // Tangaroa (#0E273B) jako obwódka
+  strokeWeight(1);
+  fill(147, 208, 207); // Superseed Light Green (#93D0CF)
+  textSize(16);
+  textStyle(NORMAL);
+  textAlign(CENTER, CENTER);
+  text("Superseed Cosmic Network", 0, cardHeight / 2 - 90);
+
+  // Nazwa NFT na dole karty
+  stroke(14, 39, 59, 200); // Tangaroa (#0E273B) jako obwódka
+  strokeWeight(1);
+  fill(255, 215, 0); // Złoty kolor
+  textSize(24);
+  textStyle(BOLD);
+  text("Superseed Cosmic Core", 0, cardHeight / 2 - 60);
+
+  // Subtelny napis "NFT"
+  stroke(14, 39, 59, 200); // Tangaroa (#0E273B) jako obwódka
+  strokeWeight(1);
+  fill(255, 255, 255, 150);
+  textSize(16);
+  text("NFT", 0, cardHeight / 2 - 30);
+
+  drawingContext.shadowBlur = 0;
+  noStroke();
+  pop();
+
+  // Tekst poniżej karty
+  stroke(14, 39, 59, 200); // Tangaroa (#0E273B) jako obwódka
+  strokeWeight(1);
+  fill(147, 208, 207); // Superseed Light Green (#93D0CF)
+  textSize(36);
+  textStyle(BOLD);
+  text("Superseed Cosmic Core Unlocked!", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 250);
+  textSize(20);
+  text("Claim your NFT on Supersync Network soon! #SuperseedGrok3", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 290);
+
+  // Przyciski
+  // Claim NFT
+  fill(93, 208, 207);
+  rect(GAME_WIDTH / 2 - 220, GAME_HEIGHT / 2 + 320, 200, 50, 10);
+  fill(255);
+  textSize(24);
+  text("Claim NFT", GAME_WIDTH / 2 - 120, GAME_HEIGHT / 2 + 345);
+
+  // Mint NFT
+  fill(255, 215, 0); // Złoty kolor dla wyróżnienia
+  rect(GAME_WIDTH / 2 + 20, GAME_HEIGHT / 2 + 320, 200, 50, 10);
+  fill(14, 39, 59); // Tangaroa dla tekstu w przycisku
+  textSize(24);
+  text("Mint NFT", GAME_WIDTH / 2 + 120, GAME_HEIGHT / 2 + 345);
 }
+pop(); // Zamknięcie push() z początku draw()
+} // Zamknięcie funkcji draw()
+
+// Jeśli to koniec pliku, upewnij się, że nie ma nic po tym
 
 function startGame() {
   if (gameState === "start" || gameState === "gameOver" || gameState === "endgame" || gameState === "tutorial") {
