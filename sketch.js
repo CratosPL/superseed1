@@ -1,8 +1,10 @@
 // Global Variables
 let logo;
 let whiteLogo;
+let smallSuperseedIntro; 
 let clickSound;
 let backgroundMusic;
+let introMusic;
 let powerUpSound;
 let meteorSound;
 let levelSound;
@@ -79,6 +81,12 @@ let tutorialClicks = 0;
 let tutorialPulseProgress = 0;
 let tutorialLastPulse = 0;
 let musicSwitched = false;
+
+let hasSeenIntro = localStorage.getItem('hasSeenIntro') === 'true'; // Czy intro już widziane
+let introState = 0; // Aktualny ekran intro (0, 1, 2)
+let introTimer = 0; // Timer do przechodzenia między ekranami
+let introDuration = 30000;
+let teslaImage; // Opcjonalna sylwetka Tesli dla sceny 3
 
 let powerUpDurations = {
   gas: 5000,
@@ -406,25 +414,30 @@ function drawMainnetBadge(x, y, size) {
   pop();
 }
 
+let upadekBg, synchronizacjaBg, nagrodaBg; // Dodaj zmienne globalne na początku kodu
+
 function preload() {
   logo = loadImage('assets/superseed-logo.png');
   whiteLogo = loadImage('assets/White.webp');
+  smallSuperseedIntro = loadImage('assets/smallsuperseedintro.png');
   clickSound = loadSound('assets/background-beat.wav');
   backgroundMusic = loadSound('assets/background-music.mp3');
-  backgroundMusic2 = loadSound('assets/background-music2.mp3'); // Nowa ścieżka od poziomu 5
+  backgroundMusic2 = loadSound('assets/background-music2.mp3');
+  introMusic = loadSound('assets/intro1.mp3'); // Nowa muzyka intro
   powerUpSound = loadSound('assets/power-up.mp3');
   meteorSound = loadSound('assets/meteor-hit.mp3');
   levelSound = loadSound('assets/level-up.mp3');
   warpSound = loadSound('assets/warp-transition.mp3');
   nebulaSound = loadSound('assets/nebula-burst.mp3');
-  holeSound = loadSound('assets/hole.mp3'); 
+  holeSound = loadSound('assets/hole.mp3');
+  upadekBg = loadImage('assets/upadek-background.png');
+  synchronizacjaBg = loadImage('assets/synchronizacja-background.png');
+  nagrodaBg = loadImage('assets/nagroda-background.png');
 }
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  
-  // Dynamiczne dostosowanie wymiarów gry do ekranu
-  let scaleFactor = min(windowWidth / 1200, windowHeight / 1000); // Skalowanie względem domyślnych 1200x1000
+  let scaleFactor = min(windowWidth / 1200, windowHeight / 1000);
   GAME_WIDTH = windowWidth;
   GAME_HEIGHT = windowHeight;
   RESTART_BUTTON_WIDTH = 200 * scaleFactor;
@@ -441,7 +454,6 @@ function setup() {
   TUTORIAL_BUTTON_HEIGHT = 50 * scaleFactor;
   TUTORIAL_MENU_BUTTON_WIDTH = 200 * scaleFactor;
   TUTORIAL_MENU_BUTTON_HEIGHT = 50 * scaleFactor;
-
   textAlign(CENTER, CENTER);
   textFont("Open Sans");
   logoX = GAME_WIDTH / 2;
@@ -450,8 +462,9 @@ function setup() {
     bgParticles.push(new BgParticle());
   }
   clickSound.setVolume(1.0);
-  backgroundMusic.setVolume(0.3);
-  backgroundMusic2.setVolume(0.3);
+  backgroundMusic.setVolume(0.5);
+  backgroundMusic2.setVolume(0.5);
+  introMusic.setVolume(0.6);
   powerUpSound.setVolume(0.5);
   meteorSound.setVolume(0.5);
   levelSound.setVolume(0.5);
@@ -460,6 +473,15 @@ function setup() {
   let savedLeaderboard = localStorage.getItem('leaderboard');
   leaderboard = savedLeaderboard ? JSON.parse(savedLeaderboard) : [];
   lastClickTime = millis();
+
+  // Zawsze startuj od intro, resetując hasSeenIntro
+  hasSeenIntro = false;
+  gameState = "intro";
+  introTimer = millis();
+  if (!soundInitialized) {
+    introMusic.loop();
+    soundInitialized = true;
+  }
 }
 
 function touchStarted() {
@@ -487,6 +509,184 @@ function drawBackground(pulseProgress) {
 function draw() {
   let currentTime = millis();
   let pulseProgress = (currentTime - lastPulse) / pulseSpeed;
+
+  // Nowy stan preIntro
+  if (gameState === "preIntro") {
+    drawBackground(0);
+    fill(255);
+    textSize(40);
+    textStyle(BOLD);
+    text("Witaj w Superseed Cosmic Network", GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50);
+    textSize(24);
+    text("Kliknij gdziekolwiek, aby rozpocząć", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 50);
+    return;
+  }
+
+  // Istniejący stan intro
+  if (gameState === "intro") {
+    drawBackground(0);
+
+    for (let i = bgParticles.length - 1; i >= 0; i--) {
+      bgParticles[i].update();
+      bgParticles[i].show(0);
+    }
+
+    push();
+    translate((width - GAME_WIDTH) / 2, (height - GAME_HEIGHT) / 2);
+
+    // Zarządzanie dźwiękiem
+  if (soundInitialized) {
+    if (!introMusic.isPlaying()) {
+      introMusic.loop();
+    }
+  }
+
+    // Odtwarzaj muzykę intro, gdy dźwięk jest zainicjalizowany
+    if (!introMusic.isPlaying() && soundInitialized) {
+      introMusic.loop();
+    }
+
+    // Scene 1: "The Fall"
+    if (introState === 0) {
+      image(upadekBg, 0, 0, GAME_WIDTH, GAME_HEIGHT);
+      let logoPulse = lerp(50, 100, sin(currentTime * 0.002));
+      tint(255, 200);
+      image(logo, GAME_WIDTH / 2, GAME_HEIGHT / 2, logoPulse, logoPulse);
+      fill(255, 200);
+      textSize(24);
+      textStyle(BOLD);
+      textAlign(CENTER, CENTER);
+      text(
+        "In a galaxy bound by centralized chains,\nthe old networks fell silent.\nOne seed remained – a spark of hope.",
+        GAME_WIDTH / 2,
+        GAME_HEIGHT - 150
+      );
+    }
+    // Scene 2: "Call to Sync"
+    else if (introState === 1) {
+      image(synchronizacjaBg, 0, 0, GAME_WIDTH, GAME_HEIGHT);
+      let logoPulse = lerp(minSize, maxSize, sin(currentTime * 0.002));
+      tint(seedColor.r, seedColor.g, seedColor.b, 200);
+      image(logo, GAME_WIDTH / 2, GAME_HEIGHT / 2, logoPulse, logoPulse);
+      for (let i = 0; i < 4; i++) {
+        let angle = TWO_PI / 4 * i + currentTime * 0.001;
+        let px = GAME_WIDTH / 2 + cos(angle) * 150;
+        let py = GAME_HEIGHT / 2 + sin(angle) * 150;
+        let p = new PowerUp(px, py);
+        p.type = ["life", "gas", "pulse", "orbit"][i];
+        p.show();
+      }
+      fill(93, 208, 207);
+      textSize(24);
+      text(
+        "You’ve been chosen to awaken the Superseed Mainnet.\nSync cosmic nodes, harness power-ups,\nand forge a decentralized future – orbit by orbit.",
+        GAME_WIDTH / 2,
+        GAME_HEIGHT - 150
+      );
+    }
+  // Scene 3: "The Reward Awaits"
+else if (introState === 2) {
+  image(nagrodaBg, 0, 0, GAME_WIDTH, GAME_HEIGHT); // Tło dla sceny 3
+
+  // Cząsteczki - generowane wokół środka holografu
+  if (random(1) < 0.2) {
+    particles.push(new Particle(GAME_WIDTH / 2, GAME_HEIGHT - 250, { r: seedColor.r, g: seedColor.g, b: seedColor.b }));
+  }
+  for (let i = particles.length - 1; i >= 0; i--) {
+    particles[i].update();
+    particles[i].show();
+    if (particles[i].isDead()) particles.splice(i, 1);
+  }
+
+  // Logo Superseed (whiteLogo) - wyśrodkowane na osi X i przesunięte do góry
+  let logoWidth = 300;
+  let logoHeight = 150;
+  image(whiteLogo, GAME_WIDTH / 2 - logoWidth / 2, 50, logoWidth, logoHeight);
+
+  // Hologram z nowym logo smallsuperseedintro.png - tuż nad tekstem
+  push();
+  translate(GAME_WIDTH / 2, GAME_HEIGHT - 250); // Pozycja trofeum
+  rotate(currentTime * 0.001); // Powolna rotacja
+  let pulseScale = 1 + sin(currentTime * 0.005) * 0.1; // Pulsowanie
+
+  // Holograficzne koło jako baza
+  noFill();
+  stroke(255, 215, 0, 150); // Złoty kolor
+  strokeWeight(4);
+  ellipse(0, 0, 240 * pulseScale, 240 * pulseScale);
+
+  // Wewnętrzne logo smallsuperseedintro.png - w pełni widoczne
+  if (smallSuperseedIntro) {
+    // Rysujemy nowe logo z holograficznym odcieniem
+    tint(255, 215, 0, 200); // Złoty odcień holograficzny
+    imageMode(CENTER); // Upewniamy się, że obraz jest wyśrodkowany
+    image(smallSuperseedIntro, 0, 0, 200 * pulseScale, 200 * pulseScale); // Kwadratowy rozmiar, zakładając proporcje 1:1
+  } else {
+    // Fallback, jeśli obraz nie jest dostępny
+    fill(255, 215, 0, 200);
+    ellipse(0, 0, 200 * pulseScale); // Okrągły fallback
+    fill(0);
+    textSize(20);
+    text("Superseed", 0, 0);
+  }
+  noStroke();
+  pop();
+
+  // Tekst z informacją o wirtualnej nagrodzie - wyśrodkowany
+  fill(255, 215, 0);
+  textSize(24);
+  textAlign(CENTER, CENTER); // Upewniamy się, że tekst jest wyśrodkowany
+  text(
+    "Reach Orbit 10, sync the Mainnet,\nand claim your place among the stars.\nA Virtual Tesla awaits the ultimate builder!",
+    GAME_WIDTH / 2,
+    GAME_HEIGHT - 150
+  );
+
+  // Tekst #SuperseedGrok3 - wyśrodkowany
+  fill(128, 131, 134, 150);
+  textSize(16);
+  text("#SuperseedGrok3", GAME_WIDTH / 2, GAME_HEIGHT - 50);
+}
+
+  // Add "NEXT" button
+  let nextButtonX = GAME_WIDTH - 100;
+  let nextButtonY = GAME_HEIGHT - 50;
+  fill(93, 208, 207);
+  rect(nextButtonX, nextButtonY, 80, 30, 5);
+  fill(255);
+  textSize(16);
+  text("NEXT", nextButtonX + 40, nextButtonY + 15);
+
+  // Display remaining time
+  let timeLeft = introDuration - (currentTime - introTimer);
+  fill(255, 200);
+  textSize(16);
+  text(`${floor(timeLeft / 1000)}s`, GAME_WIDTH / 2, 50);
+
+  pop();
+
+  // Automatic transition after 30 seconds
+  if (currentTime - introTimer > introDuration) {
+    introState++;
+    introTimer = currentTime;
+    if (introState > 2) {
+      gameState = "howToPlay";
+      introState = 0;
+      if (soundInitialized) {
+        introMusic.stop(); // Stop intro music when intro ends
+        backgroundMusic.loop(); // Start main background music
+      }
+      if (!hasSeenIntro) {
+        localStorage.setItem('hasSeenIntro', 'true');
+        hasSeenIntro = true;
+      }
+    }
+    if (soundInitialized && introState <= 2) warpSound.play();
+  }
+
+  return;
+}
+
   drawBackground(pulseProgress);
   let offsetX = (width - GAME_WIDTH) / 2;
   let offsetY = (height - GAME_HEIGHT) / 2;
@@ -514,7 +714,13 @@ function draw() {
       ellipse(logoTrail[i].x, logoTrail[i].y, circleSize * 0.5);
     }
   }
+
+
   if (gameState === "howToPlay") {
+     // Odtwarzaj introMusic w stanie "howToPlay", jeśli nie gra
+     if (soundInitialized && !introMusic.isPlaying()) {
+      introMusic.loop();
+    }
     fill(255);
     textSize(40);
     textStyle(BOLD);
@@ -774,6 +980,14 @@ text("Mainnet Wave: Clears Traps [Lv7+]", TABLE_START_X + TABLE_CELL_WIDTH + 100
   textSize(24);
   text("TUTORIAL", GAME_WIDTH / 2, GAME_HEIGHT - 200 + TUTORIAL_MENU_BUTTON_HEIGHT / 2);
 
+
+  // Nowy przycisk VIEW INTRO
+  fill(93, 208, 207);
+  rect(GAME_WIDTH / 2 - TUTORIAL_MENU_BUTTON_WIDTH / 2, GAME_HEIGHT - 120, TUTORIAL_MENU_BUTTON_WIDTH, TUTORIAL_MENU_BUTTON_HEIGHT, 10);
+  fill(255);
+  textSize(24);
+  text("VIEW INTRO", GAME_WIDTH / 2, GAME_HEIGHT - 120 + TUTORIAL_MENU_BUTTON_HEIGHT / 2);
+
     textAlign(CENTER, BASELINE);
   } else if (gameState === "tutorial") {
     // Gradient Background with Dynamic Pulse Effect
@@ -985,6 +1199,12 @@ text(savedGameState ? "RESUME SYNC" : "START SYNC", GAME_WIDTH / 2, buttonY + TU
     text("Build the Superseed Network\nSync Nodes, Earn Rewards, Decentralize Tomorrow!", GAME_WIDTH / 2, GAME_HEIGHT / 2);
   } else if (gameState === "playing" || gameState === "supernova") {
     if (soundInitialized) {
+      // Zatrzymaj introMusic, jeśli nadal gra
+      if (introMusic.isPlaying()) {
+        introMusic.stop();
+        console.log("introMusic stopped in playing state");
+      }
+      
       if (level >= 5) {
         if (!backgroundMusic2.isPlaying()) {
           console.log("Switching to backgroundMusic2");
@@ -1635,6 +1855,7 @@ function startGame() {
 
     // Resetowanie muzyki
     if (soundInitialized) {
+      introMusic.stop(); // Zatrzymaj muzykę intro
       backgroundMusic2.stop(); // Zatrzymaj drugą muzykę, jeśli gra
       backgroundMusic.stop();  // Zatrzymaj pierwszą muzykę
       backgroundMusic.loop();  // Uruchom pierwszą muzykę od nowa
@@ -1767,7 +1988,18 @@ function mousePressed() {
   let adjustedMouseX = mouseX - offsetX;
   let adjustedMouseY = mouseY - offsetY;
 
+  if (gameState === "preIntro") {
+    gameState = "intro";
+    introTimer = millis();
+    if (!soundInitialized) {
+      introMusic.loop();
+      soundInitialized = true;
+    }
+    return;
+  }
+
   if (gameState === "howToPlay") {
+    // Przycisk START/RESUME
     let buttonX = GAME_WIDTH / 2 - RESTART_BUTTON_WIDTH / 2;
     let buttonY = GAME_HEIGHT - 280;
     if (
@@ -1776,16 +2008,13 @@ function mousePressed() {
       adjustedMouseY >= buttonY &&
       adjustedMouseY <= buttonY + RESTART_BUTTON_HEIGHT
     ) {
-      if (savedGameState) {
-        resumeGame(); // Wznawia zapauzowaną grę
-      } else {
-        startGame(); // Rozpoczyna nową grę, jeśli nie ma zapauzowanego stanu
-      }
+      if (savedGameState) resumeGame();
+      else startGame();
     }
 
-    // Przycisk Tutorial na GAME_HEIGHT - 200
+    // Przycisk TUTORIAL
     let tutorialButtonX = GAME_WIDTH / 2 - TUTORIAL_MENU_BUTTON_WIDTH / 2;
-    let tutorialButtonY = GAME_HEIGHT - 200; // Nowa pozycja Y
+    let tutorialButtonY = GAME_HEIGHT - 200;
     if (
       adjustedMouseX >= tutorialButtonX &&
       adjustedMouseX <= tutorialButtonX + TUTORIAL_MENU_BUTTON_WIDTH &&
@@ -1795,6 +2024,51 @@ function mousePressed() {
       gameState = "tutorial";
     }
 
+    // Przycisk VIEW INTRO
+    if (gameState === "howToPlay") {
+      // ... (inne przyciski)
+      let introButtonX = GAME_WIDTH / 2 - TUTORIAL_MENU_BUTTON_WIDTH / 2;
+      let introButtonY = GAME_HEIGHT - 120;
+      if (
+        adjustedMouseX >= introButtonX &&
+        adjustedMouseX <= introButtonX + TUTORIAL_MENU_BUTTON_WIDTH &&
+        adjustedMouseY >= introButtonY &&
+        adjustedMouseY <= introButtonY + TUTORIAL_MENU_BUTTON_HEIGHT
+      ) {
+        gameState = "intro";
+        introState = 0;
+        introTimer = millis();
+        if (soundInitialized) {
+          introMusic.stop(); // Zatrzymaj, aby zresetować stan
+          introMusic.loop(); // Wymuś odtwarzanie
+        }
+      }
+    }
+
+  } else if (gameState === "intro") {
+    // "NEXT" button handling
+    let nextButtonX = GAME_WIDTH - 100;
+    let nextButtonY = GAME_HEIGHT - 50;
+    if (
+      adjustedMouseX >= nextButtonX &&
+      adjustedMouseX <= nextButtonX + 80 &&
+      adjustedMouseY >= nextButtonY &&
+      adjustedMouseY <= nextButtonY + 30
+    ) {
+      introState++;
+      introTimer = millis();
+      if (introState > 2) {
+        gameState = "howToPlay";
+        introState = 0;
+        if (!hasSeenIntro) {
+          localStorage.setItem('hasSeenIntro', 'true');
+          hasSeenIntro = true;
+        }
+      }
+      if (soundInitialized && introState <= 2) warpSound.play();
+    }
+  } else if (gameState === "tutorial") {
+    // Wybór koloru
     let colorBoxSize = 50;
     let colorBoxSpacing = 40;
     let totalWidth = (colorBoxSize * 3) + (colorBoxSpacing * 2);
@@ -1811,6 +2085,7 @@ function mousePressed() {
       }
     }
 
+    // Wpisywanie nicku
     if (adjustedMouseY >= 180 && adjustedMouseY <= 230 && adjustedMouseX >= GAME_WIDTH / 2 - 100 && adjustedMouseX <= GAME_WIDTH / 2 + 100) {
       playerNick = "";
       isTypingNick = true;
@@ -1818,21 +2093,36 @@ function mousePressed() {
       isTypingNick = false;
     }
 
-  } else if (gameState === "tutorial") {
+    // Przycisk "Start Sync"
     let buttonX = GAME_WIDTH / 2 - TUTORIAL_BUTTON_WIDTH / 2;
     let buttonY = GAME_HEIGHT - 190;
     if (
-      adjustedMouseX >= buttonX &&
-      adjustedMouseX <= buttonX + TUTORIAL_BUTTON_WIDTH &&
-      adjustedMouseY >= buttonY &&
-      adjustedMouseY <= buttonY + TUTORIAL_BUTTON_HEIGHT
+        adjustedMouseX >= buttonX &&
+        adjustedMouseX <= buttonX + TUTORIAL_BUTTON_WIDTH &&
+        adjustedMouseY >= buttonY &&
+        adjustedMouseY <= buttonY + TUTORIAL_BUTTON_HEIGHT
     ) {
-      if (savedGameState) {
-        resumeGame(); // Wznawia zapauzowaną grę
-      } else {
-        startGame(); // Rozpoczyna nową grę, jeśli nie ma zapauzowanego stanu
-      }
+        console.log("Start Sync clicked!");
+        if (savedGameState) {
+            resumeGame();
+        } else {
+            startGame();
+        }
     }
+
+    // Przycisk "Back"
+    let backX = 20;
+    let backY = 20;
+    if (
+        adjustedMouseX >= backX &&
+        adjustedMouseX <= backX + 120 &&
+        adjustedMouseY >= backY &&
+        adjustedMouseY <= backY + 50
+    ) {
+        console.log("Back clicked!");
+        gameState = "howToPlay";
+    }
+  
 
     if (adjustedMouseX >= 10 && adjustedMouseX <= 110 && adjustedMouseY >= 10 && adjustedMouseY <= 50) {
       gameState = "howToPlay";
