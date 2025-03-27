@@ -762,17 +762,17 @@ text("Mainnet Wave: Clears Traps [Lv7+]", TABLE_START_X + TABLE_CELL_WIDTH + 100
     text("Avoid Meteor Strikes - 5 misses = -1 life", GAME_WIDTH / 2 - 60, trapsContentY + 5);
 
     fill(93, 208, 207);
-    rect(GAME_WIDTH / 2 - RESTART_BUTTON_WIDTH / 2, GAME_HEIGHT - 140, RESTART_BUTTON_WIDTH, RESTART_BUTTON_HEIGHT, 10);
-    fill(255);
-    textSize(28);
-    textAlign(CENTER, CENTER);
-    text(savedGameState ? "RESUME" : "START", GAME_WIDTH / 2, GAME_HEIGHT - 140 + RESTART_BUTTON_HEIGHT / 2);
+  rect(GAME_WIDTH / 2 - RESTART_BUTTON_WIDTH / 2, GAME_HEIGHT - 280, RESTART_BUTTON_WIDTH, RESTART_BUTTON_HEIGHT, 10);
+  fill(255);
+  textSize(28);
+  textAlign(CENTER, CENTER);
+  text(savedGameState ? "RESUME" : "START", GAME_WIDTH / 2, GAME_HEIGHT - 280 + RESTART_BUTTON_HEIGHT / 2);
 
-    fill(93, 208, 207);
-    rect(GAME_WIDTH / 2 - TUTORIAL_MENU_BUTTON_WIDTH / 2, GAME_HEIGHT - 80, TUTORIAL_MENU_BUTTON_WIDTH, TUTORIAL_MENU_BUTTON_HEIGHT, 10);
-    fill(255);
-    textSize(24);
-    text("TUTORIAL", GAME_WIDTH / 2, GAME_HEIGHT - 55);
+  fill(93, 208, 207);
+  rect(GAME_WIDTH / 2 - TUTORIAL_MENU_BUTTON_WIDTH / 2, GAME_HEIGHT - 200, TUTORIAL_MENU_BUTTON_WIDTH, TUTORIAL_MENU_BUTTON_HEIGHT, 10);
+  fill(255);
+  textSize(24);
+  text("TUTORIAL", GAME_WIDTH / 2, GAME_HEIGHT - 200 + TUTORIAL_MENU_BUTTON_HEIGHT / 2);
 
     textAlign(CENTER, BASELINE);
   } else if (gameState === "tutorial") {
@@ -795,13 +795,13 @@ text("Mainnet Wave: Clears Traps [Lv7+]", TABLE_START_X + TABLE_CELL_WIDTH + 100
     // Text Alignment Setup
     textAlign(CENTER, BASELINE);
   
-    // Title with Logo Integration
+    // Title with Logo (whiteLogo zostaje na górze)
     fill(249, 249, 242); // White (#F9F9F2)
     textSize(36);
     textStyle(BOLD);
     text("Superseed Cosmic Network", GAME_WIDTH / 2, 60);
     let logoScale = 1 + sin(millis() * 0.003) * 0.1;
-    image(whiteLogo, GAME_WIDTH / 2 - 100, 70, 200 * logoScale, 100 * logoScale);
+    image(whiteLogo, GAME_WIDTH / 2 - 100, 70, 200 * logoScale, 100 * logoScale); // Przywrócone logo na górze
   
     let sectionY = 160;
   
@@ -841,47 +841,41 @@ text("Mainnet Wave: Clears Traps [Lv7+]", TABLE_START_X + TABLE_CELL_WIDTH + 100
     for (let i = 0; i < gameplayLines.length; i++) {
       text(gameplayLines[i], GAME_WIDTH / 2, sectionY + 20 + i * 20);
     }
-    // Mini Demo: Pulsing Logo Preview
-    push();
-    translate(GAME_WIDTH / 2 + 200, sectionY + 40);
-    let demoPulse = lerp(80, 120, sin(millis() * 0.002));
-    tint(seedColor.r, seedColor.g, seedColor.b, 200);
-    image(logo, 0, 0, demoPulse, demoPulse);
-    pop();
+    // Mini-demo logo usunięte stąd
   
     sectionY += 120;
   
     // Power-Ups Section
-fill(93, 208, 207);
-textSize(24);
-textStyle(BOLD);
-text("Power-Ups & Boosts", GAME_WIDTH / 2, sectionY);
-fill(249, 249, 242);
-textSize(14);
-textStyle(NORMAL);
-let powerUpLines = [
-  "Life (+1 life) – Restore vitality to keep syncing.",
-  "Gas Nebula (x2 points, 3s) – Double your score in a cosmic cloud.",
-  "Pulse Wave (faster pulse, 3s) – Speed up sync opportunities.",
-  "Orbit Shield (blocks damage, 3s) – Protection from meteor strikes [Lv3+].",
-  "Freeze Nova (freezes pulse, 3s) – Lock the rhythm for precision [Lv3+].",
-  "Meteor Strike (more traps, x2 points, 3s) – High risk, high reward [Lv5+].",
-  "Star Seed (bigger logo, 3s) – Easier clicks, bigger wins [Lv5+].",
-  "Mainnet Wave (clears traps) – Reset the field for a fresh start [Lv7+]."
-];
-for (let i = 0; i < powerUpLines.length; i++) {
-  text(powerUpLines[i], GAME_WIDTH / 2, sectionY + 20 + i * 20);
-}
-// Power-Up Icons Demo - ikona Life
-let iconX = GAME_WIDTH / 2 - 250;
-push(); // Izolacja stanu
-translate(iconX, sectionY + 40); // Przesunięcie do pozycji ikony
-let lifeGradient = drawingContext.createRadialGradient(0, 0, 0, 0, 0, 20); // Unikalna nazwa zmiennej
-lifeGradient.addColorStop(0, "rgb(255, 255, 255)");
-lifeGradient.addColorStop(1, "rgb(0, 255, 0)");
-drawingContext.fillStyle = lifeGradient;
-star(0, 0, 10, 20 + sin(millis() * 0.005) * 5, 8); // Pulsująca gwiazda
-pop();
+    fill(93, 208, 207);
+    textSize(24);
+    textStyle(BOLD);
+    text("Power-Ups & Boosts", GAME_WIDTH / 2, sectionY);
+    fill(249, 249, 242);
+    textSize(14);
+    textStyle(NORMAL);
+    let powerUpLines = [
+      "Life (+1 life) – Restore vitality to keep syncing.",
+      "Gas Nebula (x2 points, 3s) – Double your score in a cosmic cloud.",
+      "Pulse Wave (faster pulse, 3s) – Speed up sync opportunities.",
+      "Orbit Shield (blocks damage, 3s) – Protection from meteor strikes [Lv3+].",
+      "Freeze Nova (freezes pulse, 3s) – Lock the rhythm for precision [Lv3+].",
+      "Meteor Strike (more traps, x2 points, 3s) – High risk, high reward [Lv5+].",
+      "Star Seed (bigger logo, 3s) – Easier clicks, bigger wins [Lv5+].",
+      "Mainnet Wave (clears traps) – Reset the field for a fresh start [Lv7+]."
+    ];
+    for (let i = 0; i < powerUpLines.length; i++) {
+      text(powerUpLines[i], GAME_WIDTH / 2, sectionY + 20 + i * 20);
+    }
+    // Power-Up Icons Demo - ikona Life
+    let iconX = GAME_WIDTH / 2 - 250;
+    push();
+    translate(iconX, sectionY + 40);
+    let lifeGradient = drawingContext.createRadialGradient(0, 0, 0, 0, 0, 20);
+    lifeGradient.addColorStop(0, "rgb(255, 255, 255)");
+    lifeGradient.addColorStop(1, "rgb(0, 255, 0)");
+    drawingContext.fillStyle = lifeGradient;
+    star(0, 0, 10, 20 + sin(millis() * 0.005) * 5, 8);
+    pop();
   
     sectionY += 200;
   
@@ -943,19 +937,32 @@ pop();
       text(whyPlayLines[i], GAME_WIDTH / 2, sectionY + 20 + i * 20);
     }
   
-    // Start Game Button with Hover Effect
-    let buttonX = GAME_WIDTH / 2 - TUTORIAL_BUTTON_WIDTH / 2;
-    let buttonY = GAME_HEIGHT - 90;
-    let isHovering = mouseX > buttonX && mouseX < buttonX + TUTORIAL_BUTTON_WIDTH && 
-                     mouseY > buttonY && mouseY < buttonY + TUTORIAL_BUTTON_HEIGHT;
-    fill(93, 208, 207, isHovering ? 255 : 200);
-    rect(buttonX, buttonY, TUTORIAL_BUTTON_WIDTH, TUTORIAL_BUTTON_HEIGHT, 15);
-    fill(249, 249, 242);
-    textSize(26);
-    textStyle(BOLD);
-    text("START SYNC", GAME_WIDTH / 2, GAME_HEIGHT - 58);
+    // Pozycja ostatniego tekstu "a cosmic collaboration"
+    let lastTextY = sectionY + 20 + (whyPlayLines.length - 1) * 20; // Y ostatniej linii
+
+    // Migające logo superseed-logo.png między tekstem a przyciskiem
+    push();
+    let logoY = lastTextY + 30; // 30 pikseli pod tekstem
+    let demoPulse = lerp(80, 120, sin(millis() * 0.002));
+    tint(seedColor.r, seedColor.g, seedColor.b, 200);
+    image(logo, GAME_WIDTH / 2, logoY, demoPulse, demoPulse);
+    pop();
+
+    // Start Game Button
+    // Start Game Button
+let buttonX = GAME_WIDTH / 2 - TUTORIAL_BUTTON_WIDTH / 2;
+let buttonY = GAME_HEIGHT - 190;
+let isHovering = mouseX > buttonX && mouseX < buttonX + TUTORIAL_BUTTON_WIDTH && 
+                 mouseY > buttonY && mouseY < buttonY + TUTORIAL_BUTTON_HEIGHT;
+fill(93, 208, 207, isHovering ? 255 : 200);
+rect(buttonX, buttonY, TUTORIAL_BUTTON_WIDTH, TUTORIAL_BUTTON_HEIGHT, 15);
+fill(249, 249, 242);
+textSize(26);
+textStyle(BOLD);
+textAlign(CENTER, CENTER);
+text(savedGameState ? "RESUME SYNC" : "START SYNC", GAME_WIDTH / 2, buttonY + TUTORIAL_BUTTON_HEIGHT / 2);
   
-    // Back Button with Hover Effect
+    // Back Button
     let backX = 20;
     let backY = 20;
     let isBackHovering = mouseX > backX && mouseX < backX + 120 && 
@@ -964,7 +971,8 @@ pop();
     rect(backX, backY, 120, 50, 10);
     fill(249, 249, 242);
     textSize(20);
-    text("BACK", backX + 60, backY + 35);
+    textAlign(CENTER, CENTER); // Wyśrodkowanie w poziomie i pionie
+    text("BACK", backX + 60, backY + 25); // Środek przycisku w pionie (50 / 2 = 25)
   
     // Footer Branding
     fill(128, 131, 134, 150);
@@ -1234,9 +1242,9 @@ if (activeEvent === "blackHole") {
       }
       if (inactivityWarning) {
         inactivityTimer -= deltaTime;
-        fill(255, 0, 0, 200);
+        fill(255, 0, 0, 200); // Czerwony kolor
         textSize(20);
-        text(`Click anywhere! ${floor(inactivityTimer / 1000) + 1}s`, GAME_WIDTH / 2, GAME_HEIGHT - 100);
+        text(`Click anywhere! ${floor(inactivityTimer / 1000) + 1}s`, GAME_WIDTH / 2, GAME_HEIGHT - 130); // Przesunięte z -100 na -50
         if (inactivityTimer <= 0) {
           lives -= 1;
           lifeBar -= 20;
@@ -1434,7 +1442,8 @@ if (activeEvent === "blackHole") {
     rect(GAME_WIDTH - HOW_TO_PLAY_BUTTON_WIDTH - 10, 10, HOW_TO_PLAY_BUTTON_WIDTH, HOW_TO_PLAY_BUTTON_HEIGHT, 10);
     fill(255);
     textSize(18);
-    text("How to Play", GAME_WIDTH - HOW_TO_PLAY_BUTTON_WIDTH / 2 - 10, 30);
+    textAlign(CENTER, CENTER); // Wyśrodkowanie w poziomie i pionie
+    text("How to Play", GAME_WIDTH - HOW_TO_PLAY_BUTTON_WIDTH / 2 - 10, 10 + HOW_TO_PLAY_BUTTON_HEIGHT / 2);
 
     if (level === 1) {
       pulseSpeed = max(1800, 2000 - score * 5);
@@ -1544,16 +1553,19 @@ if (activeEvent === "blackHole") {
     }
 
     fill(93, 208, 207);
-    rect(GAME_WIDTH / 2 - RESTART_BUTTON_WIDTH / 2, GAME_HEIGHT / 2 + 150, RESTART_BUTTON_WIDTH, RESTART_BUTTON_HEIGHT, 10);
-    fill(255);
-    textSize(30);
-    text("RELAUNCH", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 175);
+  rect(GAME_WIDTH / 2 - RESTART_BUTTON_WIDTH / 2, GAME_HEIGHT / 2 + 180, RESTART_BUTTON_WIDTH, RESTART_BUTTON_HEIGHT, 10); // Z 150 na 180
+  fill(255);
+  textSize(30);
+  textAlign(CENTER, CENTER); // Ustawienie wyśrodkowania
+  text("RELAUNCH", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 180 + RESTART_BUTTON_HEIGHT / 2); // Wyśrodkowany w przycisku
 
-    fill(93, 208, 207);
-    rect(GAME_WIDTH / 2 - RESTART_BUTTON_WIDTH / 2, GAME_HEIGHT / 2 + 210, RESTART_BUTTON_WIDTH, RESTART_BUTTON_HEIGHT, 10);
-    fill(255);
-    textSize(20);
-    text("SHARE SCORE", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 235);
+  // Przycisk Share Score
+  fill(93, 208, 207);
+  rect(GAME_WIDTH / 2 - RESTART_BUTTON_WIDTH / 2, GAME_HEIGHT / 2 + 260, RESTART_BUTTON_WIDTH, RESTART_BUTTON_HEIGHT, 10); // Z 210 na 260
+  fill(255);
+  textSize(20);
+  textAlign(CENTER, CENTER); // Ustawienie wyśrodkowania
+  text("SHARE SCORE", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 260 + RESTART_BUTTON_HEIGHT / 2);
 
   } else if (gameState === "win") {
     fill(seedColor.r, seedColor.g, seedColor.b);
@@ -1620,6 +1632,14 @@ function startGame() {
     mainnetChallengeScore = 0;
     mainnetBadgeEarned = false;
     musicSwitched = false; // Reset flagi przy nowej grze
+
+    // Resetowanie muzyki
+    if (soundInitialized) {
+      backgroundMusic2.stop(); // Zatrzymaj drugą muzykę, jeśli gra
+      backgroundMusic.stop();  // Zatrzymaj pierwszą muzykę
+      backgroundMusic.loop();  // Uruchom pierwszą muzykę od nowa
+      console.log("Music reset: backgroundMusic restarted");
+    }
   }
   gameState = "playing";
   if (!soundInitialized) {
@@ -1714,7 +1734,7 @@ function resumeGame() {
     supernovaTimer = savedGameState.supernovaTimer;
     orbitShiftTimer = savedGameState.orbitShiftTimer;
     lastPulse = savedGameState.lastPulse;
-    gameState = savedGameState.gameState;
+    gameState = savedGameState.gameState; // Przywraca np. "playing" lub "supernova"
     challengeActive = savedGameState.challengeActive;
     challengeTimer = savedGameState.challengeTimer;
     challengeClicks = savedGameState.challengeClicks;
@@ -1728,10 +1748,16 @@ function resumeGame() {
     mainnetBadgeEarned = savedGameState.mainnetBadgeEarned;
     mainnetChallengeTriggered = savedGameState.mainnetChallengeTriggered;
     gameStartTime = savedGameState.gameStartTime;
-    savedGameState = null;
-    if (soundInitialized) backgroundMusic.play();
+    savedGameState = null; // Czyści zapisany stan
+    if (soundInitialized) {
+      if (level >= 5 && musicSwitched) {
+        backgroundMusic2.play(); // Wznawia odpowiednią muzykę
+      } else {
+        backgroundMusic.play();
+      }
+    }
   } else {
-    startGame();
+    startGame(); // Nowa gra, jeśli brak zapisu
   }
 }
 
@@ -1743,7 +1769,7 @@ function mousePressed() {
 
   if (gameState === "howToPlay") {
     let buttonX = GAME_WIDTH / 2 - RESTART_BUTTON_WIDTH / 2;
-    let buttonY = GAME_HEIGHT - 140;
+    let buttonY = GAME_HEIGHT - 280;
     if (
       adjustedMouseX >= buttonX &&
       adjustedMouseX <= buttonX + RESTART_BUTTON_WIDTH &&
@@ -1751,14 +1777,15 @@ function mousePressed() {
       adjustedMouseY <= buttonY + RESTART_BUTTON_HEIGHT
     ) {
       if (savedGameState) {
-        resumeGame();
+        resumeGame(); // Wznawia zapauzowaną grę
       } else {
-        startGame();
+        startGame(); // Rozpoczyna nową grę, jeśli nie ma zapauzowanego stanu
       }
     }
 
+    // Przycisk Tutorial na GAME_HEIGHT - 200
     let tutorialButtonX = GAME_WIDTH / 2 - TUTORIAL_MENU_BUTTON_WIDTH / 2;
-    let tutorialButtonY = GAME_HEIGHT - 80;
+    let tutorialButtonY = GAME_HEIGHT - 200; // Nowa pozycja Y
     if (
       adjustedMouseX >= tutorialButtonX &&
       adjustedMouseX <= tutorialButtonX + TUTORIAL_MENU_BUTTON_WIDTH &&
@@ -1793,14 +1820,18 @@ function mousePressed() {
 
   } else if (gameState === "tutorial") {
     let buttonX = GAME_WIDTH / 2 - TUTORIAL_BUTTON_WIDTH / 2;
-    let buttonY = GAME_HEIGHT - 80;
+    let buttonY = GAME_HEIGHT - 190;
     if (
       adjustedMouseX >= buttonX &&
       adjustedMouseX <= buttonX + TUTORIAL_BUTTON_WIDTH &&
       adjustedMouseY >= buttonY &&
       adjustedMouseY <= buttonY + TUTORIAL_BUTTON_HEIGHT
     ) {
-      startGame();
+      if (savedGameState) {
+        resumeGame(); // Wznawia zapauzowaną grę
+      } else {
+        startGame(); // Rozpoczyna nową grę, jeśli nie ma zapauzowanego stanu
+      }
     }
 
     if (adjustedMouseX >= 10 && adjustedMouseX <= 110 && adjustedMouseY >= 10 && adjustedMouseY <= 50) {
@@ -1813,28 +1844,28 @@ function mousePressed() {
     }
   } else if (gameState === "gameOver") {
     let buttonX = GAME_WIDTH / 2 - RESTART_BUTTON_WIDTH / 2;
-    let buttonY = GAME_HEIGHT / 2 + 150;
+    let relaunchButtonY = GAME_HEIGHT / 2 + 180;
     if (
       adjustedMouseX >= buttonX &&
       adjustedMouseX <= buttonX + RESTART_BUTTON_WIDTH &&
-      adjustedMouseY >= buttonY &&
-      adjustedMouseY <= buttonY + RESTART_BUTTON_HEIGHT
+      adjustedMouseY >= relaunchButtonY &&
+      adjustedMouseY <= relaunchButtonY + RESTART_BUTTON_HEIGHT
     ) {
       startGame();
     }
-    buttonY = GAME_HEIGHT / 2 + 210;
+    let shareScoreButtonY = GAME_HEIGHT / 2 + 260;
     if (
       adjustedMouseX >= buttonX &&
       adjustedMouseX <= buttonX + RESTART_BUTTON_WIDTH &&
-      adjustedMouseY >= buttonY &&
-      adjustedMouseY <= buttonY + RESTART_BUTTON_HEIGHT
+      adjustedMouseY >= shareScoreButtonY &&
+      adjustedMouseY <= shareScoreButtonY + RESTART_BUTTON_HEIGHT
     ) {
       let shareText = `I synced ${score.toFixed(1)} points in Superseed Cosmic Network! #SuperseedGrok3`;
       navigator.clipboard.writeText(shareText);
       alert("Score copied to clipboard: " + shareText);
     }
     if (mainnetBadgeEarned) {
-      let badgeButtonY = GAME_HEIGHT / 2 + 270;
+      let badgeButtonY = GAME_HEIGHT / 2 + 340; // Poprawiono z 270 na 340
       if (
         adjustedMouseX >= buttonX &&
         adjustedMouseX <= buttonX + RESTART_BUTTON_WIDTH &&
