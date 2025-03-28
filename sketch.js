@@ -770,279 +770,427 @@ else if (introState === 2) {
 
 
   if (gameState === "howToPlay") {
-     // Odtwarzaj introMusic w stanie "howToPlay", jeśli nie gra
-     if (soundInitialized && !introMusic.isPlaying()) {
-      introMusic.loop();
-    }
-    fill(255);
+    // Gradient tła (Tangaroa do Superseed Light Green)
+    let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    gradient.addColorStop(0, "#0E273B");
+    gradient.addColorStop(1, "#93D0CF");
+    drawingContext.fillStyle = gradient;
+    rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+  
+    // Pulsujące logo na górze
+    let logoScale = 1 + sin(millis() * 0.003) * 0.1;
+    image(whiteLogo, GAME_WIDTH / 2 - 100, 50, 200 * logoScale, 100 * logoScale);
+  
+    // Tekst powitalny
+    fill(249, 249, 242); // White (#F9F9F2)
     textSize(40);
     textStyle(BOLD);
-    text("Superseed Cosmic Network", GAME_WIDTH / 2, 50);
-
-    let sectionY = 100;
-    textSize(22);
-    textStyle(BOLD);
-    text("Choose Your Seed Color", GAME_WIDTH / 2, sectionY);
+    text("Superseed Cosmic Network", GAME_WIDTH / 2, 150);
+  
+    // Choose Your Seed Color
+    fill(249, 249, 242); // White (#F9F9F2)
+    textSize(20);
+    text("Choose Your Seed Color", GAME_WIDTH / 2, 220);
     let colorBoxSize = 50;
-    let colorBoxSpacing = 40;
-    let totalWidth = (colorBoxSize * 3) + (colorBoxSpacing * 2);
-    let startX = (GAME_WIDTH - totalWidth) / 2;
+    let colorBoxSpacing = 20;
+    let startX = GAME_WIDTH / 2 - (colorBoxSize * 3 + colorBoxSpacing * 2) / 2;
+    // Zielony
     fill(0, 255, 0);
-    rect(startX, sectionY + 20, colorBoxSize, colorBoxSize);
+    rect(startX, 250, colorBoxSize, colorBoxSize);
+    // Niebieski
     fill(0, 0, 255);
-    rect(startX + colorBoxSize + colorBoxSpacing, sectionY + 20, colorBoxSize, colorBoxSize);
+    rect(startX + colorBoxSize + colorBoxSpacing, 250, colorBoxSize, colorBoxSize);
+    // Złoty
     fill(255, 215, 0);
-    rect(startX + (colorBoxSize + colorBoxSpacing) * 2, sectionY + 20, colorBoxSize, colorBoxSize);
-    stroke(255, 255, 255, 50);
-    strokeWeight(1);
-    line(50, sectionY + 70, GAME_WIDTH - 50, sectionY + 70);
-    noStroke();
-
-    sectionY += 100;
-    textSize(22);
-    textStyle(BOLD);
-    text("Enter Your Nick", GAME_WIDTH / 2, sectionY);
-    let nickWidth = 200;
-    let nickHeight = 30;
-    let nickX = GAME_WIDTH / 2 - nickWidth / 2;
-    let nickY = sectionY + 10;
-    if (isTypingNick) {
-      fill(93, 208, 207, 100);
-      stroke(255, 255, 255, 200);
-      strokeWeight(2);
-    } else {
-      fill(255, 255, 255, 50);
-      stroke(255, 255, 255, 100);
-      strokeWeight(1);
+    rect(startX + (colorBoxSize + colorBoxSpacing) * 2, 250, colorBoxSize, colorBoxSize);
+    // Ramka dla wybranego koloru
+    stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
+    strokeWeight(2);
+    noFill();
+    if (seedColor.r === 0 && seedColor.g === 255 && seedColor.b === 0) {
+      rect(startX, 250, colorBoxSize, colorBoxSize);
+    } else if (seedColor.r === 0 && seedColor.g === 0 && seedColor.b === 255) {
+      rect(startX + colorBoxSize + colorBoxSpacing, 250, colorBoxSize, colorBoxSize);
+    } else if (seedColor.r === 255 && seedColor.g === 215 && seedColor.b === 0) {
+      rect(startX + (colorBoxSize + colorBoxSpacing) * 2, 250, colorBoxSize, colorBoxSize);
     }
-    rect(nickX, nickY, nickWidth, nickHeight, 5);
-    fill(255);
+    noStroke();
+  
+    // Enter Your Nick
+    fill(249, 249, 242); // White (#F9F9F2)
+    textSize(20);
+    text("Enter Your Nick", GAME_WIDTH / 2, 340);
+    fill(128, 131, 134, 127); // Aluminium (#808386, 50% opacity)
+    stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
+    strokeWeight(2);
+    rect(GAME_WIDTH / 2 - 100, 360, 200, 40, 5);
+    fill(249, 249, 242); // White (#F9F9F2)
     textSize(16);
     textAlign(CENTER, CENTER);
     if (isTypingNick) {
       let cursor = (floor(millis() / 500) % 2 === 0) ? "|" : "";
-      text(playerNick + cursor, GAME_WIDTH / 2, nickY + nickHeight / 2);
+      text(playerNick + cursor, GAME_WIDTH / 2, 380);
     } else {
-      text(playerNick || "Click to type", GAME_WIDTH / 2, nickY + nickHeight / 2);
+      text(playerNick || "Click to type", GAME_WIDTH / 2, 380);
     }
     noStroke();
-
-    stroke(255, 255, 255, 50);
-    strokeWeight(1);
-    line(50, sectionY + 70, GAME_WIDTH - 50, sectionY + 70);
-    noStroke();
-
-    sectionY += 100;
-    textSize(22);
-    textStyle(BOLD);
-    text("Scoring", GAME_WIDTH / 2, sectionY);
-    textSize(16);
-    textStyle(NORMAL);
-    text("Sync the Cosmic Seed when it pulses green!\nStart is easy – sync nodes slowly on Orbit 1 & 2!", GAME_WIDTH / 2, sectionY + 25);
-    stroke(255, 255, 255, 50);
-    strokeWeight(1);
-    line(50, sectionY + 70, GAME_WIDTH - 50, sectionY + 70);
-    noStroke();
-
-    sectionY += 100;
-    textSize(22);
-    textStyle(BOLD);
-    text("Combos", GAME_WIDTH / 2, sectionY);
-    textSize(16);
-    textStyle(NORMAL);
-    text("Chain syncs for multipliers (x1, x2, ...). 15+ gives +1 life.", GAME_WIDTH / 2, sectionY + 25);
-    stroke(255, 255, 255, 50);
-    strokeWeight(1);
-    line(50, sectionY + 70, GAME_WIDTH - 50, sectionY + 70);
-    noStroke();
-
-    sectionY += 100;
-textSize(22);
-textStyle(BOLD);
-text("Power-Ups (click to activate)", GAME_WIDTH / 2, sectionY);
-textSize(11);
-textStyle(NORMAL);
-stroke(255, 255, 255, 100);
-strokeWeight(1);
-noFill();
-for (let row = 0; row < 4; row++) {
-  for (let col = 0; col < 2; col++) {
-    let x = TABLE_START_X + col * TABLE_CELL_WIDTH;
-    let y = sectionY + 35 + row * TABLE_CELL_HEIGHT;
-    rect(x, y, TABLE_CELL_WIDTH, TABLE_CELL_HEIGHT);
-  }
-}
-noStroke();
-
-// 1. Life - Pulsująca gwiazda życia
-let x = TABLE_START_X + 50;
-let y = sectionY + 35 + TABLE_CELL_HEIGHT / 2;
-push(); // Izolacja stanu
-translate(x, y);
-// Uproszczony gradient lub fallback na jednolity kolor
-fill(0, 255, 0, 200); // Zielony z przezroczystością jako baza
-let pulseSize = SYMBOL_SIZE / 2 + sin(millis() * 0.005) * 3;
-star(0, 0, SYMBOL_SIZE / 4, pulseSize, 8); // Gwiazdka z pulsacją
-// Opcjonalny gradient, jeśli działa
-let gradient = drawingContext.createRadialGradient(0, 0, 0, 0, 0, SYMBOL_SIZE / 2);
-gradient.addColorStop(0, "rgb(255, 255, 255)");
-gradient.addColorStop(1, "rgb(0, 255, 0)");
-drawingContext.fillStyle = gradient;
-star(0, 0, SYMBOL_SIZE / 4, pulseSize, 8); // Drugie wywołanie z gradientem
-pop();
-fill(0, 255, 0);
-textAlign(LEFT, CENTER);
-text("+1 Life", TABLE_START_X + 100, y);
-
-// 2. Gas Nebula - Wir mgławicy
-x = TABLE_START_X + TABLE_CELL_WIDTH + 50;
-noFill();
-stroke(0, 191, 255, 200);
-strokeWeight(2);
-for (let i = 0; i < 4; i++) {
-  arc(x, y, SYMBOL_SIZE * (i + 1) / 4, SYMBOL_SIZE * (i + 1) / 4, 0, PI + i * HALF_PI);
-}
-noStroke();
-fill(93, 208, 207, 100);
-ellipse(x, y, SYMBOL_SIZE * 1.2);
-fill(0, 255, 0);
-text("Gas Nebula: x2 Points (3s)", TABLE_START_X + TABLE_CELL_WIDTH + 100, y);
-
-// 3. Pulse Wave - Fala energetyczna
-x = TABLE_START_X + 50;
-y = sectionY + 35 + TABLE_CELL_HEIGHT + TABLE_CELL_HEIGHT / 2;
-noFill();
-let pulse = (millis() % 1000) / 1000;
-stroke(147, 208, 207, 200);
-strokeWeight(1);
-ellipse(x, y, SYMBOL_SIZE * pulse);
-stroke(255, 255, 255, 150);
-ellipse(x, y, SYMBOL_SIZE * (pulse + 0.5));
-noStroke();
-fill(0, 255, 0);
-text("Pulse Wave: Boost Pulse (3s)", TABLE_START_X + 100, y);
-
-// 4. Orbit Shield - Sferyczna bariera
-x = TABLE_START_X + TABLE_CELL_WIDTH + 50;
-fill(255, 215, 0, 150);
-ellipse(x, y, SYMBOL_SIZE);
-stroke(255, 255, 255, 200);
-strokeWeight(1);
-for (let i = -1; i <= 1; i++) {
-  line(x + i * 10, y - SYMBOL_SIZE / 2, x + i * 10, y + SYMBOL_SIZE / 2);
-  line(x - SYMBOL_SIZE / 2, y + i * 10, x + SYMBOL_SIZE / 2, y + i * 10);
-}
-noStroke();
-fill(0, 255, 0);
-text("Orbit Shield: Blocks Damage (3s) [Lv3+]", TABLE_START_X + TABLE_CELL_WIDTH + 100, y);
-
-// 5. Freeze Nova - Kryształ lodu
-x = TABLE_START_X + 50;
-y = sectionY + 35 + TABLE_CELL_HEIGHT * 2 + TABLE_CELL_HEIGHT / 2;
-fill(0, 255, 255, 200 + sin(millis() * 0.01) * 55);
-star(x, y, SYMBOL_SIZE / 2, SYMBOL_SIZE, 6);
-fill(0, 255, 0);
-text("Freeze Nova: Freezes Pulse (3s) [Lv3+]", TABLE_START_X + 100, y);
-
-// 6. Meteor Strike - Płonący meteor
-x = TABLE_START_X + TABLE_CELL_WIDTH + 50;
-fill(255, 100, 0, 200);
-ellipse(x, y, SYMBOL_SIZE);
-fill(255, 0, 0, 150);
-let tailLength = 15 + sin(millis() * 0.01) * 5;
-triangle(x, y - SYMBOL_SIZE / 2, x - tailLength, y - SYMBOL_SIZE, x + tailLength, y - SYMBOL_SIZE);
-fill(0, 255, 0);
-text("Meteor Strike: More Traps, x2 (3s) [Lv5+]", TABLE_START_X + TABLE_CELL_WIDTH + 100, y);
-
-// 7. Star Seed - Kosmiczne ziarno
-x = TABLE_START_X + 50;
-y = sectionY + 35 + TABLE_CELL_HEIGHT * 3 + TABLE_CELL_HEIGHT / 2;
-fill(147, 208, 207, 200);
-ellipse(x, y, SYMBOL_SIZE, SYMBOL_SIZE * 0.7);
-stroke(255, 255, 255, 150);
-strokeWeight(1);
-pulse = (millis() % 1000) / 1000;
-for (let i = 0; i < 8; i++) {
-  let a = TWO_PI / 8 * i;
-  line(x + cos(a) * SYMBOL_SIZE / 2, y + sin(a) * SYMBOL_SIZE / 2, 
-       x + cos(a) * (SYMBOL_SIZE / 2 + pulse * 5), y + sin(a) * (SYMBOL_SIZE / 2 + pulse * 5));
-}
-noStroke();
-fill(0, 255, 0);
-text("Star Seed: Bigger Seed (3s) [Lv5+]", TABLE_START_X + 100, y);
-
-// 8. Mainnet Wave - Impuls sieciowy
-x = TABLE_START_X + TABLE_CELL_WIDTH + 50;
-gradient = drawingContext.createLinearGradient(x - SYMBOL_SIZE / 2, y, x + SYMBOL_SIZE / 2, y);
-gradient.addColorStop(0, "rgb(93, 208, 207)");
-gradient.addColorStop(1, "rgb(255, 215, 0)");
-drawingContext.fillStyle = gradient;
-beginShape();
-for (let i = 0; i < 6; i++) {
-  let a = TWO_PI / 6 * i;
-  vertex(x + cos(a) * SYMBOL_SIZE / 2, y + sin(a) * SYMBOL_SIZE / 2);
-}
-endShape(CLOSE);
-noFill();
-stroke(255, 215, 0, 150);
-strokeWeight(1);
-ellipse(x, y, SYMBOL_SIZE + sin(millis() * 0.005) * 5);
-noStroke();
-fill(0, 255, 0);
-text("Mainnet Wave: Clears Traps [Lv7+]", TABLE_START_X + TABLE_CELL_WIDTH + 100, y);
-
-    stroke(255, 255, 255, 50);
-    strokeWeight(1);
-    line(50, sectionY + 35 + TABLE_CELL_HEIGHT * 4 + 25, GAME_WIDTH - 50, sectionY + 35 + TABLE_CELL_HEIGHT * 4 + 25);
-    noStroke();
-
-    sectionY += 100 + TABLE_CELL_HEIGHT * 4;
-    textSize(22);
-    textStyle(BOLD);
-    text("Traps", GAME_WIDTH / 2, sectionY);
-
-    let trapsContentY = sectionY + 35;
-    stroke(255, 255, 255, 100);
-    strokeWeight(1);
-    noFill();
-    rect(GAME_WIDTH / 2 - 275, trapsContentY - 22, 550, 60);
-    noStroke();
-
-    textSize(17);
-    textStyle(NORMAL);
-    fill(255, 0, 0, 200);
-    ellipse(GAME_WIDTH / 2 - 150, trapsContentY + 5, SYMBOL_SIZE);
-    stroke(255, 100);
+  
+    // Start Button
+    gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 420, GAME_WIDTH / 2 + 100, 420);
+    gradient.addColorStop(0, "#93D0CF");
+    gradient.addColorStop(1, "#FFD700");
+    drawingContext.fillStyle = gradient;
+    stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
     strokeWeight(2);
-    line(GAME_WIDTH / 2 - 150 - SYMBOL_SIZE / 2, trapsContentY + 5 - SYMBOL_SIZE / 2, 
-         GAME_WIDTH / 2 - 150 + SYMBOL_SIZE / 2, trapsContentY + 5 + SYMBOL_SIZE / 2);
+    rect(GAME_WIDTH / 2 - 100, 420, 200, 50, 10);
     noStroke();
-    fill(255, 0, 0);
-    text("Avoid Meteor Strikes - 5 misses = -1 life", GAME_WIDTH / 2 - 60, trapsContentY + 5);
+    fill(14, 39, 59); // Tangaroa (#0E273B)
+    textSize(24);
+    text("START", GAME_WIDTH / 2, 445);
+  
+    // Login Button
+    gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 480, GAME_WIDTH / 2 + 100, 480);
+    gradient.addColorStop(0, "#0E273B");
+    gradient.addColorStop(1, "#808386");
+    drawingContext.fillStyle = gradient;
+    stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
+    strokeWeight(2);
+    rect(GAME_WIDTH / 2 - 100, 480, 200, 50, 10);
+    noStroke();
+    fill(249, 249, 242); // White (#F9F9F2)
+    textSize(24);
+    text("LOGIN", GAME_WIDTH / 2, 505);
+  
+    // INFO Button
+    gradient = drawingContext.createLinearGradient(GAME_WIDTH - 160, 200, GAME_WIDTH - 60, 200);
+    gradient.addColorStop(0, "#93D0CF");
+    gradient.addColorStop(1, "#FFD700");
+    drawingContext.fillStyle = gradient;
+    stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
+    strokeWeight(2);
+    rect(GAME_WIDTH - 160, 200, 100, 40, 10);
+    noStroke();
+    fill(14, 39, 59); // Tangaroa (#0E273B)
+    textSize(18);
+    text("INFO", GAME_WIDTH - 110, 220);
+  
+    // Tutorial Button
+    gradient = drawingContext.createLinearGradient(GAME_WIDTH - 160, 250, GAME_WIDTH - 60, 250);
+    gradient.addColorStop(0, "#93D0CF");
+    gradient.addColorStop(1, "#FFD700");
+    drawingContext.fillStyle = gradient;
+    stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
+    strokeWeight(2);
+    rect(GAME_WIDTH - 160, 250, 100, 40, 10);
+    noStroke();
+    fill(14, 39, 59); // Tangaroa (#0E273B)
+    textSize(18);
+    text("TUTORIAL", GAME_WIDTH - 110, 270);
+  
+    // View Intro Button
+    gradient = drawingContext.createLinearGradient(GAME_WIDTH - 160, 300, GAME_WIDTH - 60, 300);
+    gradient.addColorStop(0, "#93D0CF");
+    gradient.addColorStop(1, "#FFD700");
+    drawingContext.fillStyle = gradient;
+    stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
+    strokeWeight(2);
+    rect(GAME_WIDTH - 160, 300, 100, 40, 10);
+    noStroke();
+    fill(14, 39, 59); // Tangaroa (#0E273B)
+    textSize(18);
+    text("VIEW INTRO", GAME_WIDTH - 110, 320);
+  
+    textAlign(CENTER, BASELINE); // Reset wyrównania tekstu
 
-    fill(93, 208, 207);
-  rect(GAME_WIDTH / 2 - RESTART_BUTTON_WIDTH / 2, GAME_HEIGHT - 280, RESTART_BUTTON_WIDTH, RESTART_BUTTON_HEIGHT, 10);
-  fill(255);
-  textSize(28);
+    
+} 
+
+else if (gameState === "info") {
+  // Gradient tła (Tangaroa do Superseed Light Green)
+  let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
+  gradient.addColorStop(0, "#0E273B");
+  gradient.addColorStop(1, "#93D0CF");
+  drawingContext.fillStyle = gradient;
+  rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+  // Gwiazdki w tle
+  for (let i = bgParticles.length - 1; i >= 0; i--) {
+    bgParticles[i].update();
+    bgParticles[i].show(0);
+  }
+
+  // Nagłówek
+  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 150, 30, GAME_WIDTH / 2 + 150, 30);
+  gradient.addColorStop(0, "#93D0CF");
+  gradient.addColorStop(1, "#FFD700");
+  drawingContext.fillStyle = gradient;
+  textSize(48);
+  textStyle(BOLD);
   textAlign(CENTER, CENTER);
-  text(savedGameState ? "RESUME" : "START", GAME_WIDTH / 2, GAME_HEIGHT - 280 + RESTART_BUTTON_HEIGHT / 2);
+  text("Game Info", GAME_WIDTH / 2, 60);
 
-  fill(93, 208, 207);
-  rect(GAME_WIDTH / 2 - TUTORIAL_MENU_BUTTON_WIDTH / 2, GAME_HEIGHT - 200, TUTORIAL_MENU_BUTTON_WIDTH, TUTORIAL_MENU_BUTTON_HEIGHT, 10);
-  fill(255);
+  // Sekcja Scoring
+  fill(14, 39, 59, 230); // Tangaroa (#0E273B, 90% opacity)
+  stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
+  strokeWeight(3);
+  rect(100, 100, GAME_WIDTH - 200, 140, 20);
+  // Gradientowy nagłówek sekcji
+  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 130, GAME_WIDTH / 2 + 100, 130);
+  gradient.addColorStop(0, "#93D0CF");
+  gradient.addColorStop(1, "#FFD700");
+  drawingContext.fillStyle = gradient;
   textSize(24);
-  text("TUTORIAL", GAME_WIDTH / 2, GAME_HEIGHT - 200 + TUTORIAL_MENU_BUTTON_HEIGHT / 2);
+  textStyle(BOLD);
+  text("Scoring", GAME_WIDTH / 2, 140);
+  fill(249, 249, 242); // White (#F9F9F2)
+  textSize(18);
+  textStyle(NORMAL);
+  text("Sync the Cosmic Seed when it pulses green!\nStart is easy – sync nodes slowly on Orbit 1 & 2!", GAME_WIDTH / 2, 190);
+  noStroke();
 
+  // Separator
+  stroke(147, 208, 207, 150); // Superseed Light Green (#93D0CF, 60% opacity)
+  strokeWeight(1);
+  line(150, 250, GAME_WIDTH - 150, 250);
+  noStroke();
 
-  // Nowy przycisk VIEW INTRO
-  fill(93, 208, 207);
-  rect(GAME_WIDTH / 2 - TUTORIAL_MENU_BUTTON_WIDTH / 2, GAME_HEIGHT - 120, TUTORIAL_MENU_BUTTON_WIDTH, TUTORIAL_MENU_BUTTON_HEIGHT, 10);
-  fill(255);
+  // Sekcja Combos
+  fill(14, 39, 59, 230); // Tangaroa (#0E273B, 90% opacity)
+  stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
+  strokeWeight(3);
+  rect(100, 260, GAME_WIDTH - 200, 140, 20);
+  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 290, GAME_WIDTH / 2 + 100, 290);
+  gradient.addColorStop(0, "#93D0CF");
+  gradient.addColorStop(1, "#FFD700");
+  drawingContext.fillStyle = gradient;
   textSize(24);
-  text("VIEW INTRO", GAME_WIDTH / 2, GAME_HEIGHT - 120 + TUTORIAL_MENU_BUTTON_HEIGHT / 2);
+  textStyle(BOLD);
+  text("Combos", GAME_WIDTH / 2, 300);
+  fill(249, 249, 242); // White (#F9F9F2)
+  textSize(18);
+  textStyle(NORMAL);
+  text("Chain syncs for multipliers (x1, x2, ...).\n15+ syncs grants +1 life.", GAME_WIDTH / 2, 350);
+  noStroke();
 
-    textAlign(CENTER, BASELINE);
-  } else if (gameState === "tutorial") {
+  // Separator
+  stroke(147, 208, 207, 150); // Superseed Light Green (#93D0CF, 60% opacity)
+  strokeWeight(1);
+  line(150, 410, GAME_WIDTH - 150, 410);
+  noStroke();
+
+  // Sekcja Power-Ups (2 kolumny)
+  fill(14, 39, 59, 230); // Tangaroa (#0E273B, 90% opacity)
+  stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
+  strokeWeight(3);
+  rect(100, 420, GAME_WIDTH - 200, 460, 20);
+  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 200, 450, GAME_WIDTH / 2 + 200, 450);
+  gradient.addColorStop(0, "#93D0CF");
+  gradient.addColorStop(1, "#FFD700");
+  drawingContext.fillStyle = gradient;
+  textSize(24);
+  textStyle(BOLD);
+  text("Power-Ups (click to activate)", GAME_WIDTH / 2, 460);
+  textSize(16);
+  textStyle(NORMAL);
+  textAlign(LEFT, CENTER);
+
+  // Sprawdzanie pozycji myszy dla efektu hover
+  let mx = mouseX - (width - GAME_WIDTH) / 2;
+  let my = mouseY - (height - GAME_HEIGHT) / 2;
+
+  // Kolumna 1 (lewa)
+  // 1. Life
+  push();
+  translate(150, 510);
+  let gradientLife = drawingContext.createRadialGradient(0, 0, 0, 0, 0, 30);
+  gradientLife.addColorStop(0, "rgb(255, 255, 255)");
+  gradientLife.addColorStop(1, "rgb(0, 255, 0)");
+  drawingContext.fillStyle = gradientLife;
+  star(0, 0, 20, 30 + sin(millis() * 0.005) * 5, 8);
+  pop();
+  if (mx >= 150 && mx <= 200 && my >= 490 && my <= 530) {
+    noFill();
+    stroke(255, 215, 0, 200); // Złoty hover
+    strokeWeight(2);
+    ellipse(150, 510, 60);
+    noStroke();
+  }
+  fill(249, 249, 242);
+  text("1. +1 Life", 210, 510);
+  // 2. Gas Nebula
+  noFill();
+  stroke(0, 191, 255, 200);
+  strokeWeight(3);
+  for (let i = 0; i < 4; i++) {
+    arc(150, 580, 30 * (i + 1) / 4, 30 * (i + 1) / 4, 0, PI + i * HALF_PI);
+  }
+  noStroke();
+  if (mx >= 150 && mx <= 200 && my >= 560 && my <= 600) {
+    noFill();
+    stroke(255, 215, 0, 200);
+    strokeWeight(2);
+    ellipse(150, 580, 60);
+    noStroke();
+  }
+  fill(249, 249, 242);
+  text("2. Gas Nebula: x2 Points (3s)", 210, 580);
+  // 3. Pulse Wave
+  noFill();
+  let pulse = (millis() % 1000) / 1000;
+  stroke(147, 208, 207, 200);
+  strokeWeight(3);
+  ellipse(150, 650, 50 * pulse);
+  noStroke();
+  if (mx >= 150 && mx <= 200 && my >= 630 && my <= 670) {
+    noFill();
+    stroke(255, 215, 0, 200);
+    strokeWeight(2);
+    ellipse(150, 650, 60);
+    noStroke();
+  }
+  fill(249, 249, 242);
+  text("3. Pulse Wave: Boost Pulse (3s)", 210, 650);
+  // 4. Orbit Shield
+  fill(255, 215, 0, 150);
+  ellipse(150, 720, 50);
+  stroke(255, 255, 255, 200);
+  strokeWeight(2);
+  for (let i = -1; i <= 1; i++) {
+    line(150 + i * 20, 695, 150 + i * 20, 745);
+  }
+  noStroke();
+  if (mx >= 150 && mx <= 200 && my >= 700 && my <= 740) {
+    noFill();
+    stroke(255, 215, 0, 200);
+    strokeWeight(2);
+    ellipse(150, 720, 60);
+    noStroke();
+  }
+  fill(249, 249, 242);
+  text("4. Orbit Shield: Blocks Damage (3s) [Lv3+]", 210, 720);
+
+  // Kolumna 2 (prawa)
+  // 5. Freeze Nova
+  fill(0, 255, 255, 200 + sin(millis() * 0.01) * 55);
+  star(GAME_WIDTH / 2 + 50, 510, 25, 35, 6);
+  if (mx >= GAME_WIDTH / 2 + 50 && mx <= GAME_WIDTH / 2 + 100 && my >= 490 && my <= 530) {
+    noFill();
+    stroke(255, 215, 0, 200);
+    strokeWeight(2);
+    ellipse(GAME_WIDTH / 2 + 50, 510, 60);
+    noStroke();
+  }
+  fill(249, 249, 242);
+  text("5. Freeze Nova: Freezes Pulse (3s) [Lv3+]", GAME_WIDTH / 2 + 110, 510);
+  // 6. Meteor Strike
+  fill(255, 100, 0, 200);
+  ellipse(GAME_WIDTH / 2 + 50, 580, 50);
+  fill(255, 0, 0, 150);
+  let tailLength = 25 + sin(millis() * 0.01) * 5;
+  triangle(GAME_WIDTH / 2 + 50, 555, GAME_WIDTH / 2 + 50 - tailLength, 545, GAME_WIDTH / 2 + 50 + tailLength, 545);
+  if (mx >= GAME_WIDTH / 2 + 50 && mx <= GAME_WIDTH / 2 + 100 && my >= 560 && my <= 600) {
+    noFill();
+    stroke(255, 215, 0, 200);
+    strokeWeight(2);
+    ellipse(GAME_WIDTH / 2 + 50, 580, 60);
+    noStroke();
+  }
+  fill(249, 249, 242);
+  text("6. Meteor Strike: More Traps, x2 (3s) [Lv5+]", GAME_WIDTH / 2 + 110, 580);
+  // 7. Star Seed
+  fill(147, 208, 207, 200);
+  ellipse(GAME_WIDTH / 2 + 50, 650, 50, 30);
+  stroke(255, 255, 255, 150);
+  strokeWeight(2);
+  pulse = (millis() % 1000) / 1000;
+  for (let i = 0; i < 8; i++) {
+    let a = TWO_PI / 8 * i;
+    line(GAME_WIDTH / 2 + 50 + cos(a) * 25, 650 + sin(a) * 15, 
+         GAME_WIDTH / 2 + 50 + cos(a) * (25 + pulse * 5), 650 + sin(a) * (15 + pulse * 5));
+  }
+  noStroke();
+  if (mx >= GAME_WIDTH / 2 + 50 && mx <= GAME_WIDTH / 2 + 100 && my >= 630 && my <= 670) {
+    noFill();
+    stroke(255, 215, 0, 200);
+    strokeWeight(2);
+    ellipse(GAME_WIDTH / 2 + 50, 650, 60);
+    noStroke();
+  }
+  fill(249, 249, 242);
+  text("7. Star Seed: Bigger Seed (3s) [Lv5+]", GAME_WIDTH / 2 + 110, 650);
+  // 8. Mainnet Wave
+  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 + 35, 720, GAME_WIDTH / 2 + 65, 720);
+  gradient.addColorStop(0, "#93D0CF");
+  gradient.addColorStop(1, "#FFD700");
+  drawingContext.fillStyle = gradient;
+  beginShape();
+  for (let i = 0; i < 6; i++) {
+    let a = TWO_PI / 6 * i;
+    vertex(GAME_WIDTH / 2 + 50 + cos(a) * 25, 720 + sin(a) * 25);
+  }
+  endShape(CLOSE);
+  noFill();
+  stroke(255, 215, 0, 150);
+  strokeWeight(2);
+  ellipse(GAME_WIDTH / 2 + 50, 720, 60 + sin(millis() * 0.005) * 5);
+  noStroke();
+  if (mx >= GAME_WIDTH / 2 + 50 && mx <= GAME_WIDTH / 2 + 100 && my >= 700 && my <= 740) {
+    noFill();
+    stroke(255, 215, 0, 200);
+    strokeWeight(2);
+    ellipse(GAME_WIDTH / 2 + 50, 720, 60);
+    noStroke();
+  }
+  fill(249, 249, 242);
+  text("8. Mainnet Wave: Clears Traps [Lv7+]", GAME_WIDTH / 2 + 110, 720);
+
+  // Separator
+  stroke(147, 208, 207, 150); // Superseed Light Green (#93D0CF, 60% opacity)
+  strokeWeight(1);
+  line(150, 890, GAME_WIDTH - 150, 890);
+  noStroke();
+
+  // Sekcja Traps
+  fill(14, 39, 59, 230); // Tangaroa (#0E273B, 90% opacity)
+  stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
+  strokeWeight(3);
+  rect(100, 900, GAME_WIDTH - 200, 140, 20);
+  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 930, GAME_WIDTH / 2 + 100, 930);
+  gradient.addColorStop(0, "#93D0CF");
+  gradient.addColorStop(1, "#FFD700");
+  drawingContext.fillStyle = gradient;
+  textSize(24);
+  textStyle(BOLD);
+  text("Traps", GAME_WIDTH / 2, 940);
+  textSize(18);
+  textStyle(NORMAL);
+  textAlign(CENTER, CENTER);
+  fill(255, 0, 0, 200);
+  ellipse(150, 990, 40);
+  stroke(255, 100);
+  strokeWeight(3);
+  line(135, 975, 165, 1005);
+  noStroke();
+  fill(249, 249, 242);
+  text("Avoid Meteor Strikes - 5 misses = -1 life", GAME_WIDTH / 2, 990);
+
+  // Przycisk BACK z efektem pulsowania
+  gradient = drawingContext.createLinearGradient(20, 20, 120, 20);
+  gradient.addColorStop(0, "#93D0CF");
+  gradient.addColorStop(1, "#FFD700");
+  drawingContext.fillStyle = gradient;
+  stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
+  strokeWeight(3 + sin(millis() * 0.005) * 1); // Pulsowanie obramowania
+  rect(20, 20, 100, 40, 10);
+  noStroke();
+  fill(14, 39, 59); // Tangaroa (#0E273B)
+  textSize(20);
+  text("BACK", 70, 40);
+
+  textAlign(CENTER, BASELINE); // Reset wyrównania
+}
+
+  else if (gameState === "tutorial") {
     // Gradient Background with Dynamic Pulse Effect
     let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
     gradient.addColorStop(0, "#0E273B"); // Tangaroa
@@ -2163,69 +2311,91 @@ function resumeGame() {
 }
 
 function mousePressed() {
-  let offsetX = (width - GAME_WIDTH) / 2;
-  let offsetY = (height - GAME_HEIGHT) / 2;
-  let adjustedMouseX = mouseX - offsetX;
-  let adjustedMouseY = mouseY - offsetY;
-
-  if (gameState === "preIntro") {
-    gameState = "intro";
-    introTimer = millis();
-    if (!soundInitialized) {
-      introMusic.loop();
-      soundInitialized = true;
-    }
-    return;
-  }
+  let adjustedMouseX = mouseX - (width - GAME_WIDTH) / 2;
+  let adjustedMouseY = mouseY - (height - GAME_HEIGHT) / 2;
 
   if (gameState === "howToPlay") {
-    // Przycisk START/RESUME
-    let buttonX = GAME_WIDTH / 2 - RESTART_BUTTON_WIDTH / 2;
-    let buttonY = GAME_HEIGHT - 280;
-    if (
-      adjustedMouseX >= buttonX &&
-      adjustedMouseX <= buttonX + RESTART_BUTTON_WIDTH &&
-      adjustedMouseY >= buttonY &&
-      adjustedMouseY <= buttonY + RESTART_BUTTON_HEIGHT
-    ) {
+    let offsetX = (width - GAME_WIDTH) / 2;
+    let offsetY = (height - GAME_HEIGHT) / 2;
+    let adjustedMouseX = mouseX - offsetX;
+    let adjustedMouseY = mouseY - offsetY;
+
+    // Choose Your Seed Color
+    let colorBoxSize = 50;
+    let colorBoxSpacing = 20;
+    let startX = GAME_WIDTH / 2 - (colorBoxSize * 3 + colorBoxSpacing * 2) / 2;
+    if (adjustedMouseY >= 250 && adjustedMouseY <= 250 + colorBoxSize) {
+      if (adjustedMouseX >= startX && adjustedMouseX <= startX + colorBoxSize) {
+        seedColor = { r: 0, g: 255, b: 0 }; // Zielony
+      } else if (adjustedMouseX >= startX + colorBoxSize + colorBoxSpacing &&
+                 adjustedMouseX <= startX + colorBoxSize * 2 + colorBoxSpacing) {
+        seedColor = { r: 0, g: 0, b: 255 }; // Niebieski
+      } else if (adjustedMouseX >= startX + (colorBoxSize + colorBoxSpacing) * 2 &&
+                 adjustedMouseX <= startX + (colorBoxSize + colorBoxSpacing) * 2 + colorBoxSize) {
+        seedColor = { r: 255, g: 215, b: 0 }; // Złoty
+      }
+    }
+
+    // Enter Your Nick
+    if (adjustedMouseY >= 360 && adjustedMouseY <= 400 &&
+        adjustedMouseX >= GAME_WIDTH / 2 - 100 && adjustedMouseX <= GAME_WIDTH / 2 + 100) {
+      isTypingNick = true;
+    } else {
+      isTypingNick = false;
+    }
+
+    // Start Button
+    if (adjustedMouseX >= GAME_WIDTH / 2 - 100 && adjustedMouseX <= GAME_WIDTH / 2 + 100 &&
+        adjustedMouseY >= 420 && adjustedMouseY <= 470) {
       if (savedGameState) resumeGame();
       else startGame();
     }
 
-    // Przycisk TUTORIAL
-    let tutorialButtonX = GAME_WIDTH / 2 - TUTORIAL_MENU_BUTTON_WIDTH / 2;
-    let tutorialButtonY = GAME_HEIGHT - 200;
-    if (
-      adjustedMouseX >= tutorialButtonX &&
-      adjustedMouseX <= tutorialButtonX + TUTORIAL_MENU_BUTTON_WIDTH &&
-      adjustedMouseY >= tutorialButtonY &&
-      adjustedMouseY <= tutorialButtonY + TUTORIAL_MENU_BUTTON_HEIGHT
-    ) {
+    // Login Button (wizualny placeholder)
+    if (adjustedMouseX >= GAME_WIDTH / 2 - 100 && adjustedMouseX <= GAME_WIDTH / 2 + 100 &&
+        adjustedMouseY >= 480 && adjustedMouseY <= 530) {
+      console.log("Login clicked - placeholder for blockchain integration");
+    }
+
+    // INFO Button
+    if (adjustedMouseX >= GAME_WIDTH - 160 && adjustedMouseX <= GAME_WIDTH - 60 &&
+        adjustedMouseY >= 200 && adjustedMouseY <= 240) {
+      gameState = "info";
+    }
+
+    // Tutorial Button
+    if (adjustedMouseX >= GAME_WIDTH - 160 && adjustedMouseX <= GAME_WIDTH - 60 &&
+        adjustedMouseY >= 250 && adjustedMouseY <= 290) {
       gameState = "tutorial";
     }
 
-    // Przycisk VIEW INTRO
-    if (gameState === "howToPlay") {
-      // ... (inne przyciski)
-      let introButtonX = GAME_WIDTH / 2 - TUTORIAL_MENU_BUTTON_WIDTH / 2;
-      let introButtonY = GAME_HEIGHT - 120;
-      if (
-        adjustedMouseX >= introButtonX &&
-        adjustedMouseX <= introButtonX + TUTORIAL_MENU_BUTTON_WIDTH &&
-        adjustedMouseY >= introButtonY &&
-        adjustedMouseY <= introButtonY + TUTORIAL_MENU_BUTTON_HEIGHT
-      ) {
-        gameState = "intro";
-        introState = 0;
-        introTimer = millis();
-        if (soundInitialized) {
-          introMusic.stop(); // Zatrzymaj, aby zresetować stan
-          introMusic.loop(); // Wymuś odtwarzanie
-        }
+    // View Intro Button
+    if (adjustedMouseX >= GAME_WIDTH - 160 && adjustedMouseX <= GAME_WIDTH - 60 &&
+        adjustedMouseY >= 300 && adjustedMouseY <= 340) {
+      gameState = "intro";
+      introState = 0;
+      introTimer = millis();
+      if (soundInitialized) {
+        introMusic.stop();
+        introMusic.loop();
       }
     }
+  } 
+  
+  else if (gameState === "info") {
+    let offsetX = (width - GAME_WIDTH) / 2;
+    let offsetY = (height - GAME_HEIGHT) / 2;
+    let adjustedMouseX = mouseX - offsetX;
+    let adjustedMouseY = mouseY - offsetY;
 
-  } else if (gameState === "intro") {
+    // BACK Button
+    if (adjustedMouseX >= 20 && adjustedMouseX <= 120 &&
+        adjustedMouseY >= 20 && adjustedMouseY <= 60) {
+      gameState = "howToPlay";
+    }
+  }
+  
+  else if (gameState === "intro") {
     // "NEXT" button handling
     let nextButtonX = GAME_WIDTH - 100;
     let nextButtonY = GAME_HEIGHT - 50;
