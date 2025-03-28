@@ -2546,7 +2546,7 @@ function mousePressed() {
       comboBar = min(comboBar + 2, 10);
       let multiplier = (powerUpEffect === "gas" || meteorShowerActive || gameState === "supernova") ? 3 : 1;
       if (powerUpCombo === "gas+star") multiplier = 4;
-      let basePoints = level <= 2 ? 2 : 1;
+      let basePoints = level === 1 ? 2 : 1;
       let points = combo * basePoints * multiplier;
       if (activeEvent === "overload") {
         if (eventColor === 2) points += 10;
