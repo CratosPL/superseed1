@@ -81,6 +81,10 @@ let tutorialClicks = 0;
 let tutorialPulseProgress = 0;
 let tutorialLastPulse = 0;
 let musicSwitched = false;
+let upadekBg; // Przeniesione tutaj
+let synchronizacjaBg; // Przeniesione tutaj
+let nagrodaBg; // Przeniesione tutaj
+let isConnecting = false;
 
 
 let hasSeenIntro = localStorage.getItem('hasSeenIntro') === 'true'; // Czy intro już widziane
@@ -97,24 +101,6 @@ let powerUpDurations = {
   meteor: 6000,
   star: 5000
 };
-
-// Global Variables (zastępują sekcję Constants)
-let GAME_WIDTH = 1200;
-let GAME_HEIGHT = 1000;
-let RESTART_BUTTON_WIDTH = 200;
-let RESTART_BUTTON_HEIGHT = 50;
-let SYMBOL_SIZE = 18;
-let GAME_SYMBOL_SIZE = 40;
-let TABLE_CELL_WIDTH = 500;
-let TABLE_CELL_HEIGHT = 50;
-let TABLE_START_X = (GAME_WIDTH - TABLE_CELL_WIDTH * 2) / 2;
-let TABLE_START_Y = 300;
-let HOW_TO_PLAY_BUTTON_WIDTH = 100;
-let HOW_TO_PLAY_BUTTON_HEIGHT = 40;
-let TUTORIAL_BUTTON_WIDTH = 200;
-let TUTORIAL_BUTTON_HEIGHT = 50;
-let TUTORIAL_MENU_BUTTON_WIDTH = 200;
-let TUTORIAL_MENU_BUTTON_HEIGHT = 50;
 
 // Classes
 class Particle {
@@ -331,6 +317,225 @@ class PowerUp {
   }
 }
 
+// Global Variables (zastępują sekcję Constants)
+let GAME_WIDTH = 1200;
+let GAME_HEIGHT = 1000;
+let RESTART_BUTTON_WIDTH = 200;
+let RESTART_BUTTON_HEIGHT = 50;
+let SYMBOL_SIZE = 18;
+let GAME_SYMBOL_SIZE = 40;
+let TABLE_CELL_WIDTH = 500;
+let TABLE_CELL_HEIGHT = 50;
+let TABLE_START_X = (GAME_WIDTH - TABLE_CELL_WIDTH * 2) / 2;
+let TABLE_START_Y = 300;
+let HOW_TO_PLAY_BUTTON_WIDTH = 100;
+let HOW_TO_PLAY_BUTTON_HEIGHT = 40;
+let TUTORIAL_BUTTON_WIDTH = 200;
+let TUTORIAL_BUTTON_HEIGHT = 50;
+let TUTORIAL_MENU_BUTTON_WIDTH = 200;
+let TUTORIAL_MENU_BUTTON_HEIGHT = 50;
+
+
+// Globalne zmienne dla Web3Modal i ethers.js
+let provider;
+let signer;
+let userAddress;
+let isConnected = false;
+let connectionError = null;
+let web3Modal;
+
+// Konfiguracja sieci Superseed Sepolia Testnet
+const superseedSepolia = {
+  chainId: "0xD036", // Poprawiono na 53302 w hex (było 0xD05E, czyli 53342)
+  chainName: "Superseed Sepolia Testnet",
+  nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+  rpcUrls: ["https://sepolia.superseed.xyz"],
+  blockExplorerUrls: ["https://sepolia-explorer.superseed.xyz"],
+};
+
+// Funkcja czekająca na załadowanie skryptów z debugowaniem
+function waitForScripts() {
+  return new Promise((resolve) => {
+    console.log("Checking for scripts...");
+    if (window.ethers) {
+      console.log("ethers loaded:", window.ethers.version);
+    } else {
+      console.log("ethers not loaded yet");
+    }
+    if (window.Web3Modal) {
+      console.log("Web3Modal loaded, type:", typeof window.Web3Modal, "value:", window.Web3Modal);
+    } else {
+      console.log("Web3Modal not loaded yet");
+    }
+    if (window.WalletConnectProvider) {
+      console.log("WalletConnectProvider loaded, type:", typeof window.WalletConnectProvider);
+    } else {
+      console.log("WalletConnectProvider not loaded yet");
+    }
+
+    if (window.Web3Modal && window.WalletConnectProvider && window.ethers) {
+      console.log("All scripts loaded successfully");
+      resolve();
+    } else {
+      const checkInterval = setInterval(() => {
+        if (window.Web3Modal && window.WalletConnectProvider && window.ethers) {
+          console.log("All scripts loaded successfully after interval");
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 100);
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        console.error("Web3Modal, WalletConnectProvider, or ethers failed to load after 10 seconds");
+        resolve();
+      }, 10000);
+    }
+  });
+}
+
+// Inicjalizacja Web3Modal
+function initializeWeb3Modal() {
+  if (!window.Web3Modal) {
+    console.error("Web3Modal not loaded yet!");
+    return;
+  }
+  if (!window.WalletConnectProvider) {
+    console.error("WalletConnectProvider not loaded yet!");
+    return;
+  }
+
+  const providerOptions = {
+    walletconnect: {
+      package: window.WalletConnectProvider,
+      options: {
+        rpc: {
+          53302: "https://sepolia.superseed.xyz", // Poprawiono z 53342 na 53302
+        },
+      },
+    },
+  };
+  // Sprawdzamy, czy Web3Modal jest konstruktorem, czy obiektem
+  if (typeof window.Web3Modal === "function") {
+    try {
+      web3Modal = new window.Web3Modal({
+        cacheProvider: true,
+        providerOptions,
+        theme: "dark",
+      });
+      console.log("Web3Modal initialized successfully as constructor");
+    } catch (error) {
+      console.error("Failed to initialize Web3Modal as constructor:", error);
+    }
+  } else if (typeof window.Web3Modal === "object" && window.Web3Modal.default) {
+    // Jeśli Web3Modal jest obiektem z domyślnym eksportem (np. w nowszych wersjach)
+    try {
+      web3Modal = new window.Web3Modal.default({
+        cacheProvider: true,
+        providerOptions,
+        theme: "dark",
+      });
+      console.log("Web3Modal initialized successfully using default export");
+    } catch (error) {
+      console.error("Failed to initialize Web3Modal with default export:", error);
+    }
+  } else {
+    console.error("Web3Modal is neither a constructor nor has a default export, type:", typeof window.Web3Modal, "value:", window.Web3Modal);
+    return;
+  }
+}
+
+// Funkcja do połączenia z portfelem
+async function connectWallet(forceReconnect = false) {
+  if (isConnecting) {
+    console.log("Connection already in progress, please wait...");
+    return;
+  }
+  isConnecting = true;
+  try {
+    console.log("Starting wallet connection...");
+
+    if (!web3Modal) {
+      console.log("Web3Modal not initialized, initializing now...");
+      initializeWeb3Modal();
+    }
+    if (!web3Modal) throw new Error("Web3Modal failed to initialize");
+
+    if (forceReconnect && web3Modal) {
+      console.log("Clearing cached provider...");
+      web3Modal.clearCachedProvider();
+      localStorage.removeItem("WEB3_CONNECT_CACHED_PROVIDER");
+      localStorage.removeItem("walletconnect");
+      // Resetowanie zmiennych stanu
+      isConnected = false;
+      userAddress = null;
+      provider = null;
+      signer = null;
+    }
+
+    console.log("Attempting to open Web3Modal...");
+    console.log("Before web3Modal.connect()");
+
+    const connectPromise = web3Modal.connect();
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Web3Modal connect timed out after 10s")), 10000)
+    );
+    const instance = await Promise.race([connectPromise, timeoutPromise]);
+
+    console.log("After web3Modal.connect(), instance:", instance);
+
+    console.log("Initializing ethers provider...");
+    provider = new ethers.providers.Web3Provider(instance);
+    signer = provider.getSigner();
+    userAddress = await signer.getAddress();
+
+    // Sprawdzenie, czy połączenie jest aktywne
+    const accounts = await provider.listAccounts();
+    if (accounts.length === 0) {
+      throw new Error("No accounts found. Please ensure wallet is unlocked.");
+    }
+
+    isConnected = true;
+
+    const network = await provider.getNetwork();
+    console.log("Current network chainId:", network.chainId);
+    if (network.chainId !== 53302) {
+      console.log("Switching to Superseed Sepolia Testnet...");
+      try {
+        await provider.send("wallet_switchEthereumChain", [{ chainId: "0xD036" }]);
+      } catch (switchError) {
+        if (switchError.code === 4902) {
+          console.log("Adding Superseed Sepolia Testnet...");
+          await provider.send("wallet_addEthereumChain", [superseedSepolia]);
+        } else {
+          throw switchError;
+        }
+      }
+    }
+
+    console.log("Connected to wallet:", userAddress);
+    connectionError = null;
+  } catch (error) {
+    console.error("Wallet connection failed:", error);
+    isConnected = false;
+    userAddress = null;
+    provider = null;
+    signer = null;
+    connectionError = "Failed to connect wallet: " + error.message;
+  } finally {
+    isConnecting = false;
+  }
+}
+
+
+// W draw(), w bloku gameState === "howToPlay", po sekcji leaderboard
+if (connectionError) {
+  fill(255, 0, 0); // Czerwony kolor dla błędu
+  textSize(16);
+  text(connectionError, GAME_WIDTH / 2, GAME_HEIGHT - 100);
+}
+
+
+
 class Obstacle {
   constructor(x = random(100, GAME_WIDTH - 100), y = random(100, GAME_HEIGHT - 100)) {
     this.x = x;
@@ -415,8 +620,6 @@ function drawMainnetBadge(x, y, size) {
   pop();
 }
 
-let upadekBg, synchronizacjaBg, nagrodaBg; // Dodaj zmienne globalne na początku kodu
-
 function preload() {
   logo = loadImage('assets/superseed-logo.png');
   whiteLogo = loadImage('assets/White.webp');
@@ -436,8 +639,9 @@ function preload() {
   nagrodaBg = loadImage('assets/nagroda-background.png');
 }
 
+// Poprawiony setup() – bez async, wywołanie asynchroniczne w tle
 function setup() {
-  createCanvas(windowWidth, windowHeight);
+  const canvas = createCanvas(windowWidth, windowHeight, { willReadFrequently: true });
   let scaleFactor = min(windowWidth / 1200, windowHeight / 1000);
   GAME_WIDTH = windowWidth;
   GAME_HEIGHT = windowHeight;
@@ -475,7 +679,6 @@ function setup() {
   leaderboard = savedLeaderboard ? JSON.parse(savedLeaderboard) : [];
   lastClickTime = millis();
 
-  // Zawsze startuj od intro, resetując hasSeenIntro
   hasSeenIntro = false;
   gameState = "intro";
   introTimer = millis();
@@ -483,7 +686,39 @@ function setup() {
     introMusic.loop();
     soundInitialized = true;
   }
+
+  // Resetowanie stanu Web3Modal
+  isConnected = false;
+  userAddress = null;
+  provider = null;
+  signer = null;
+  connectionError = null;
+
+  // Inicjalizacja Web3Modal w tle
+  waitForScripts().then(() => {
+    initializeWeb3Modal();
+    if (web3Modal && web3Modal.cachedProvider) {
+      
+    }
+  });
 }
+
+async function initWeb3() {
+  try {
+    await waitForScripts();
+    initializeWeb3Modal();
+    if (web3Modal && web3Modal.cachedProvider) {
+      await connectWallet();
+    } else {
+      console.log("No cached provider, waiting for user login");
+    }
+  } catch (error) {
+    console.error("Web3 initialization failed:", error);
+    connectionError = "Web3 initialization failed: " + error.message;
+  }
+}
+
+
 
 function touchStarted() {
   if (!soundInitialized) {
@@ -511,6 +746,8 @@ function draw() {
   let currentTime = millis();
   let pulseProgress = (currentTime - lastPulse) / pulseSpeed;
 
+
+  
   // Nowy stan preIntro
   if (gameState === "preIntro") {
     drawBackground(0);
@@ -837,29 +1074,64 @@ else if (introState === 2) {
   
     // Start Button
     gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 420, GAME_WIDTH / 2 + 100, 420);
-    gradient.addColorStop(0, "#93D0CF");
-    gradient.addColorStop(1, "#FFD700");
-    drawingContext.fillStyle = gradient;
-    stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
-    strokeWeight(2);
-    rect(GAME_WIDTH / 2 - 100, 420, 200, 50, 10);
-    noStroke();
-    fill(14, 39, 59); // Tangaroa (#0E273B)
-    textSize(24);
-    text("START", GAME_WIDTH / 2, 445);
-  
-    // Login Button
+  gradient.addColorStop(0, "#93D0CF");
+  gradient.addColorStop(1, "#FFD700");
+  drawingContext.fillStyle = gradient;
+  stroke(147, 208, 207);
+  strokeWeight(2);
+  rect(GAME_WIDTH / 2 - 100, 420, 200, 50, 10);
+  noStroke();
+  fill(14, 39, 59);
+  textSize(24);
+  let buttonText = savedGameState ? "RESUME" : "START";
+  text(buttonText, GAME_WIDTH / 2, 445);
+
+  // Login/Logout Button lub status zalogowania
+  if (!isConnected) {
     gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 480, GAME_WIDTH / 2 + 100, 480);
     gradient.addColorStop(0, "#0E273B");
     gradient.addColorStop(1, "#808386");
     drawingContext.fillStyle = gradient;
-    stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
+    stroke(147, 208, 207);
     strokeWeight(2);
     rect(GAME_WIDTH / 2 - 100, 480, 200, 50, 10);
     noStroke();
-    fill(249, 249, 242); // White (#F9F9F2)
+    fill(249, 249, 242);
     textSize(24);
     text("LOGIN", GAME_WIDTH / 2, 505);
+  } else {
+    // Wyświetlanie statusu zalogowania zamiast przycisku
+    fill(93, 208, 207);
+    textSize(16);
+    text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 505);
+    // Opcjonalnie: Przycisk "LOGOUT"
+    gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 540, GAME_WIDTH / 2 + 100, 540);
+    gradient.addColorStop(0, "#FF4500");
+    gradient.addColorStop(1, "#FFD700");
+    drawingContext.fillStyle = gradient;
+    stroke(147, 208, 207);
+    strokeWeight(2);
+    rect(GAME_WIDTH / 2 - 100, 540, 200, 50, 10);
+    noStroke();
+    fill(249, 249, 242);
+    textSize(24);
+    text("LOGOUT", GAME_WIDTH / 2, 565);
+  }
+
+  // Wyświetlanie komunikatu o błędzie lub prośbie o zalogowanie
+  if (showLoginMessage) {
+    let elapsed = millis() - loginMessageStartTime;
+    if (elapsed < loginMessageDuration) {
+      fill(255, 0, 0);
+      textSize(20);
+      textAlign(CENTER);
+      text("Please log in first to start the game", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 100);
+    } else {
+      showLoginMessage = false;
+    }
+  }
+
+
   
     // INFO Button
     gradient = drawingContext.createLinearGradient(GAME_WIDTH - 160, 200, GAME_WIDTH - 60, 200);
@@ -906,286 +1178,287 @@ else if (introState === 2) {
 } 
 
 else if (gameState === "info") {
-  // Gradient tła (Tangaroa do Superseed Light Green)
+  // Gradient tła z trzema kolorami i zaokrąglonymi rogami (spójny z tutorialem)
   let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
-  gradient.addColorStop(0, "#0E273B");
-  gradient.addColorStop(1, "#93D0CF");
+  gradient.addColorStop(0, "#0E273B"); // Tangaroa
+  gradient.addColorStop(0.5, "#93D0CF"); // Morning Glory
+  gradient.addColorStop(1, "#808386"); // Aluminium
   drawingContext.fillStyle = gradient;
-  rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+  rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
 
-  // Gwiazdki w tle
+  // Pulsujące obramowanie (jak w tutorialu)
+  let pulseProgress = sin(millis() * 0.002) * 0.5 + 0.5;
+  stroke(93, 208, 207, map(pulseProgress, 0, 1, 100, 255));
+  strokeWeight(5 + pulseProgress * 2);
+  noFill();
+  rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
+  noStroke();
+
+  // Gwiazdki w tle (dynamiczne tło jak w tutorialu)
   for (let i = bgParticles.length - 1; i >= 0; i--) {
     bgParticles[i].update();
-    bgParticles[i].show(0);
+    bgParticles[i].show(pulseProgress); // Użycie pulseProgress dla spójności
   }
 
-  // Nagłówek
-  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 150, 30, GAME_WIDTH / 2 + 150, 30);
+  // Nagłówek (mniejszy i bardziej elegancki)
+  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 150, 50, GAME_WIDTH / 2 + 150, 50);
   gradient.addColorStop(0, "#93D0CF");
   gradient.addColorStop(1, "#FFD700");
   drawingContext.fillStyle = gradient;
-  textSize(48);
+  textSize(36); // Zmniejszono z 48 dla harmonii
   textStyle(BOLD);
   textAlign(CENTER, CENTER);
-  text("Game Info", GAME_WIDTH / 2, 60);
+  text("Game Info", GAME_WIDTH / 2, 70);
 
   // Sekcja Scoring
-  fill(14, 39, 59, 230); // Tangaroa (#0E273B, 90% opacity)
-  stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
+  let sectionY = 120;
+  fill(14, 39, 59, 230); // Tangaroa z lekką przezroczystością
+  stroke(147, 208, 207); // Superseed Light Green
   strokeWeight(3);
-  rect(100, 100, GAME_WIDTH - 200, 140, 20);
-  // Gradientowy nagłówek sekcji
-  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 130, GAME_WIDTH / 2 + 100, 130);
+  rect(100, sectionY, GAME_WIDTH - 200, 120, 20); // Zmniejszona wysokość
+  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, sectionY + 20, GAME_WIDTH / 2 + 100, sectionY + 20);
   gradient.addColorStop(0, "#93D0CF");
   gradient.addColorStop(1, "#FFD700");
   drawingContext.fillStyle = gradient;
   textSize(24);
   textStyle(BOLD);
-  text("Scoring", GAME_WIDTH / 2, 140);
+  text("Scoring", GAME_WIDTH / 2, sectionY + 30);
   fill(249, 249, 242); // White (#F9F9F2)
-  textSize(18);
+  textSize(14); // Zmniejszono z 18 dla elegancji
   textStyle(NORMAL);
-  text("Sync the Cosmic Seed when it pulses green!\nStart is easy – sync nodes slowly on Orbit 1 & 2!", GAME_WIDTH / 2, 190);
-  noStroke();
-
-  // Separator
-  stroke(147, 208, 207, 150); // Superseed Light Green (#93D0CF, 60% opacity)
-  strokeWeight(1);
-  line(150, 250, GAME_WIDTH - 150, 250);
+  text("Sync the Cosmic Seed when it pulses green!\nStart is easy – sync nodes slowly on Orbit 1 & 2!", GAME_WIDTH / 2, sectionY + 70);
   noStroke();
 
   // Sekcja Combos
-  fill(14, 39, 59, 230); // Tangaroa (#0E273B, 90% opacity)
-  stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
+  sectionY += 150; // Większy odstęp
+  fill(14, 39, 59, 230);
+  stroke(147, 208, 207);
   strokeWeight(3);
-  rect(100, 260, GAME_WIDTH - 200, 140, 20);
-  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 290, GAME_WIDTH / 2 + 100, 290);
+  rect(100, sectionY, GAME_WIDTH - 200, 120, 20);
+  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, sectionY + 20, GAME_WIDTH / 2 + 100, sectionY + 20);
   gradient.addColorStop(0, "#93D0CF");
   gradient.addColorStop(1, "#FFD700");
   drawingContext.fillStyle = gradient;
   textSize(24);
   textStyle(BOLD);
-  text("Combos", GAME_WIDTH / 2, 300);
-  fill(249, 249, 242); // White (#F9F9F2)
-  textSize(18);
+  text("Combos", GAME_WIDTH / 2, sectionY + 30);
+  fill(249, 249, 242);
+  textSize(14);
   textStyle(NORMAL);
-  text("Chain syncs for multipliers (x1, x2, ...).\n15+ syncs grants +1 life.", GAME_WIDTH / 2, 350);
+  text("Chain syncs for multipliers (x1, x2, ...).\n15+ syncs grants +1 life.", GAME_WIDTH / 2, sectionY + 70);
   noStroke();
 
-  // Separator
-  stroke(147, 208, 207, 150); // Superseed Light Green (#93D0CF, 60% opacity)
-  strokeWeight(1);
-  line(150, 410, GAME_WIDTH - 150, 410);
-  noStroke();
-
-  // Sekcja Power-Ups (2 kolumny)
-  fill(14, 39, 59, 230); // Tangaroa (#0E273B, 90% opacity)
-  stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
+  // Sekcja Power-Ups (jedna kolumna z animacjami)
+  sectionY += 150;
+  fill(14, 39, 59, 230);
+  stroke(147, 208, 207);
   strokeWeight(3);
-  rect(100, 420, GAME_WIDTH - 200, 460, 20);
-  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 200, 450, GAME_WIDTH / 2 + 200, 450);
+  rect(100, sectionY, GAME_WIDTH - 200, 400, 20); // Zwiększona wysokość dla jednej kolumny
+  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 200, sectionY + 20, GAME_WIDTH / 2 + 200, sectionY + 20);
   gradient.addColorStop(0, "#93D0CF");
   gradient.addColorStop(1, "#FFD700");
   drawingContext.fillStyle = gradient;
   textSize(24);
   textStyle(BOLD);
-  text("Power-Ups (click to activate)", GAME_WIDTH / 2, 460);
-  textSize(16);
+  text("Power-Ups (click to activate)", GAME_WIDTH / 2, sectionY + 30);
+  textSize(14);
   textStyle(NORMAL);
   textAlign(LEFT, CENTER);
 
-  // Sprawdzanie pozycji myszy dla efektu hover
   let mx = mouseX - (width - GAME_WIDTH) / 2;
   let my = mouseY - (height - GAME_HEIGHT) / 2;
 
-  // Kolumna 1 (lewa)
+  // Ikony Power-Ups z animacjami
+  let iconY = sectionY + 70;
+  let iconSpacing = 50;
+
   // 1. Life
   push();
-  translate(150, 510);
-  let gradientLife = drawingContext.createRadialGradient(0, 0, 0, 0, 0, 30);
+  translate(150, iconY);
+  let gradientLife = drawingContext.createRadialGradient(0, 0, 0, 0, 0, 20);
   gradientLife.addColorStop(0, "rgb(255, 255, 255)");
   gradientLife.addColorStop(1, "rgb(0, 255, 0)");
   drawingContext.fillStyle = gradientLife;
-  star(0, 0, 20, 30 + sin(millis() * 0.005) * 5, 8);
+  star(0, 0, 15, 25 + sin(millis() * 0.005) * 5, 8); // Pulsująca animacja
   pop();
-  if (mx >= 150 && mx <= 200 && my >= 490 && my <= 530) {
+  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
     noFill();
-    stroke(255, 215, 0, 200); // Złoty hover
+    stroke(255, 215, 0, 200);
     strokeWeight(2);
-    ellipse(150, 510, 60);
+    ellipse(150, iconY, 50);
     noStroke();
   }
   fill(249, 249, 242);
-  text("1. +1 Life", 210, 510);
+  text("Life: +1 Life", 220, iconY);
+
   // 2. Gas Nebula
+  iconY += iconSpacing;
   noFill();
   stroke(0, 191, 255, 200);
   strokeWeight(3);
   for (let i = 0; i < 4; i++) {
-    arc(150, 580, 30 * (i + 1) / 4, 30 * (i + 1) / 4, 0, PI + i * HALF_PI);
+    arc(150, iconY, 25 * (i + 1) / 4, 25 * (i + 1) / 4, 0, PI + i * HALF_PI + millis() * 0.001); // Lekka rotacja
   }
   noStroke();
-  if (mx >= 150 && mx <= 200 && my >= 560 && my <= 600) {
+  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
     noFill();
     stroke(255, 215, 0, 200);
     strokeWeight(2);
-    ellipse(150, 580, 60);
+    ellipse(150, iconY, 50);
     noStroke();
   }
   fill(249, 249, 242);
-  text("2. Gas Nebula: x2 Points (3s)", 210, 580);
+  text("Gas Nebula: x2 Points (3s)", 220, iconY);
+
   // 3. Pulse Wave
+  iconY += iconSpacing;
   noFill();
   let pulse = (millis() % 1000) / 1000;
   stroke(147, 208, 207, 200);
   strokeWeight(3);
-  ellipse(150, 650, 50 * pulse);
+  ellipse(150, iconY, 40 * pulse); // Pulsująca fala
   noStroke();
-  if (mx >= 150 && mx <= 200 && my >= 630 && my <= 670) {
+  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
     noFill();
     stroke(255, 215, 0, 200);
     strokeWeight(2);
-    ellipse(150, 650, 60);
+    ellipse(150, iconY, 50);
     noStroke();
   }
   fill(249, 249, 242);
-  text("3. Pulse Wave: Boost Pulse (3s)", 210, 650);
+  text("Pulse Wave: Boost Pulse (3s)", 220, iconY);
+
   // 4. Orbit Shield
+  iconY += iconSpacing;
   fill(255, 215, 0, 150);
-  ellipse(150, 720, 50);
+  ellipse(150, iconY, 40 + sin(millis() * 0.005) * 5); // Pulsowanie
   stroke(255, 255, 255, 200);
   strokeWeight(2);
   for (let i = -1; i <= 1; i++) {
-    line(150 + i * 20, 695, 150 + i * 20, 745);
+    line(150 + i * 15, iconY - 20, 150 + i * 15, iconY + 20);
   }
   noStroke();
-  if (mx >= 150 && mx <= 200 && my >= 700 && my <= 740) {
+  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
     noFill();
     stroke(255, 215, 0, 200);
     strokeWeight(2);
-    ellipse(150, 720, 60);
+    ellipse(150, iconY, 50);
     noStroke();
   }
   fill(249, 249, 242);
-  text("4. Orbit Shield: Blocks Damage (3s) [Lv3+]", 210, 720);
+  text("Orbit Shield: Blocks Damage (3s) [Lv3+]", 220, iconY);
 
-  // Kolumna 2 (prawa)
   // 5. Freeze Nova
+  iconY += iconSpacing;
   fill(0, 255, 255, 200 + sin(millis() * 0.01) * 55);
-  star(GAME_WIDTH / 2 + 50, 510, 25, 35, 6);
-  if (mx >= GAME_WIDTH / 2 + 50 && mx <= GAME_WIDTH / 2 + 100 && my >= 490 && my <= 530) {
+  star(150, iconY, 20, 30, 6); // Pulsujący kryształ
+  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
     noFill();
     stroke(255, 215, 0, 200);
     strokeWeight(2);
-    ellipse(GAME_WIDTH / 2 + 50, 510, 60);
+    ellipse(150, iconY, 50);
     noStroke();
   }
   fill(249, 249, 242);
-  text("5. Freeze Nova: Freezes Pulse (3s) [Lv3+]", GAME_WIDTH / 2 + 110, 510);
-  // 6. Meteor Strike
-  fill(255, 100, 0, 200);
-  ellipse(GAME_WIDTH / 2 + 50, 580, 50);
-  fill(255, 0, 0, 150);
-  let tailLength = 25 + sin(millis() * 0.01) * 5;
-  triangle(GAME_WIDTH / 2 + 50, 555, GAME_WIDTH / 2 + 50 - tailLength, 545, GAME_WIDTH / 2 + 50 + tailLength, 545);
-  if (mx >= GAME_WIDTH / 2 + 50 && mx <= GAME_WIDTH / 2 + 100 && my >= 560 && my <= 600) {
-    noFill();
-    stroke(255, 215, 0, 200);
-    strokeWeight(2);
-    ellipse(GAME_WIDTH / 2 + 50, 580, 60);
-    noStroke();
-  }
-  fill(249, 249, 242);
-  text("6. Meteor Strike: More Traps, x2 (3s) [Lv5+]", GAME_WIDTH / 2 + 110, 580);
-  // 7. Star Seed
+  text("Freeze Nova: Freezes Pulse (3s) [Lv3+]", 220, iconY);
+
+  // 6. Star Seed
+  iconY += iconSpacing;
   fill(147, 208, 207, 200);
-  ellipse(GAME_WIDTH / 2 + 50, 650, 50, 30);
-  stroke(255, 255, 255, 150);
-  strokeWeight(2);
-  pulse = (millis() % 1000) / 1000;
-  for (let i = 0; i < 8; i++) {
-    let a = TWO_PI / 8 * i;
-    line(GAME_WIDTH / 2 + 50 + cos(a) * 25, 650 + sin(a) * 15, 
-         GAME_WIDTH / 2 + 50 + cos(a) * (25 + pulse * 5), 650 + sin(a) * (15 + pulse * 5));
-  }
-  noStroke();
-  if (mx >= GAME_WIDTH / 2 + 50 && mx <= GAME_WIDTH / 2 + 100 && my >= 630 && my <= 670) {
+  ellipse(150, iconY, 40, 25 + sin(millis() * 0.005) * 5); // Pulsowanie
+  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
     noFill();
     stroke(255, 215, 0, 200);
     strokeWeight(2);
-    ellipse(GAME_WIDTH / 2 + 50, 650, 60);
+    ellipse(150, iconY, 50);
     noStroke();
   }
   fill(249, 249, 242);
-  text("7. Star Seed: Bigger Seed (3s) [Lv5+]", GAME_WIDTH / 2 + 110, 650);
-  // 8. Mainnet Wave
-  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 + 35, 720, GAME_WIDTH / 2 + 65, 720);
+  text("Star Seed: Bigger Seed (3s) [Lv5+]", 220, iconY);
+
+  // 7. Mainnet Wave
+  iconY += iconSpacing;
+  gradient = drawingContext.createLinearGradient(135, iconY, 165, iconY);
   gradient.addColorStop(0, "#93D0CF");
   gradient.addColorStop(1, "#FFD700");
   drawingContext.fillStyle = gradient;
   beginShape();
   for (let i = 0; i < 6; i++) {
     let a = TWO_PI / 6 * i;
-    vertex(GAME_WIDTH / 2 + 50 + cos(a) * 25, 720 + sin(a) * 25);
+    vertex(150 + cos(a) * (20 + sin(millis() * 0.005) * 5), iconY + sin(a) * 20); // Pulsowanie
   }
   endShape(CLOSE);
-  noFill();
-  stroke(255, 215, 0, 150);
-  strokeWeight(2);
-  ellipse(GAME_WIDTH / 2 + 50, 720, 60 + sin(millis() * 0.005) * 5);
-  noStroke();
-  if (mx >= GAME_WIDTH / 2 + 50 && mx <= GAME_WIDTH / 2 + 100 && my >= 700 && my <= 740) {
+  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
     noFill();
     stroke(255, 215, 0, 200);
     strokeWeight(2);
-    ellipse(GAME_WIDTH / 2 + 50, 720, 60);
+    ellipse(150, iconY, 50);
     noStroke();
   }
   fill(249, 249, 242);
-  text("8. Mainnet Wave: Clears Traps [Lv7+]", GAME_WIDTH / 2 + 110, 720);
-
-  // Separator
-  stroke(147, 208, 207, 150); // Superseed Light Green (#93D0CF, 60% opacity)
-  strokeWeight(1);
-  line(150, 890, GAME_WIDTH - 150, 890);
-  noStroke();
+  text("Mainnet Wave: Clears Traps [Lv7+]", 220, iconY);
 
   // Sekcja Traps
-  fill(14, 39, 59, 230); // Tangaroa (#0E273B, 90% opacity)
-  stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
+  sectionY += 450; // Większy odstęp
+  fill(14, 39, 59, 230);
+  stroke(147, 208, 207);
   strokeWeight(3);
-  rect(100, 900, GAME_WIDTH - 200, 140, 20);
-  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 930, GAME_WIDTH / 2 + 100, 930);
+  rect(100, sectionY, GAME_WIDTH - 200, 150, 20); // Zwiększona wysokość dla dwóch elementów
+  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, sectionY + 20, GAME_WIDTH / 2 + 100, sectionY + 20);
   gradient.addColorStop(0, "#93D0CF");
   gradient.addColorStop(1, "#FFD700");
   drawingContext.fillStyle = gradient;
   textSize(24);
   textStyle(BOLD);
-  text("Traps", GAME_WIDTH / 2, 940);
-  textSize(18);
+  text("Traps", GAME_WIDTH / 2, sectionY + 30);
+  textSize(14);
   textStyle(NORMAL);
-  textAlign(CENTER, CENTER);
-  fill(255, 0, 0, 200);
-  ellipse(150, 990, 40);
-  stroke(255, 100);
-  strokeWeight(3);
-  line(135, 975, 165, 1005);
-  noStroke();
-  fill(249, 249, 242);
-  text("Avoid Meteor Strikes - 5 misses = -1 life", GAME_WIDTH / 2, 990);
 
-  // Przycisk BACK z efektem pulsowania
-  gradient = drawingContext.createLinearGradient(20, 20, 120, 20);
-  gradient.addColorStop(0, "#93D0CF");
-  gradient.addColorStop(1, "#FFD700");
-  drawingContext.fillStyle = gradient;
-  stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
-  strokeWeight(3 + sin(millis() * 0.005) * 1); // Pulsowanie obramowania
-  rect(20, 20, 100, 40, 10);
+  // 1. Avoid Meteor Strikes
+  iconY = sectionY + 70;
+  fill(255, 0, 0, 200);
+  ellipse(150, iconY, 30 + sin(millis() * 0.005) * 5); // Pulsowanie
+  stroke(255, 100);
+  strokeWeight(2);
+  line(135, iconY - 15, 165, iconY + 15);
   noStroke();
-  fill(14, 39, 59); // Tangaroa (#0E273B)
+  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
+    noFill();
+    stroke(255, 215, 0, 200);
+    strokeWeight(2);
+    ellipse(150, iconY, 50);
+    noStroke();
+  }
+  fill(249, 249, 242);
+  text("Avoid Meteor Strikes: 5 misses = -1 life", 220, iconY);
+
+  // 2. Meteor Strike
+  iconY += iconSpacing;
+  fill(255, 100, 0, 200);
+  ellipse(150, iconY, 40); // Stały rozmiar dla kontrastu
+  fill(255, 0, 0, 150);
+  let tailLength = 20 + sin(millis() * 0.01) * 5;
+  triangle(150, iconY - 20, 150 - tailLength, iconY - 30, 150 + tailLength, iconY - 30); // Pulsujący ogon
+  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
+    noFill();
+    stroke(255, 215, 0, 200);
+    strokeWeight(2);
+    ellipse(150, iconY, 50);
+    noStroke();
+  }
+  fill(249, 249, 242);
+  text("Meteor Strike: More Traps, x2 Points (3s) [Lv5+]", 220, iconY);
+
+  // Przycisk BACK (spójny z tutorialem)
+  let backX = 20;
+  let backY = 20;
+  let isBackHovering = mx >= backX && mx <= backX + 120 && my >= backY && my <= backY + 50;
+  fill(93, 208, 207, isBackHovering ? 255 : 200);
+  rect(backX, backY, 120, 50, 10);
+  fill(249, 249, 242);
   textSize(20);
-  text("BACK", 70, 40);
+  textAlign(CENTER, CENTER);
+  text("BACK", backX + 60, backY + 25);
 
   textAlign(CENTER, BASELINE); // Reset wyrównania
 }
@@ -1847,6 +2120,12 @@ if (activeEvent === "blackHole") {
       text(`Sync x${combo}`, GAME_WIDTH / 2, 100);
       if (playerNick) text(`${playerNick}'s Network`, GAME_WIDTH / 2, 130);
     }
+    // Dodaj adres portfela, jeśli podłączony
+if (isConnected && userAddress) {
+  fill(93, 208, 207);
+  textSize(16);
+  text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 160);
+}
     noFill();
     stroke(seedColor.r, seedColor.g, seedColor.b);
     strokeWeight(4);
@@ -2310,16 +2589,15 @@ function resumeGame() {
   }
 }
 
+
+let showLoginMessage = false;
+let loginMessageStartTime = 0;
+const loginMessageDuration = 3000;
 function mousePressed() {
   let adjustedMouseX = mouseX - (width - GAME_WIDTH) / 2;
   let adjustedMouseY = mouseY - (height - GAME_HEIGHT) / 2;
 
   if (gameState === "howToPlay") {
-    let offsetX = (width - GAME_WIDTH) / 2;
-    let offsetY = (height - GAME_HEIGHT) / 2;
-    let adjustedMouseX = mouseX - offsetX;
-    let adjustedMouseY = mouseY - offsetY;
-
     // Choose Your Seed Color
     let colorBoxSize = 50;
     let colorBoxSpacing = 20;
@@ -2344,18 +2622,86 @@ function mousePressed() {
       isTypingNick = false;
     }
 
-    // Start Button
+    // Start/Resume Button
     if (adjustedMouseX >= GAME_WIDTH / 2 - 100 && adjustedMouseX <= GAME_WIDTH / 2 + 100 &&
-        adjustedMouseY >= 420 && adjustedMouseY <= 470) {
-      if (savedGameState) resumeGame();
-      else startGame();
+      adjustedMouseY >= 420 && adjustedMouseY <= 470) {
+    if (!isConnected) {
+      console.log("Please log in first");
+      showLoginMessage = true;
+      loginMessageStartTime = millis();
+    } else if (savedGameState) {
+      resumeGame();
+    } else {
+      startGame();
     }
+  }
 
-    // Login Button (wizualny placeholder)
-    if (adjustedMouseX >= GAME_WIDTH / 2 - 100 && adjustedMouseX <= GAME_WIDTH / 2 + 100 &&
-        adjustedMouseY >= 480 && adjustedMouseY <= 530) {
-      console.log("Login clicked - placeholder for blockchain integration");
+  // Login/Logout Button
+  if (adjustedMouseX >= GAME_WIDTH / 2 - 100 && adjustedMouseX <= GAME_WIDTH / 2 + 100 &&
+      adjustedMouseY >= 480 && adjustedMouseY <= 530 && !isConnected) {
+    console.log("Login clicked - initiating wallet connection");
+    connectWallet(true).then(() => {
+      if (isConnected) {
+        console.log("Wallet connected successfully");
+      } else {
+        console.log("Wallet connection failed");
+      }
+    }).catch((error) => {
+      console.error("Unexpected error in connectWallet:", error);
+      connectionError = "Unexpected error: " + error.message;
+    });
+  }
+
+  // Logout Button
+  if (isConnected && adjustedMouseX >= GAME_WIDTH / 2 - 100 && adjustedMouseX <= GAME_WIDTH / 2 + 100 &&
+      adjustedMouseY >= 540 && adjustedMouseY <= 590) {
+    console.log("Logout clicked - disconnecting wallet");
+    if (web3Modal) {
+      web3Modal.clearCachedProvider();
+      localStorage.removeItem("WEB3_CONNECT_CACHED_PROVIDER");
+      localStorage.removeItem("walletconnect");
     }
+    isConnected = false;
+    userAddress = null;
+    provider = null;
+    signer = null;
+    connectionError = null;
+  }
+
+  if (isConnected) {
+    gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 540, GAME_WIDTH / 2 + 100, 540);
+    gradient.addColorStop(0, "#FF4500");
+    gradient.addColorStop(1, "#FFD700");
+    drawingContext.fillStyle = gradient;
+    stroke(147, 208, 207);
+    strokeWeight(2);
+    rect(GAME_WIDTH / 2 - 100, 540, 200, 50, 10);
+    noStroke();
+    fill(249, 249, 242);
+    textSize(24);
+    text("LOGOUT", GAME_WIDTH / 2, 565);
+  }
+
+  if (
+    adjustedMouseX >= GAME_WIDTH / 2 - 100 &&
+    adjustedMouseX <= GAME_WIDTH / 2 + 100 &&
+    adjustedMouseY >= 480 &&
+    adjustedMouseY <= 530
+  ) {
+    console.log("Login clicked - initiating wallet connection");
+    connectWallet(true).then(() => {
+      if (isConnected) {
+        console.log("Wallet connected successfully, starting game");
+        if (savedGameState) resumeGame();
+        else startGame();
+      } else {
+        console.log("Wallet connection failed, staying in howToPlay");
+      }
+    }).catch((error) => {
+      console.error("Unexpected error in connectWallet:", error);
+      connectionError = "Unexpected error: " + error.message;
+    });
+  }
 
     // INFO Button
     if (adjustedMouseX >= GAME_WIDTH - 160 && adjustedMouseX <= GAME_WIDTH - 60 &&
@@ -2380,7 +2726,7 @@ function mousePressed() {
         introMusic.loop();
       }
     }
-  } 
+  }
   
   else if (gameState === "info") {
     let offsetX = (width - GAME_WIDTH) / 2;
