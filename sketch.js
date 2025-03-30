@@ -1055,71 +1055,71 @@ else if (introState === 2) {
   if (gameState === "howToPlay") {
     // Gradient tła (Tangaroa do Superseed Light Green)
     let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    gradient.addColorStop(0, "#0E273B");
-    gradient.addColorStop(1, "#93D0CF");
-    drawingContext.fillStyle = gradient;
-    rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-  
-    // Pulsujące logo na górze
-    let logoScale = 1 + sin(millis() * 0.003) * 0.1;
-    image(whiteLogo, GAME_WIDTH / 2 - 100, 50, 200 * logoScale, 100 * logoScale);
-  
-    // Tekst powitalny
-    fill(249, 249, 242); // White (#F9F9F2)
-    textSize(40);
-    textStyle(BOLD);
-    text("Superseed Cosmic Network", GAME_WIDTH / 2, 150);
-  
-    // Choose Your Seed Color
-    fill(249, 249, 242); // White (#F9F9F2)
-    textSize(20);
-    text("Choose Your Seed Color", GAME_WIDTH / 2, 220);
-    let colorBoxSize = 50;
-    let colorBoxSpacing = 20;
-    let startX = GAME_WIDTH / 2 - (colorBoxSize * 3 + colorBoxSpacing * 2) / 2;
-    // Zielony
-    fill(0, 255, 0);
+  gradient.addColorStop(0, "#0E273B");
+  gradient.addColorStop(1, "#93D0CF");
+  drawingContext.fillStyle = gradient;
+  rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+  // Pulsujące logo na górze
+  let logoScale = 1 + sin(millis() * 0.003) * 0.1;
+  image(whiteLogo, GAME_WIDTH / 2 - 100, 50, 200 * logoScale, 100 * logoScale);
+
+  // Tekst powitalny
+  fill(249, 249, 242); // White (#F9F9F2)
+  textSize(40);
+  textStyle(BOLD);
+  text("Superseed Cosmic Network", GAME_WIDTH / 2, 150);
+
+  // Choose Your Seed Color
+  fill(249, 249, 242); // White (#F9F9F2)
+  textSize(20);
+  text("Choose Your Seed Color", GAME_WIDTH / 2, 220);
+  let colorBoxSize = 50;
+  let colorBoxSpacing = 20;
+  let startX = GAME_WIDTH / 2 - (colorBoxSize * 3 + colorBoxSpacing * 2) / 2;
+  // Zielony
+  fill(0, 255, 0);
+  rect(startX, 250, colorBoxSize, colorBoxSize);
+  // Niebieski
+  fill(0, 0, 255);
+  rect(startX + colorBoxSize + colorBoxSpacing, 250, colorBoxSize, colorBoxSize);
+  // Złoty
+  fill(255, 215, 0);
+  rect(startX + (colorBoxSize + colorBoxSpacing) * 2, 250, colorBoxSize, colorBoxSize);
+  // Ramka dla wybranego koloru
+  stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
+  strokeWeight(2);
+  noFill();
+  if (seedColor.r === 0 && seedColor.g === 255 && seedColor.b === 0) {
     rect(startX, 250, colorBoxSize, colorBoxSize);
-    // Niebieski
-    fill(0, 0, 255);
+  } else if (seedColor.r === 0 && seedColor.g === 0 && seedColor.b === 255) {
     rect(startX + colorBoxSize + colorBoxSpacing, 250, colorBoxSize, colorBoxSize);
-    // Złoty
-    fill(255, 215, 0);
+  } else if (seedColor.r === 255 && seedColor.g === 215 && seedColor.b === 0) {
     rect(startX + (colorBoxSize + colorBoxSpacing) * 2, 250, colorBoxSize, colorBoxSize);
-    // Ramka dla wybranego koloru
-    stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
-    strokeWeight(2);
-    noFill();
-    if (seedColor.r === 0 && seedColor.g === 255 && seedColor.b === 0) {
-      rect(startX, 250, colorBoxSize, colorBoxSize);
-    } else if (seedColor.r === 0 && seedColor.g === 0 && seedColor.b === 255) {
-      rect(startX + colorBoxSize + colorBoxSpacing, 250, colorBoxSize, colorBoxSize);
-    } else if (seedColor.r === 255 && seedColor.g === 215 && seedColor.b === 0) {
-      rect(startX + (colorBoxSize + colorBoxSpacing) * 2, 250, colorBoxSize, colorBoxSize);
-    }
-    noStroke();
-  
-    // Enter Your Nick
-    fill(249, 249, 242); // White (#F9F9F2)
-    textSize(20);
-    text("Enter Your Nick", GAME_WIDTH / 2, 340);
-    fill(128, 131, 134, 127); // Aluminium (#808386, 50% opacity)
-    stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
-    strokeWeight(2);
-    rect(GAME_WIDTH / 2 - 100, 360, 200, 40, 5);
-    fill(249, 249, 242); // White (#F9F9F2)
-    textSize(16);
-    textAlign(CENTER, CENTER);
-    if (isTypingNick) {
-      let cursor = (floor(millis() / 500) % 2 === 0) ? "|" : "";
-      text(playerNick + cursor, GAME_WIDTH / 2, 380);
-    } else {
-      text(playerNick || "Click to type", GAME_WIDTH / 2, 380);
-    }
-    noStroke();
-  
-    // Start Button
-    gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 420, GAME_WIDTH / 2 + 100, 420);
+  }
+  noStroke();
+
+  // Enter Your Nick
+  fill(249, 249, 242); // White (#F9F9F2)
+  textSize(20);
+  text("Enter Your Nick", GAME_WIDTH / 2, 340);
+  fill(128, 131, 134, 127); // Aluminium (#808386, 50% opacity)
+  stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
+  strokeWeight(2);
+  rect(GAME_WIDTH / 2 - 100, 360, 200, 40, 5);
+  fill(249, 249, 242); // White (#F9F9F2)
+  textSize(16);
+  textAlign(CENTER, CENTER);
+  if (isTypingNick) {
+    let cursor = (floor(millis() / 500) % 2 === 0) ? "|" : "";
+    text(playerNick + cursor, GAME_WIDTH / 2, 380);
+  } else {
+    text(playerNick || "Click to type", GAME_WIDTH / 2, 380);
+  }
+  noStroke();
+
+  // Start Button
+  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 420, GAME_WIDTH / 2 + 100, 420);
   gradient.addColorStop(0, "#93D0CF");
   gradient.addColorStop(1, "#FFD700");
   drawingContext.fillStyle = gradient;
@@ -1136,7 +1136,7 @@ else if (introState === 2) {
   if (!isConnected) {
     gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 480, GAME_WIDTH / 2 + 100, 480);
     gradient.addColorStop(0, "#0E273B");
-    gradient.addColorStop(1, "#808386");
+    gradient.addColorStop(1, "#808386"); // Poprawiono składnię
     drawingContext.fillStyle = gradient;
     stroke(147, 208, 207);
     strokeWeight(2);
@@ -1146,11 +1146,9 @@ else if (introState === 2) {
     textSize(24);
     text("LOGIN", GAME_WIDTH / 2, 505);
   } else {
-    // Wyświetlanie statusu zalogowania zamiast przycisku
     fill(93, 208, 207);
     textSize(16);
     text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 505);
-    // Opcjonalnie: Przycisk "LOGOUT"
     gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 540, GAME_WIDTH / 2 + 100, 540);
     gradient.addColorStop(0, "#FF4500");
     gradient.addColorStop(1, "#FFD700");
@@ -1163,6 +1161,15 @@ else if (introState === 2) {
     textSize(24);
     text("LOGOUT", GAME_WIDTH / 2, 565);
   }
+
+  // Wyraźny komunikat o wersji desktopowej – pod przyciskiem LOGIN/LOGOUT
+  fill(255, 0, 0); // Czerwony kolor dla uwagi
+  textSize(24);
+  textStyle(BOLD);
+  text("NOTICE: Game currently available only on desktop.", GAME_WIDTH / 2, 640);
+  fill(255, 215, 0); // Złoty kolor dla dodatkowej informacji
+  textSize(20);
+  text("Mobile version in development – stay tuned!", GAME_WIDTH / 2, 680);
 
   // Wyświetlanie komunikatu o błędzie lub prośbie o zalogowanie
   if (showLoginMessage) {
@@ -1177,51 +1184,47 @@ else if (introState === 2) {
     }
   }
 
+  // INFO Button
+  gradient = drawingContext.createLinearGradient(GAME_WIDTH - 160, 200, GAME_WIDTH - 60, 200);
+  gradient.addColorStop(0, "#93D0CF");
+  gradient.addColorStop(1, "#FFD700");
+  drawingContext.fillStyle = gradient;
+  stroke(147, 208, 207);
+  strokeWeight(2);
+  rect(GAME_WIDTH - 160, 200, 100, 40, 10);
+  noStroke();
+  fill(14, 39, 59);
+  textSize(18);
+  text("INFO", GAME_WIDTH - 110, 220);
 
-  
-    // INFO Button
-    gradient = drawingContext.createLinearGradient(GAME_WIDTH - 160, 200, GAME_WIDTH - 60, 200);
-    gradient.addColorStop(0, "#93D0CF");
-    gradient.addColorStop(1, "#FFD700");
-    drawingContext.fillStyle = gradient;
-    stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
-    strokeWeight(2);
-    rect(GAME_WIDTH - 160, 200, 100, 40, 10);
-    noStroke();
-    fill(14, 39, 59); // Tangaroa (#0E273B)
-    textSize(18);
-    text("INFO", GAME_WIDTH - 110, 220);
-  
-    // Tutorial Button
-    gradient = drawingContext.createLinearGradient(GAME_WIDTH - 160, 250, GAME_WIDTH - 60, 250);
-    gradient.addColorStop(0, "#93D0CF");
-    gradient.addColorStop(1, "#FFD700");
-    drawingContext.fillStyle = gradient;
-    stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
-    strokeWeight(2);
-    rect(GAME_WIDTH - 160, 250, 100, 40, 10);
-    noStroke();
-    fill(14, 39, 59); // Tangaroa (#0E273B)
-    textSize(18);
-    text("TUTORIAL", GAME_WIDTH - 110, 270);
-  
-    // View Intro Button
-    gradient = drawingContext.createLinearGradient(GAME_WIDTH - 160, 300, GAME_WIDTH - 60, 300);
-    gradient.addColorStop(0, "#93D0CF");
-    gradient.addColorStop(1, "#FFD700");
-    drawingContext.fillStyle = gradient;
-    stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
-    strokeWeight(2);
-    rect(GAME_WIDTH - 160, 300, 100, 40, 10);
-    noStroke();
-    fill(14, 39, 59); // Tangaroa (#0E273B)
-    textSize(18);
-    text("VIEW INTRO", GAME_WIDTH - 110, 320);
-  
-    textAlign(CENTER, BASELINE); // Reset wyrównania tekstu
+  // Tutorial Button
+  gradient = drawingContext.createLinearGradient(GAME_WIDTH - 160, 250, GAME_WIDTH - 60, 250);
+  gradient.addColorStop(0, "#93D0CF");
+  gradient.addColorStop(1, "#FFD700");
+  drawingContext.fillStyle = gradient;
+  stroke(147, 208, 207);
+  strokeWeight(2);
+  rect(GAME_WIDTH - 160, 250, 100, 40, 10);
+  noStroke();
+  fill(14, 39, 59);
+  textSize(18);
+  text("TUTORIAL", GAME_WIDTH - 110, 270);
 
-    
-} 
+  // View Intro Button
+  gradient = drawingContext.createLinearGradient(GAME_WIDTH - 160, 300, GAME_WIDTH - 60, 300);
+  gradient.addColorStop(0, "#93D0CF");
+  gradient.addColorStop(1, "#FFD700");
+  drawingContext.fillStyle = gradient;
+  stroke(147, 208, 207);
+  strokeWeight(2);
+  rect(GAME_WIDTH - 160, 300, 100, 40, 10);
+  noStroke();
+  fill(14, 39, 59);
+  textSize(18);
+  text("VIEW INTRO", GAME_WIDTH - 110, 320);
+
+  textAlign(CENTER, BASELINE); // Reset wyrównania tekstu
+}
 
 else if (gameState === "info") {
   // Gradient tła z trzema kolorami i zaokrąglonymi rogami (spójny z tutorialem)
