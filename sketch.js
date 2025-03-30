@@ -356,37 +356,25 @@ const superseedSepolia = {
 // Funkcja czekająca na załadowanie skryptów z debugowaniem
 function waitForScripts() {
   return new Promise((resolve) => {
-    console.log("Checking for scripts...");
-    if (window.ethers) {
-      console.log("ethers loaded:", window.ethers.version);
-    } else {
-      console.log("ethers not loaded yet");
-    }
-    if (window.Web3Modal) {
-      console.log("Web3Modal loaded, type:", typeof window.Web3Modal, "value:", window.Web3Modal);
-    } else {
-      console.log("Web3Modal not loaded yet");
-    }
-    if (window.WalletConnectProvider) {
-      console.log("WalletConnectProvider loaded, type:", typeof window.WalletConnectProvider);
-    } else {
-      console.log("WalletConnectProvider not loaded yet");
-    }
+    console.log("Checking scripts for mobile...");
+    if (!window.ethers) console.warn("ethers.js not loaded");
+    if (!window.Web3Modal) console.warn("Web3Modal not loaded");
+    if (!window.WalletConnectProvider) console.warn("WalletConnectProvider not loaded");
 
     if (window.Web3Modal && window.WalletConnectProvider && window.ethers) {
-      console.log("All scripts loaded successfully");
+      console.log("All scripts loaded");
       resolve();
     } else {
-      const checkInterval = setInterval(() => {
+      const interval = setInterval(() => {
         if (window.Web3Modal && window.WalletConnectProvider && window.ethers) {
-          console.log("All scripts loaded successfully after interval");
-          clearInterval(checkInterval);
+          clearInterval(interval);
           resolve();
         }
       }, 100);
       setTimeout(() => {
-        clearInterval(checkInterval);
-        console.error("Web3Modal, WalletConnectProvider, or ethers failed to load after 10 seconds");
+        clearInterval(interval);
+        console.error("Scripts failed to load after 10s");
+        connectionError = "Required scripts failed to load";
         resolve();
       }, 10000);
     }
@@ -395,12 +383,9 @@ function waitForScripts() {
 
 // Inicjalizacja Web3Modal
 function initializeWeb3Modal() {
-  if (!window.Web3Modal) {
-    console.error("Web3Modal not loaded yet!");
-    return;
-  }
-  if (!window.WalletConnectProvider) {
-    console.error("WalletConnectProvider not loaded yet!");
+  if (!window.Web3Modal || !window.WalletConnectProvider) {
+    console.error("Web3Modal or WalletConnectProvider missing");
+    connectionError = "Wallet libraries not loaded";
     return;
   }
 
@@ -409,7 +394,11 @@ function initializeWeb3Modal() {
       package: window.WalletConnectProvider,
       options: {
         rpc: {
-          53302: "https://sepolia.superseed.xyz", // Poprawiono z 53342 na 53302
+          53302: "https://sepolia.superseed.xyz",
+        },
+        qrcode: true, // Explicitly enable QR code for mobile
+        qrcodeModalOptions: {
+          mobileLinks: ["metamask", "trust", "rainbow"], // Popular mobile wallets
         },
       },
     },
@@ -422,9 +411,10 @@ function initializeWeb3Modal() {
         providerOptions,
         theme: "dark",
       });
-      console.log("Web3Modal initialized successfully as constructor");
+      console.log("Web3Modal initialized for mobile");
     } catch (error) {
-      console.error("Failed to initialize Web3Modal as constructor:", error);
+      console.error("Web3Modal init failed:", error);
+      connectionError = "Web3Modal failed: " + error.message;
     }
   } else if (typeof window.Web3Modal === "object" && window.Web3Modal.default) {
     // Jeśli Web3Modal jest obiektem z domyślnym eksportem (np. w nowszych wersjach)
@@ -725,8 +715,31 @@ function touchStarted() {
     soundInitialized = true;
     backgroundMusic.loop();
   }
-  mousePressed(); // Reużyj logiki myszy
-  return false;
+  let adjustedTouchX = mouseX - (width - GAME_WIDTH) / 2; // mouseX is updated by p5.js for touch
+  let adjustedTouchY = mouseY - (height - GAME_HEIGHT) / 2;
+
+  if (gameState === "howToPlay" && !isConnected) {
+    if (
+      adjustedTouchX >= GAME_WIDTH / 2 - 100 &&
+      adjustedTouchX <= GAME_WIDTH / 2 + 100 &&
+      adjustedTouchY >= 480 &&
+      adjustedTouchY <= 530
+    ) {
+      console.log("Touch login initiated on mobile");
+      connectWallet(true).then(() => {
+        if (isConnected) {
+          console.log("Wallet connected successfully via touch");
+        } else {
+          console.log("Wallet connection failed via touch");
+        }
+      }).catch((error) => {
+        console.error("Touch connectWallet error:", error);
+        connectionError = "Touch connection failed: " + error.message;
+      });
+    }
+  }
+  mousePressed(); // Keep existing mouse logic
+  return false; // Prevent default touch behavior
 }
 
 function drawBackground(pulseProgress) {
