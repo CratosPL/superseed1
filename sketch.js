@@ -1056,11 +1056,11 @@ else if (introState === 2) {
 
  if (gameState === "howToPlay") {
   // Wczytanie tła z subtelnym rozmyciem
-  drawingContext.filter = 'blur(5px)'; // Rozmycie o promieniu 5 pikseli
+  drawingContext.filter = 'blur(5px)';
   image(cosmicMenuBg, 0, 0, GAME_WIDTH, GAME_HEIGHT);
-  drawingContext.filter = 'none'; // Reset filtru dla pozostałych elementów
+  drawingContext.filter = 'none';
 
-  // Winietka dla płynnego przejścia
+  // Winietka i overlay gradientu (bez zmian)
   let vignette = drawingContext.createRadialGradient(
     GAME_WIDTH / 2, 
     GAME_HEIGHT / 2, 
@@ -1069,126 +1069,124 @@ else if (introState === 2) {
     GAME_HEIGHT / 2, 
     Math.max(GAME_WIDTH, GAME_HEIGHT) / 2
   );
-  vignette.addColorStop(0, "rgba(14, 39, 59, 0)"); // Centrum przezroczyste
-  vignette.addColorStop(1, "rgba(14, 39, 59, 0.7)"); // Krawędzie przyciemnione (Tangaroa)
+  vignette.addColorStop(0, "rgba(14, 39, 59, 0)");
+  vignette.addColorStop(1, "rgba(14, 39, 59, 0.7)");
   drawingContext.fillStyle = vignette;
   rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
 
-  // Subtelny overlay gradientu dla kontrastu
   let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
-  gradient.addColorStop(0, "rgba(14, 39, 59, 0.6)"); // Tangaroa z przezroczystością
-  gradient.addColorStop(1, "rgba(93, 208, 207, 0.4)"); // Morning Glory z przezroczystością
+  gradient.addColorStop(0, "rgba(14, 39, 59, 0.6)");
+  gradient.addColorStop(1, "rgba(93, 208, 207, 0.4)");
   drawingContext.fillStyle = gradient;
   rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
 
-  // Pulsujące nowe logo na górze – kwadratowe proporcje
+  // Większe pulsujące logo na górze
   let logoScale = 1 + sin(millis() * 0.002) * 0.05; // Subtelne pulsowanie
-  let logoSize = 300 * logoScale; // Jednolity rozmiar dla kwadratu
-  image(mainLogo, GAME_WIDTH / 2 - logoSize / 2, 30, logoSize, logoSize); // Kwadratowe logo
-  
-    // Choose Your Seed Color – bardziej dynamiczne pudełka
-    fill(249, 249, 242);
-    textSize(24);
-    text("Choose Your Seed Color", GAME_WIDTH / 2, 320);
-    let colorBoxSize = 60;
-    let colorBoxSpacing = 30;
-    let startX = GAME_WIDTH / 2 - (colorBoxSize * 3 + colorBoxSpacing * 2) / 2;
-    let pulse = 1 + sin(millis() * 0.005) * 0.1; // Animacja pulsowania dla wybranych kolorów
-  
-    // Zielony
-    fill(0, 255, 0);
-    rect(startX, 350, colorBoxSize, colorBoxSize, 15);
-    // Niebieski
-    fill(0, 0, 255);
-    rect(startX + colorBoxSize + colorBoxSpacing, 350, colorBoxSize, colorBoxSize, 15);
-    // Złoty
-    fill(255, 215, 0);
-    rect(startX + (colorBoxSize + colorBoxSpacing) * 2, 350, colorBoxSize, colorBoxSize, 15);
-  
-    // Ramka dla wybranego koloru z efektem pulsowania
-    stroke(147, 208, 207); // Superseed Light Green (#93D0CF)
-    strokeWeight(3);
-    noFill();
-    if (seedColor.r === 0 && seedColor.g === 255 && seedColor.b === 0) {
-      rect(startX, 350, colorBoxSize * pulse, colorBoxSize * pulse, 15);
-    } else if (seedColor.r === 0 && seedColor.g === 0 && seedColor.b === 255) {
-      rect(startX + colorBoxSize + colorBoxSpacing, 350, colorBoxSize * pulse, colorBoxSize * pulse, 15);
-    } else if (seedColor.r === 255 && seedColor.g === 215 && seedColor.b === 0) {
-      rect(startX + (colorBoxSize + colorBoxSpacing) * 2, 350, colorBoxSize * pulse, colorBoxSize * pulse, 15);
-    }
-    noStroke();
-  
-    // Enter Your Nick – ulepszony styl
-    fill(249, 249, 242);
-    textSize(24);
-    text("Enter Your Nick", GAME_WIDTH / 2, 450);
-    fill(128, 131, 134, 180); // Aluminium z większą przezroczystością
+  let logoSize = 400 * logoScale; // Zwiększono z 300 do 400
+  image(mainLogo, GAME_WIDTH / 2 - logoSize / 2, 30, logoSize, logoSize); // Pozycja Y bez zmian
+
+  // Przesunięcie wszystkich elementów w dół o 100 pikseli (możesz dostosować wartość)
+  let verticalOffset = 100;
+
+  // Choose Your Seed Color
+  fill(249, 249, 242);
+  textSize(24);
+  text("Choose Your Seed Color", GAME_WIDTH / 2, 320 + verticalOffset);
+  let colorBoxSize = 60;
+  let colorBoxSpacing = 30;
+  let startX = GAME_WIDTH / 2 - (colorBoxSize * 3 + colorBoxSpacing * 2) / 2;
+  let pulse = 1 + sin(millis() * 0.005) * 0.1;
+
+  fill(0, 255, 0);
+  rect(startX, 350 + verticalOffset, colorBoxSize, colorBoxSize, 15);
+  fill(0, 0, 255);
+  rect(startX + colorBoxSize + colorBoxSpacing, 350 + verticalOffset, colorBoxSize, colorBoxSize, 15);
+  fill(255, 215, 0);
+  rect(startX + (colorBoxSize + colorBoxSpacing) * 2, 350 + verticalOffset, colorBoxSize, colorBoxSize, 15);
+
+  stroke(147, 208, 207);
+  strokeWeight(3);
+  noFill();
+  if (seedColor.r === 0 && seedColor.g === 255 && seedColor.b === 0) {
+    rect(startX, 350 + verticalOffset, colorBoxSize * pulse, colorBoxSize * pulse, 15);
+  } else if (seedColor.r === 0 && seedColor.g === 0 && seedColor.b === 255) {
+    rect(startX + colorBoxSize + colorBoxSpacing, 350 + verticalOffset, colorBoxSize * pulse, colorBoxSize * pulse, 15);
+  } else if (seedColor.r === 255 && seedColor.g === 215 && seedColor.b === 0) {
+    rect(startX + (colorBoxSize + colorBoxSpacing) * 2, 350 + verticalOffset, colorBoxSize * pulse, colorBoxSize * pulse, 15);
+  }
+  noStroke();
+
+  // Enter Your Nick
+  fill(249, 249, 242);
+  textSize(24);
+  text("Enter Your Nick", GAME_WIDTH / 2, 450 + verticalOffset);
+  fill(128, 131, 134, 180);
+  stroke(147, 208, 207);
+  strokeWeight(3);
+  rect(GAME_WIDTH / 2 - 120, 470 + verticalOffset, 240, 50, 10);
+  fill(249, 249, 242);
+  textSize(20);
+  textAlign(CENTER, CENTER);
+  if (isTypingNick) {
+    let cursor = (floor(millis() / 500) % 2 === 0) ? "|" : "";
+    text(playerNick + cursor, GAME_WIDTH / 2, 495 + verticalOffset);
+  } else {
+    text(playerNick || "Click to type", GAME_WIDTH / 2, 495 + verticalOffset);
+  }
+  noStroke();
+
+  // Start Button
+  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 120, 540 + verticalOffset, GAME_WIDTH / 2 + 120, 540 + verticalOffset);
+  gradient.addColorStop(0, "#93D0CF");
+  gradient.addColorStop(1, "#FFD700");
+  drawingContext.fillStyle = gradient;
+  stroke(147, 208, 207);
+  strokeWeight(3);
+  rect(GAME_WIDTH / 2 - 120, 540 + verticalOffset, 240, 60, 15);
+  noStroke();
+  fill(14, 39, 59);
+  textSize(28);
+  let buttonText = savedGameState ? "RESUME" : "START";
+  text(buttonText, GAME_WIDTH / 2, 570 + verticalOffset);
+
+  // Login/Logout Button
+  if (!isConnected) {
+    gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 120, 620 + verticalOffset, GAME_WIDTH / 2 + 120, 620 + verticalOffset);
+    gradient.addColorStop(0, "#0E273B");
+    gradient.addColorStop(1, "#808386");
+    drawingContext.fillStyle = gradient;
     stroke(147, 208, 207);
     strokeWeight(3);
-    rect(GAME_WIDTH / 2 - 120, 470, 240, 50, 10);
-    fill(249, 249, 242);
-    textSize(20);
-    textAlign(CENTER, CENTER);
-    if (isTypingNick) {
-      let cursor = (floor(millis() / 500) % 2 === 0) ? "|" : "";
-      text(playerNick + cursor, GAME_WIDTH / 2, 495);
-    } else {
-      text(playerNick || "Click to type", GAME_WIDTH / 2, 495);
-    }
+    rect(GAME_WIDTH / 2 - 120, 620 + verticalOffset, 240, 60, 15);
     noStroke();
-  
-    // Start Button – większy i bardziej widoczny
-    gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 120, 540, GAME_WIDTH / 2 + 120, 540);
-    gradient.addColorStop(0, "#93D0CF");
+    fill(249, 249, 242);
+    textSize(28);
+    text("LOGIN", GAME_WIDTH / 2, 650 + verticalOffset);
+  } else {
+    fill(93, 208, 207);
+    textSize(18);
+    text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 620 + verticalOffset);
+    gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 120, 660 + verticalOffset, GAME_WIDTH / 2 + 120, 660 + verticalOffset);
+    gradient.addColorStop(0, "#FF4500");
     gradient.addColorStop(1, "#FFD700");
     drawingContext.fillStyle = gradient;
     stroke(147, 208, 207);
     strokeWeight(3);
-    rect(GAME_WIDTH / 2 - 120, 540, 240, 60, 15);
+    rect(GAME_WIDTH / 2 - 120, 660 + verticalOffset, 240, 60, 15);
     noStroke();
-    fill(14, 39, 59); // Tangaroa
+    fill(249, 249, 242);
     textSize(28);
-    let buttonText = savedGameState ? "RESUME" : "START";
-    text(buttonText, GAME_WIDTH / 2, 570);
-  
-    // Login/Logout Button – bardziej dynamiczny styl
-    if (!isConnected) {
-      gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 120, 620, GAME_WIDTH / 2 + 120, 620);
-      gradient.addColorStop(0, "#0E273B");
-      gradient.addColorStop(1, "#808386");
-      drawingContext.fillStyle = gradient;
-      stroke(147, 208, 207);
-      strokeWeight(3);
-      rect(GAME_WIDTH / 2 - 120, 620, 240, 60, 15);
-      noStroke();
-      fill(249, 249, 242);
-      textSize(28);
-      text("LOGIN", GAME_WIDTH / 2, 650);
-    } else {
-      fill(93, 208, 207);
-      textSize(18);
-      text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 620);
-      gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 120, 660, GAME_WIDTH / 2 + 120, 660);
-      gradient.addColorStop(0, "#FF4500");
-      gradient.addColorStop(1, "#FFD700");
-      drawingContext.fillStyle = gradient;
-      stroke(147, 208, 207);
-      strokeWeight(3);
-      rect(GAME_WIDTH / 2 - 120, 660, 240, 60, 15);
-      noStroke();
-      fill(249, 249, 242);
-      textSize(28);
-      text("LOGOUT", GAME_WIDTH / 2, 690);
-    }
-  
-    // Komunikat o wersji desktopowej – mniejszy i bardziej subtelny
-    fill(255, 0, 0, 200); // Czerwony z przezroczystością
-    textSize(26);
-    textStyle(BOLD);
-    text("NOTICE: Desktop only for now", GAME_WIDTH / 2, 770);
-    fill(255, 215, 0, 200); // Złoty z przezroczystością
-    textSize(16);
-    text("Mobile version coming soon!", GAME_WIDTH / 2, 800);
+    text("LOGOUT", GAME_WIDTH / 2, 690 + verticalOffset);
+  }
+
+  // Komunikat o wersji desktopowej
+  fill(255, 0, 0, 200);
+  textSize(26);
+  textStyle(BOLD);
+  text("NOTICE: Desktop only for now", GAME_WIDTH / 2, 770 + verticalOffset);
+  fill(255, 215, 0, 200);
+  textSize(16);
+  text("Mobile version coming soon!", GAME_WIDTH / 2, 800 + verticalOffset);
   
     // Wyświetlanie komunikatu o błędzie lub prośbie o zalogowanie
     if (showLoginMessage) {
@@ -1196,7 +1194,7 @@ else if (introState === 2) {
       if (elapsed < loginMessageDuration) {
         fill(255, 0, 0, 220);
         textSize(20);
-        text("Please log in to start the game", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 120);
+        text("Please log in to start the game", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 170);
       } else {
         showLoginMessage = false;
       }
@@ -1822,8 +1820,8 @@ if (orbitShiftTimer <= 0) {
   orbitShiftTimer = 20000;
 }
 if (orbitType === 0) {
-  logoX = GAME_WIDTH / 2 + sin(millis() * 0.001) * min(40 * level, 200); // Płynny ruch sinusoidalny
-  logoY = GAME_HEIGHT / 2 + cos(millis() * 0.001) * min(30 * level, 150);
+  logoX = GAME_WIDTH / 2 + sin(millis() * 0.001) * min(40 * level, GAME_WIDTH * 0.3);
+  logoY = GAME_HEIGHT / 2 + cos(millis() * 0.001) * min(30 * level, GAME_HEIGHT * 0.25);
 } else {
   logoX = GAME_WIDTH / 2 + cos(millis() * 0.002) * min(60 * level, 300); // Eliptyczny ruch
   logoY = GAME_HEIGHT / 2 + sin(millis() * 0.002) * min(60 * level, 300);
@@ -2705,61 +2703,76 @@ function mousePressed() {
   let adjustedMouseY = mouseY - (height - GAME_HEIGHT) / 2;
 
   if (gameState === "howToPlay") {
-    // Kliknięcie na whiteLogo w lewym dolnym rogu – nowa pozycja
+    // Kliknięcie na whiteLogo w lewym dolnym rogu – bez zmian
     let whiteLogoX = 20;
-    let whiteLogoY = GAME_HEIGHT - 100; // Zaktualizowana pozycja z -60 na -100
-    let whiteLogoWidth = 100; // Bazowa szerokość bez skalowania
-    let whiteLogoHeight = 50; // Bazowa wysokość bez skalowania
+    let whiteLogoY = GAME_HEIGHT - 100;
+    let whiteLogoWidth = 100;
+    let whiteLogoHeight = 50;
     if (
       adjustedMouseX >= whiteLogoX &&
       adjustedMouseX <= whiteLogoX + whiteLogoWidth &&
       adjustedMouseY >= whiteLogoY &&
       adjustedMouseY <= whiteLogoY + whiteLogoHeight
     ) {
-      window.open("https://www.superseed.xyz/", "_blank"); // Otwiera link w nowej karcie
+      window.open("https://www.superseed.xyz/", "_blank");
     }
 
-// Kliknięcie na "Created by CratosPL" w prawym dolnym rogu
-let creatorTextX = GAME_WIDTH - 140; // Początek tekstu (GAME_WIDTH - 20 - szerokość tekstu około 120)
-let creatorTextY = GAME_HEIGHT - 30; // Góra obszaru tekstu (GAME_HEIGHT - 10 - 20 wysokości)
-let creatorTextWidth = 120; // Przybliżona szerokość tekstu
-let creatorTextHeight = 20; // Wysokość obszaru klikalnego
-if (
-  adjustedMouseX >= creatorTextX &&
-  adjustedMouseX <= creatorTextX + creatorTextWidth &&
-  adjustedMouseY >= creatorTextY &&
-  adjustedMouseY <= creatorTextY + creatorTextHeight
-) {
-  window.open("https://x.com/sebbtgk", "_blank"); // Otwiera Twój Twitter w nowej karcie
-}
+    // Kliknięcie na "Created by CratosPL" w prawym dolnym rogu – bez zmian
+    let creatorTextX = GAME_WIDTH - 140;
+    let creatorTextY = GAME_HEIGHT - 30;
+    let creatorTextWidth = 120;
+    let creatorTextHeight = 20;
+    if (
+      adjustedMouseX >= creatorTextX &&
+      adjustedMouseX <= creatorTextX + creatorTextWidth &&
+      adjustedMouseY >= creatorTextY &&
+      adjustedMouseY <= creatorTextY + creatorTextHeight
+    ) {
+      window.open("https://x.com/sebbtgk", "_blank");
+    }
 
-    // Choose Your Seed Color – nowe wymiary i pozycje
+    // Przesunięcie dla wszystkich elementów menu o verticalOffset
+    let verticalOffset = 100;
+
+    // Choose Your Seed Color – zaktualizowane współrzędne Y
     let colorBoxSize = 60;
     let colorBoxSpacing = 30;
     let startX = GAME_WIDTH / 2 - (colorBoxSize * 3 + colorBoxSpacing * 2) / 2;
-    if (adjustedMouseY >= 350 && adjustedMouseY <= 350 + colorBoxSize) {
+    if (adjustedMouseY >= 350 + verticalOffset && adjustedMouseY <= 350 + verticalOffset + colorBoxSize) {
       if (adjustedMouseX >= startX && adjustedMouseX <= startX + colorBoxSize) {
         seedColor = { r: 0, g: 255, b: 0 }; // Zielony
-      } else if (adjustedMouseX >= startX + colorBoxSize + colorBoxSpacing &&
-                 adjustedMouseX <= startX + colorBoxSize * 2 + colorBoxSpacing) {
+      } else if (
+        adjustedMouseX >= startX + colorBoxSize + colorBoxSpacing &&
+        adjustedMouseX <= startX + colorBoxSize * 2 + colorBoxSpacing
+      ) {
         seedColor = { r: 0, g: 0, b: 255 }; // Niebieski
-      } else if (adjustedMouseX >= startX + (colorBoxSize + colorBoxSpacing) * 2 &&
-                 adjustedMouseX <= startX + (colorBoxSize + colorBoxSpacing) * 2 + colorBoxSize) {
+      } else if (
+        adjustedMouseX >= startX + (colorBoxSize + colorBoxSpacing) * 2 &&
+        adjustedMouseX <= startX + (colorBoxSize + colorBoxSpacing) * 2 + colorBoxSize
+      ) {
         seedColor = { r: 255, g: 215, b: 0 }; // Złoty
       }
     }
 
-    // Enter Your Nick – nowe pozycje
-    if (adjustedMouseY >= 470 && adjustedMouseY <= 520 &&
-        adjustedMouseX >= GAME_WIDTH / 2 - 120 && adjustedMouseX <= GAME_WIDTH / 2 + 120) {
+    // Enter Your Nick – zaktualizowane współrzędne Y
+    if (
+      adjustedMouseY >= 470 + verticalOffset &&
+      adjustedMouseY <= 520 + verticalOffset &&
+      adjustedMouseX >= GAME_WIDTH / 2 - 120 &&
+      adjustedMouseX <= GAME_WIDTH / 2 + 120
+    ) {
       isTypingNick = true;
     } else {
       isTypingNick = false;
     }
 
-    // Start/Resume Button – nowe wymiary i pozycje
-    if (adjustedMouseX >= GAME_WIDTH / 2 - 120 && adjustedMouseX <= GAME_WIDTH / 2 + 120 &&
-        adjustedMouseY >= 540 && adjustedMouseY <= 600) {
+    // Start/Resume Button – zaktualizowane współrzędne Y
+    if (
+      adjustedMouseX >= GAME_WIDTH / 2 - 120 &&
+      adjustedMouseX <= GAME_WIDTH / 2 + 120 &&
+      adjustedMouseY >= 540 + verticalOffset &&
+      adjustedMouseY <= 600 + verticalOffset
+    ) {
       if (!isConnected) {
         console.log("Please log in first");
         showLoginMessage = true;
@@ -2771,25 +2784,36 @@ if (
       }
     }
 
-    // Login/Logout Button – nowe pozycje
-    if (!isConnected && adjustedMouseX >= GAME_WIDTH / 2 - 120 && adjustedMouseX <= GAME_WIDTH / 2 + 120 &&
-        adjustedMouseY >= 620 && adjustedMouseY <= 680) {
+    // Login/Logout Button – zaktualizowane współrzędne Y
+    if (
+      !isConnected &&
+      adjustedMouseX >= GAME_WIDTH / 2 - 120 &&
+      adjustedMouseX <= GAME_WIDTH / 2 + 120 &&
+      adjustedMouseY >= 620 + verticalOffset &&
+      adjustedMouseY <= 680 + verticalOffset
+    ) {
       console.log("Login clicked - initiating wallet connection");
-      connectWallet(true).then(() => {
-        if (isConnected) {
-          console.log("Wallet connected successfully");
-          // Automatyczne przejście do gry po połączeniu
-          if (savedGameState) resumeGame();
-          else startGame();
-        } else {
-          console.log("Wallet connection failed");
-        }
-      }).catch((error) => {
-        console.error("Wallet connection error:", error);
-        connectionError = "Connection failed: " + error.message;
-      });
-    } else if (isConnected && adjustedMouseX >= GAME_WIDTH / 2 - 120 && adjustedMouseX <= GAME_WIDTH / 2 + 120 &&
-               adjustedMouseY >= 660 && adjustedMouseY <= 720) {
+      connectWallet(true)
+        .then(() => {
+          if (isConnected) {
+            console.log("Wallet connected successfully");
+            if (savedGameState) resumeGame();
+            else startGame();
+          } else {
+            console.log("Wallet connection failed");
+          }
+        })
+        .catch((error) => {
+          console.error("Wallet connection error:", error);
+          connectionError = "Connection failed: " + error.message;
+        });
+    } else if (
+      isConnected &&
+      adjustedMouseX >= GAME_WIDTH / 2 - 120 &&
+      adjustedMouseX <= GAME_WIDTH / 2 + 120 &&
+      adjustedMouseY >= 660 + verticalOffset &&
+      adjustedMouseY <= 720 + verticalOffset
+    ) {
       console.log("Logout clicked - disconnecting wallet");
       if (web3Modal) {
         web3Modal.clearCachedProvider();
@@ -2803,22 +2827,34 @@ if (
       connectionError = null;
     }
 
-    // INFO Button – nowe pozycje
+    // INFO Button – bez zmian
     let sideButtonX = GAME_WIDTH - 120 - 20;
-    if (adjustedMouseX >= sideButtonX && adjustedMouseX <= sideButtonX + 120 &&
-        adjustedMouseY >= 200 && adjustedMouseY <= 250) {
+    if (
+      adjustedMouseX >= sideButtonX &&
+      adjustedMouseX <= sideButtonX + 120 &&
+      adjustedMouseY >= 200 &&
+      adjustedMouseY <= 250
+    ) {
       gameState = "info";
     }
 
-    // Tutorial Button – nowe pozycje
-    if (adjustedMouseX >= sideButtonX && adjustedMouseX <= sideButtonX + 120 &&
-        adjustedMouseY >= 260 && adjustedMouseY <= 310) {
+    // Tutorial Button – bez zmian
+    if (
+      adjustedMouseX >= sideButtonX &&
+      adjustedMouseX <= sideButtonX + 120 &&
+      adjustedMouseY >= 260 &&
+      adjustedMouseY <= 310
+    ) {
       gameState = "tutorial";
     }
 
-    // View Intro Button – nowe pozycje
-    if (adjustedMouseX >= sideButtonX && adjustedMouseX <= sideButtonX + 120 &&
-        adjustedMouseY >= 320 && adjustedMouseY <= 370) {
+    // View Intro Button – bez zmian
+    if (
+      adjustedMouseX >= sideButtonX &&
+      adjustedMouseX <= sideButtonX + 120 &&
+      adjustedMouseY >= 320 &&
+      adjustedMouseY <= 370
+    ) {
       gameState = "intro";
       introState = 0;
       introTimer = millis();
@@ -3123,4 +3159,15 @@ function keyPressed() {
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
+  let scaleFactor = min(windowWidth / 1200, windowHeight / 1000);
+  GAME_WIDTH = windowWidth;
+  GAME_HEIGHT = windowHeight;
+  RESTART_BUTTON_WIDTH = 200 * scaleFactor;
+  RESTART_BUTTON_HEIGHT = 50 * scaleFactor;
+  SYMBOL_SIZE = 18 * scaleFactor;
+  GAME_SYMBOL_SIZE = 40 * scaleFactor;
+  TABLE_CELL_WIDTH = 500 * scaleFactor;
+  TABLE_CELL_HEIGHT = 50 * scaleFactor;
+  TABLE_START_X = (GAME_WIDTH - TABLE_CELL_WIDTH * 2) / 2;
+  TABLE_START_Y = 300 * scaleFactor;
 }
