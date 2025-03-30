@@ -896,20 +896,25 @@ let aspectRatio = originalWidth / originalHeight;
     image(logo, GAME_WIDTH / 2, GAME_HEIGHT / 2, logoPulse, logoPulse);
     for (let i = 0; i < 4; i++) {
       let angle = TWO_PI / 4 * i + currentTime * 0.001;
-      let orbitRadius = isMobile ? min(100, GAME_WIDTH * 0.15) : 150; // Mniejsza orbita na telefonie
+      let orbitRadius = isMobile ? min(100, GAME_WIDTH * 0.15) : 150;
       let px = GAME_WIDTH / 2 + cos(angle) * orbitRadius;
       let py = GAME_HEIGHT / 2 + sin(angle) * orbitRadius;
       let p = new PowerUp(px, py);
       p.type = ["life", "gas", "pulse", "orbit"][i];
       p.show();
     }
-    fill(93, 208, 207);
+    // Dodajemy obrys dla lepszej widoczności
+    stroke(14, 39, 59); // Ciemny kolor Tangaroa (#0E273B) dla obrysu
+    strokeWeight(2);    // Subtelny obrys o grubości 1 piksel
+    fill(93, 208, 207); // Wypełnienie pozostaje bez zmian
     textSize(isMobile ? 18 : 24);
+    textStyle(BOLD);    // Opcjonalnie: pogrubienie dla dodatkowego kontrastu
     text(
       "You’ve been chosen to awaken the Superseed Mainnet.\nSync cosmic nodes, harness power-ups,\nand forge a decentralized future – orbit by orbit.",
       GAME_WIDTH / 2,
       GAME_HEIGHT - (isMobile ? 100 : 150)
     );
+    noStroke(); // Wyłączamy obrys po tekście, aby nie wpływał na inne elementy
   }
   // Scene 3: "The Reward Awaits" – NFT jako karta z obracającym się logo i nazwą gry
   else if (introState === 2) {
@@ -1012,18 +1017,18 @@ let aspectRatio = originalWidth / originalHeight;
     noStroke();
     pop();
 
-    stroke(14, 39, 59, 200);
-    strokeWeight(1);
-    fill(147, 208, 207);
-    textSize(isMobile ? 18 : 24);
-    textStyle(BOLD);
-    textAlign(CENTER, CENTER);
-    text(
-      "Reach Orbit 10, sync the Mainnet,\nand claim your Superseed Cosmic Core NFT\non the Supersync Network!",
-      GAME_WIDTH / 2,
-      GAME_HEIGHT - (isMobile ? 100 : 150)
-    );
-    noStroke();
+    stroke(14, 39, 59, 200); // Obrys w kolorze Tangaroa dla kontrastu
+  strokeWeight(3);         // Grubszy obrys (z 1.5 na 2) dla lepszej widoczności
+  fill(255, 245, 102);     // Jasny żółty (#FFF566) bez zmian
+  textSize(isMobile ? 18 : 24);
+  textStyle(BOLD);         // Pogrubienie dla lepszej widoczności
+  textAlign(CENTER, CENTER);
+  text(
+    "Reach Orbit 10, sync the Mainnet,\nand claim your Superseed Cosmic Core NFT\non the Supersync Network!",
+    GAME_WIDTH / 2,
+    GAME_HEIGHT - (isMobile ? 100 : 150)
+  );
+  noStroke();
 
     stroke(14, 39, 59, 200);
     strokeWeight(1);
@@ -1226,10 +1231,11 @@ let aspectRatio = originalWidth / originalHeight;
   }
 
   // Komunikat o wersji desktopowej
-  fill(255, 0, 0, 200);
-  textSize(26);
-  textStyle(BOLD);
-  text("NOTICE: Desktop only for now", GAME_WIDTH / 2, 770 + verticalOffset);
+  fill(255, 50, 50, 255); // Brighter red, fully opaque
+textSize(32); // Larger text for readability
+textStyle(BOLD);
+drawingContext.shadowBlur = 0; // Disable blur for this text
+text("NOTICE: Desktop only for now", GAME_WIDTH / 2, 770 + verticalOffset);
   fill(255, 215, 0, 200);
   textSize(16);
   text("Mobile version coming soon!", GAME_WIDTH / 2, 800 + verticalOffset);
