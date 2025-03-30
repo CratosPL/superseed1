@@ -1087,64 +1087,62 @@ else if (introState === 2) {
   
     // Start Button
     gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 420, GAME_WIDTH / 2 + 100, 420);
-  gradient.addColorStop(0, "#93D0CF");
-  gradient.addColorStop(1, "#FFD700");
-  drawingContext.fillStyle = gradient;
-  stroke(147, 208, 207);
-  strokeWeight(2);
-  rect(GAME_WIDTH / 2 - 100, 420, 200, 50, 10);
-  noStroke();
-  fill(14, 39, 59);
-  textSize(24);
-  let buttonText = savedGameState ? "RESUME" : "START";
-  text(buttonText, GAME_WIDTH / 2, 445);
-
-  // Login/Logout Button lub status zalogowania
-  if (!isConnected) {
-    gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 480, GAME_WIDTH / 2 + 100, 480);
-    gradient.addColorStop(0, "#0E273B");
-    gradient.addColorStop(1, "#808386");
-    drawingContext.fillStyle = gradient;
-    stroke(147, 208, 207);
-    strokeWeight(2);
-    rect(GAME_WIDTH / 2 - 100, 480, 200, 50, 10);
-    noStroke();
-    fill(249, 249, 242);
-    textSize(24);
-    text("LOGIN", GAME_WIDTH / 2, 505);
-  } else {
-    // Wyświetlanie statusu zalogowania zamiast przycisku
-    fill(93, 208, 207);
-    textSize(16);
-    text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 505);
-    // Opcjonalnie: Przycisk "LOGOUT"
-    gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 540, GAME_WIDTH / 2 + 100, 540);
-    gradient.addColorStop(0, "#FF4500");
+    gradient.addColorStop(0, "#93D0CF");
     gradient.addColorStop(1, "#FFD700");
     drawingContext.fillStyle = gradient;
     stroke(147, 208, 207);
     strokeWeight(2);
-    rect(GAME_WIDTH / 2 - 100, 540, 200, 50, 10);
+    rect(GAME_WIDTH / 2 - 100, 420, 200, 50, 10);
     noStroke();
-    fill(249, 249, 242);
+    fill(14, 39, 59);
     textSize(24);
-    text("LOGOUT", GAME_WIDTH / 2, 565);
-  }
-
-  // Wyświetlanie komunikatu o błędzie lub prośbie o zalogowanie
-  if (showLoginMessage) {
-    let elapsed = millis() - loginMessageStartTime;
-    if (elapsed < loginMessageDuration) {
-      fill(255, 0, 0);
-      textSize(20);
-      textAlign(CENTER);
-      text("Please log in first to start the game", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 100);
+    let buttonText = savedGameState ? "RESUME" : "START";
+    text(buttonText, GAME_WIDTH / 2, 445);
+  
+    // Login/Logout Button lub status zalogowania
+    if (!isConnected) {
+      gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 480, GAME_WIDTH / 2 + 100, 480);
+      gradient.addColorStop(0, "#0E273B");
+      gradient.addColorStop(1, "#808386");
+      drawingContext.fillStyle = gradient;
+      stroke(147, 208, 207);
+      strokeWeight(2);
+      rect(GAME_WIDTH / 2 - 100, 480, 200, 50, 10);
+      noStroke();
+      fill(249, 249, 242);
+      textSize(24);
+      text("LOGIN", GAME_WIDTH / 2, 505);
     } else {
-      showLoginMessage = false;
+      // Wyświetlanie statusu zalogowania zamiast przycisku
+      fill(93, 208, 207);
+      textSize(16);
+      text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 505);
+      // Opcjonalnie: Przycisk "LOGOUT"
+      gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 540, GAME_WIDTH / 2 + 100, 540);
+      gradient.addColorStop(0, "#FF4500");
+      gradient.addColorStop(1, "#FFD700");
+      drawingContext.fillStyle = gradient;
+      stroke(147, 208, 207);
+      strokeWeight(2);
+      rect(GAME_WIDTH / 2 - 100, 540, 200, 50, 10);
+      noStroke();
+      fill(249, 249, 242);
+      textSize(24);
+      text("LOGOUT", GAME_WIDTH / 2, 565);
     }
-  }
-
-
+  
+    // Wyświetlanie komunikatu o błędzie lub prośbie o zalogowanie
+    if (showLoginMessage) {
+      let elapsed = millis() - loginMessageStartTime;
+      if (elapsed < loginMessageDuration) {
+        fill(255, 0, 0);
+        textSize(20);
+        textAlign(CENTER);
+        text("Please log in first to start the game", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 100);
+      } else {
+        showLoginMessage = false;
+      }
+    }
   
     // INFO Button
     gradient = drawingContext.createLinearGradient(GAME_WIDTH - 160, 200, GAME_WIDTH - 60, 200);
@@ -1185,296 +1183,21 @@ else if (introState === 2) {
     textSize(18);
     text("VIEW INTRO", GAME_WIDTH - 110, 320);
   
+    // Dodanie bardziej wyrazistej informacji o dostępności gry poniżej przycisków
+    stroke(14, 39, 59, 200); // Tangaroa (#0E273B) jako ciemna obwódka
+    strokeWeight(2);
+    fill(249, 249, 242); // White (#F9F9F2) dla kontrastu
+    textSize(18); // Nieco większy rozmiar dla wyrazistości
+    textStyle(BOLD); // Pogrubienie dla lepszej widoczności
+    text(
+      "Game currently available only on desktop - mobile version coming soon",
+      GAME_WIDTH / 2,
+      GAME_HEIGHT - 100 // Pozycja poniżej przycisku LOGOUT (565 + odstęp)
+    );
+    noStroke();
+  
     textAlign(CENTER, BASELINE); // Reset wyrównania tekstu
-
-    
-} 
-
-else if (gameState === "info") {
-  // Gradient tła z trzema kolorami i zaokrąglonymi rogami (spójny z tutorialem)
-  let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
-  gradient.addColorStop(0, "#0E273B"); // Tangaroa
-  gradient.addColorStop(0.5, "#93D0CF"); // Morning Glory
-  gradient.addColorStop(1, "#808386"); // Aluminium
-  drawingContext.fillStyle = gradient;
-  rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
-
-  // Pulsujące obramowanie (jak w tutorialu)
-  let pulseProgress = sin(millis() * 0.002) * 0.5 + 0.5;
-  stroke(93, 208, 207, map(pulseProgress, 0, 1, 100, 255));
-  strokeWeight(5 + pulseProgress * 2);
-  noFill();
-  rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
-  noStroke();
-
-  // Gwiazdki w tle (dynamiczne tło jak w tutorialu)
-  for (let i = bgParticles.length - 1; i >= 0; i--) {
-    bgParticles[i].update();
-    bgParticles[i].show(pulseProgress); // Użycie pulseProgress dla spójności
   }
-
-  // Nagłówek (mniejszy i bardziej elegancki)
-  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 150, 50, GAME_WIDTH / 2 + 150, 50);
-  gradient.addColorStop(0, "#93D0CF");
-  gradient.addColorStop(1, "#FFD700");
-  drawingContext.fillStyle = gradient;
-  textSize(36); // Zmniejszono z 48 dla harmonii
-  textStyle(BOLD);
-  textAlign(CENTER, CENTER);
-  text("Game Info", GAME_WIDTH / 2, 70);
-
-  // Sekcja Scoring
-  let sectionY = 120;
-  fill(14, 39, 59, 230); // Tangaroa z lekką przezroczystością
-  stroke(147, 208, 207); // Superseed Light Green
-  strokeWeight(3);
-  rect(100, sectionY, GAME_WIDTH - 200, 120, 20); // Zmniejszona wysokość
-  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, sectionY + 20, GAME_WIDTH / 2 + 100, sectionY + 20);
-  gradient.addColorStop(0, "#93D0CF");
-  gradient.addColorStop(1, "#FFD700");
-  drawingContext.fillStyle = gradient;
-  textSize(24);
-  textStyle(BOLD);
-  text("Scoring", GAME_WIDTH / 2, sectionY + 30);
-  fill(249, 249, 242); // White (#F9F9F2)
-  textSize(14); // Zmniejszono z 18 dla elegancji
-  textStyle(NORMAL);
-  text("Sync the Cosmic Seed when it pulses green!\nStart is easy – sync nodes slowly on Orbit 1 & 2!", GAME_WIDTH / 2, sectionY + 70);
-  noStroke();
-
-  // Sekcja Combos
-  sectionY += 150; // Większy odstęp
-  fill(14, 39, 59, 230);
-  stroke(147, 208, 207);
-  strokeWeight(3);
-  rect(100, sectionY, GAME_WIDTH - 200, 120, 20);
-  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, sectionY + 20, GAME_WIDTH / 2 + 100, sectionY + 20);
-  gradient.addColorStop(0, "#93D0CF");
-  gradient.addColorStop(1, "#FFD700");
-  drawingContext.fillStyle = gradient;
-  textSize(24);
-  textStyle(BOLD);
-  text("Combos", GAME_WIDTH / 2, sectionY + 30);
-  fill(249, 249, 242);
-  textSize(14);
-  textStyle(NORMAL);
-  text("Chain syncs for multipliers (x1, x2, ...).\n15+ syncs grants +1 life.", GAME_WIDTH / 2, sectionY + 70);
-  noStroke();
-
-  // Sekcja Power-Ups (jedna kolumna z animacjami)
-  sectionY += 150;
-  fill(14, 39, 59, 230);
-  stroke(147, 208, 207);
-  strokeWeight(3);
-  rect(100, sectionY, GAME_WIDTH - 200, 400, 20); // Zwiększona wysokość dla jednej kolumny
-  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 200, sectionY + 20, GAME_WIDTH / 2 + 200, sectionY + 20);
-  gradient.addColorStop(0, "#93D0CF");
-  gradient.addColorStop(1, "#FFD700");
-  drawingContext.fillStyle = gradient;
-  textSize(24);
-  textStyle(BOLD);
-  text("Power-Ups (click to activate)", GAME_WIDTH / 2, sectionY + 30);
-  textSize(14);
-  textStyle(NORMAL);
-  textAlign(LEFT, CENTER);
-
-  let mx = mouseX - (width - GAME_WIDTH) / 2;
-  let my = mouseY - (height - GAME_HEIGHT) / 2;
-
-  // Ikony Power-Ups z animacjami
-  let iconY = sectionY + 70;
-  let iconSpacing = 50;
-
-  // 1. Life
-  push();
-  translate(150, iconY);
-  let gradientLife = drawingContext.createRadialGradient(0, 0, 0, 0, 0, 20);
-  gradientLife.addColorStop(0, "rgb(255, 255, 255)");
-  gradientLife.addColorStop(1, "rgb(0, 255, 0)");
-  drawingContext.fillStyle = gradientLife;
-  star(0, 0, 15, 25 + sin(millis() * 0.005) * 5, 8); // Pulsująca animacja
-  pop();
-  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
-    noFill();
-    stroke(255, 215, 0, 200);
-    strokeWeight(2);
-    ellipse(150, iconY, 50);
-    noStroke();
-  }
-  fill(249, 249, 242);
-  text("Life: +1 Life", 220, iconY);
-
-  // 2. Gas Nebula
-  iconY += iconSpacing;
-  noFill();
-  stroke(0, 191, 255, 200);
-  strokeWeight(3);
-  for (let i = 0; i < 4; i++) {
-    arc(150, iconY, 25 * (i + 1) / 4, 25 * (i + 1) / 4, 0, PI + i * HALF_PI + millis() * 0.001); // Lekka rotacja
-  }
-  noStroke();
-  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
-    noFill();
-    stroke(255, 215, 0, 200);
-    strokeWeight(2);
-    ellipse(150, iconY, 50);
-    noStroke();
-  }
-  fill(249, 249, 242);
-  text("Gas Nebula: x2 Points (3s)", 220, iconY);
-
-  // 3. Pulse Wave
-  iconY += iconSpacing;
-  noFill();
-  let pulse = (millis() % 1000) / 1000;
-  stroke(147, 208, 207, 200);
-  strokeWeight(3);
-  ellipse(150, iconY, 40 * pulse); // Pulsująca fala
-  noStroke();
-  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
-    noFill();
-    stroke(255, 215, 0, 200);
-    strokeWeight(2);
-    ellipse(150, iconY, 50);
-    noStroke();
-  }
-  fill(249, 249, 242);
-  text("Pulse Wave: Boost Pulse (3s)", 220, iconY);
-
-  // 4. Orbit Shield
-  iconY += iconSpacing;
-  fill(255, 215, 0, 150);
-  ellipse(150, iconY, 40 + sin(millis() * 0.005) * 5); // Pulsowanie
-  stroke(255, 255, 255, 200);
-  strokeWeight(2);
-  for (let i = -1; i <= 1; i++) {
-    line(150 + i * 15, iconY - 20, 150 + i * 15, iconY + 20);
-  }
-  noStroke();
-  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
-    noFill();
-    stroke(255, 215, 0, 200);
-    strokeWeight(2);
-    ellipse(150, iconY, 50);
-    noStroke();
-  }
-  fill(249, 249, 242);
-  text("Orbit Shield: Blocks Damage (3s) [Lv3+]", 220, iconY);
-
-  // 5. Freeze Nova
-  iconY += iconSpacing;
-  fill(0, 255, 255, 200 + sin(millis() * 0.01) * 55);
-  star(150, iconY, 20, 30, 6); // Pulsujący kryształ
-  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
-    noFill();
-    stroke(255, 215, 0, 200);
-    strokeWeight(2);
-    ellipse(150, iconY, 50);
-    noStroke();
-  }
-  fill(249, 249, 242);
-  text("Freeze Nova: Freezes Pulse (3s) [Lv3+]", 220, iconY);
-
-  // 6. Star Seed
-  iconY += iconSpacing;
-  fill(147, 208, 207, 200);
-  ellipse(150, iconY, 40, 25 + sin(millis() * 0.005) * 5); // Pulsowanie
-  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
-    noFill();
-    stroke(255, 215, 0, 200);
-    strokeWeight(2);
-    ellipse(150, iconY, 50);
-    noStroke();
-  }
-  fill(249, 249, 242);
-  text("Star Seed: Bigger Seed (3s) [Lv5+]", 220, iconY);
-
-  // 7. Mainnet Wave
-  iconY += iconSpacing;
-  gradient = drawingContext.createLinearGradient(135, iconY, 165, iconY);
-  gradient.addColorStop(0, "#93D0CF");
-  gradient.addColorStop(1, "#FFD700");
-  drawingContext.fillStyle = gradient;
-  beginShape();
-  for (let i = 0; i < 6; i++) {
-    let a = TWO_PI / 6 * i;
-    vertex(150 + cos(a) * (20 + sin(millis() * 0.005) * 5), iconY + sin(a) * 20); // Pulsowanie
-  }
-  endShape(CLOSE);
-  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
-    noFill();
-    stroke(255, 215, 0, 200);
-    strokeWeight(2);
-    ellipse(150, iconY, 50);
-    noStroke();
-  }
-  fill(249, 249, 242);
-  text("Mainnet Wave: Clears Traps [Lv7+]", 220, iconY);
-
-  // Sekcja Traps
-  sectionY += 450; // Większy odstęp
-  fill(14, 39, 59, 230);
-  stroke(147, 208, 207);
-  strokeWeight(3);
-  rect(100, sectionY, GAME_WIDTH - 200, 150, 20); // Zwiększona wysokość dla dwóch elementów
-  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, sectionY + 20, GAME_WIDTH / 2 + 100, sectionY + 20);
-  gradient.addColorStop(0, "#93D0CF");
-  gradient.addColorStop(1, "#FFD700");
-  drawingContext.fillStyle = gradient;
-  textSize(24);
-  textStyle(BOLD);
-  text("Traps", GAME_WIDTH / 2, sectionY + 30);
-  textSize(14);
-  textStyle(NORMAL);
-
-  // 1. Avoid Meteor Strikes
-  iconY = sectionY + 70;
-  fill(255, 0, 0, 200);
-  ellipse(150, iconY, 30 + sin(millis() * 0.005) * 5); // Pulsowanie
-  stroke(255, 100);
-  strokeWeight(2);
-  line(135, iconY - 15, 165, iconY + 15);
-  noStroke();
-  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
-    noFill();
-    stroke(255, 215, 0, 200);
-    strokeWeight(2);
-    ellipse(150, iconY, 50);
-    noStroke();
-  }
-  fill(249, 249, 242);
-  text("Avoid Meteor Strikes: 5 misses = -1 life", 220, iconY);
-
-  // 2. Meteor Strike
-  iconY += iconSpacing;
-  fill(255, 100, 0, 200);
-  ellipse(150, iconY, 40); // Stały rozmiar dla kontrastu
-  fill(255, 0, 0, 150);
-  let tailLength = 20 + sin(millis() * 0.01) * 5;
-  triangle(150, iconY - 20, 150 - tailLength, iconY - 30, 150 + tailLength, iconY - 30); // Pulsujący ogon
-  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
-    noFill();
-    stroke(255, 215, 0, 200);
-    strokeWeight(2);
-    ellipse(150, iconY, 50);
-    noStroke();
-  }
-  fill(249, 249, 242);
-  text("Meteor Strike: More Traps, x2 Points (3s) [Lv5+]", 220, iconY);
-
-  // Przycisk BACK (spójny z tutorialem)
-  let backX = 20;
-  let backY = 20;
-  let isBackHovering = mx >= backX && mx <= backX + 120 && my >= backY && my <= backY + 50;
-  fill(93, 208, 207, isBackHovering ? 255 : 200);
-  rect(backX, backY, 120, 50, 10);
-  fill(249, 249, 242);
-  textSize(20);
-  textAlign(CENTER, CENTER);
-  text("BACK", backX + 60, backY + 25);
-
-  textAlign(CENTER, BASELINE); // Reset wyrównania
-}
 
   else if (gameState === "tutorial") {
     // Gradient Background with Dynamic Pulse Effect
