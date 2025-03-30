@@ -1054,14 +1054,30 @@ else if (introState === 2) {
   }
 
 
-  if (gameState === "howToPlay") {
-    // Nowe tło kosmiczne (do wygenerowania, np. cosmicMenuBg.png)
-    image(cosmicMenuBg, 0, 0, GAME_WIDTH, GAME_HEIGHT);
+ if (gameState === "howToPlay") {
+  // Wczytanie tła z subtelnym rozmyciem
+  drawingContext.filter = 'blur(5px)'; // Rozmycie o promieniu 5 pikseli
+  image(cosmicMenuBg, 0, 0, GAME_WIDTH, GAME_HEIGHT);
+  drawingContext.filter = 'none'; // Reset filtru dla pozostałych elementów
+
+  // Winietka dla płynnego przejścia
+  let vignette = drawingContext.createRadialGradient(
+    GAME_WIDTH / 2, 
+    GAME_HEIGHT / 2, 
+    0, 
+    GAME_WIDTH / 2, 
+    GAME_HEIGHT / 2, 
+    Math.max(GAME_WIDTH, GAME_HEIGHT) / 2
+  );
+  vignette.addColorStop(0, "rgba(14, 39, 59, 0)"); // Centrum przezroczyste
+  vignette.addColorStop(1, "rgba(14, 39, 59, 0.7)"); // Krawędzie przyciemnione (Tangaroa)
+  drawingContext.fillStyle = vignette;
+  rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
 
   // Subtelny overlay gradientu dla kontrastu
   let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
-  gradient.addColorStop(0, "rgba(14, 39, 59, 0.6)");
-  gradient.addColorStop(1, "rgba(93, 208, 207, 0.4)");
+  gradient.addColorStop(0, "rgba(14, 39, 59, 0.6)"); // Tangaroa z przezroczystością
+  gradient.addColorStop(1, "rgba(93, 208, 207, 0.4)"); // Morning Glory z przezroczystością
   drawingContext.fillStyle = gradient;
   rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
 
@@ -1167,12 +1183,12 @@ else if (introState === 2) {
   
     // Komunikat o wersji desktopowej – mniejszy i bardziej subtelny
     fill(255, 0, 0, 200); // Czerwony z przezroczystością
-    textSize(20);
+    textSize(26);
     textStyle(BOLD);
-    text("NOTICE: Desktop only for now", GAME_WIDTH / 2, 760);
+    text("NOTICE: Desktop only for now", GAME_WIDTH / 2, 770);
     fill(255, 215, 0, 200); // Złoty z przezroczystością
     textSize(16);
-    text("Mobile version coming soon!", GAME_WIDTH / 2, 790);
+    text("Mobile version coming soon!", GAME_WIDTH / 2, 800);
   
     // Wyświetlanie komunikatu o błędzie lub prośbie o zalogowanie
     if (showLoginMessage) {
@@ -1227,11 +1243,45 @@ else if (introState === 2) {
     textSize(20);
     text("VIEW INTRO", sideButtonX + sideButtonWidth / 2, 345);
   
-    // Dodatkowy akcent – białe logo jako subtelna dekoracja w rogu
+    /// WhiteLogo w lewym dolnym rogu z miganiem i napisem
     let whiteLogoScale = 1 + sin(millis() * 0.003) * 0.05;
-    image(whiteLogo, 20, GAME_HEIGHT - 60, 100 * whiteLogoScale, 50 * whiteLogoScale);
+    let whiteLogoWidth = 100 * whiteLogoScale;
+    let whiteLogoHeight = 50 * whiteLogoScale;
+    let whiteLogoX = 20;
+    let whiteLogoY = GAME_HEIGHT - 100; // Przesunięte z -60 na -100 dla większego odstępu
+    image(whiteLogo, whiteLogoX, whiteLogoY, whiteLogoWidth, whiteLogoHeight);
+  
+    // Mały napis pod logo – dostosowany do nowej pozycji
+    fill(147, 208, 207, 200); // Superseed Light Green z lekką przezroczystością
+    textSize(12);
+    textStyle(NORMAL);
+    textAlign(LEFT, TOP);
+    text("Powered by Superseed", whiteLogoX, whiteLogoY + whiteLogoHeight + 5);
   
     textAlign(CENTER, BASELINE); // Reset wyrównania tekstu
+
+// Informacja o twórcy w prawym dolnym rogu z efektem hover
+let adjustedMouseX = mouseX - (width - GAME_WIDTH) / 2;
+let adjustedMouseY = mouseY - (height - GAME_HEIGHT) / 2;
+let creatorTextX = GAME_WIDTH - 140; // Początek tekstu
+let creatorTextY = GAME_HEIGHT - 30; // Góra obszaru tekstu
+let creatorTextWidth = 120; // Przybliżona szerokość tekstu
+let creatorTextHeight = 20; // Wysokość obszaru klikalnego
+if (
+  adjustedMouseX >= creatorTextX &&
+  adjustedMouseX <= creatorTextX + creatorTextWidth &&
+  adjustedMouseY >= creatorTextY &&
+  adjustedMouseY <= creatorTextY + creatorTextHeight
+) {
+  fill(255, 215, 0, 200); // Złoty kolor przy najechaniu (#FFD700)
+} else {
+  fill(147, 208, 207, 200); // Standardowy Superseed Light Green
+}
+textSize(12);
+textStyle(NORMAL);
+textAlign(RIGHT, BOTTOM);
+text("Created by CratosPL", GAME_WIDTH - 20, GAME_HEIGHT - 10);
+
   }
 
 else if (gameState === "info") {
@@ -2655,6 +2705,34 @@ function mousePressed() {
   let adjustedMouseY = mouseY - (height - GAME_HEIGHT) / 2;
 
   if (gameState === "howToPlay") {
+    // Kliknięcie na whiteLogo w lewym dolnym rogu – nowa pozycja
+    let whiteLogoX = 20;
+    let whiteLogoY = GAME_HEIGHT - 100; // Zaktualizowana pozycja z -60 na -100
+    let whiteLogoWidth = 100; // Bazowa szerokość bez skalowania
+    let whiteLogoHeight = 50; // Bazowa wysokość bez skalowania
+    if (
+      adjustedMouseX >= whiteLogoX &&
+      adjustedMouseX <= whiteLogoX + whiteLogoWidth &&
+      adjustedMouseY >= whiteLogoY &&
+      adjustedMouseY <= whiteLogoY + whiteLogoHeight
+    ) {
+      window.open("https://www.superseed.xyz/", "_blank"); // Otwiera link w nowej karcie
+    }
+
+// Kliknięcie na "Created by CratosPL" w prawym dolnym rogu
+let creatorTextX = GAME_WIDTH - 140; // Początek tekstu (GAME_WIDTH - 20 - szerokość tekstu około 120)
+let creatorTextY = GAME_HEIGHT - 30; // Góra obszaru tekstu (GAME_HEIGHT - 10 - 20 wysokości)
+let creatorTextWidth = 120; // Przybliżona szerokość tekstu
+let creatorTextHeight = 20; // Wysokość obszaru klikalnego
+if (
+  adjustedMouseX >= creatorTextX &&
+  adjustedMouseX <= creatorTextX + creatorTextWidth &&
+  adjustedMouseY >= creatorTextY &&
+  adjustedMouseY <= creatorTextY + creatorTextHeight
+) {
+  window.open("https://x.com/sebbtgk", "_blank"); // Otwiera Twój Twitter w nowej karcie
+}
+
     // Choose Your Seed Color – nowe wymiary i pozycje
     let colorBoxSize = 60;
     let colorBoxSpacing = 30;
