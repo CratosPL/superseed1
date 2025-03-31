@@ -72,7 +72,7 @@ let inactivityTimer = 0;
 let isTypingNick = false;
 let mainnetChallengeActive = false;
 let mainnetChallengeTimer = 60000;
-let mainnetChallengeGoal = 500;
+let mainnetChallengeGoal = 400;
 let mainnetChallengeScore = 0;
 let mainnetBadgeEarned = false;
 let mainnetChallengeTriggered = false;
@@ -86,6 +86,17 @@ let synchronizacjaBg; // Przeniesione tutaj
 let nagrodaBg; // Przeniesione tutaj
 let isConnecting = false;
 
+let blackHoleSoundPlayed = false;
+
+let baseRotationSpeed = 0.01;
+let slowdownActive = false; // Czy spowolnienie jest aktywne
+let slowdownTimer = 0; // Czas pozostały do końca spowolnienia
+let slowdownCooldown = 0; // Czas pozostały do końca cooldownu
+const SLOWDOWN_DURATION = 10000;  // Czas trwania spowolnienia (5 sekund)
+
+const SLOWDOWN_COOLDOWN = 30000; // Cooldown (30 sekund)
+const SLOWDOWN_FACTOR = 1.5; // Współczynnik spowolnienia (50% wolniej)
+
 
 let hasSeenIntro = localStorage.getItem('hasSeenIntro') === 'true'; // Czy intro już widziane
 let introState = 0; // Aktualny ekran intro (0, 1, 2)
@@ -97,9 +108,9 @@ let powerUpDurations = {
   gas: 5000,
   pulse: 4000,
   orbit: 6000,
-  nova: 5000,
+  nova: 10000, // Zmień z 5000 na 10000
   meteor: 6000,
-  star: 5000
+  star: 6000 // Zmień z 5000 na 6000 dla spójności
 };
 
 // Classes
@@ -723,7 +734,7 @@ function setup() {
   waitForScripts().then(() => {
     initializeWeb3Modal();
     if (web3Modal && web3Modal.cachedProvider) {
-      
+      connectWallet();
     }
   });
 }
@@ -1292,6 +1303,19 @@ text("NOTICE: Desktop only for now", GAME_WIDTH / 2, 770 + verticalOffset);
     fill(14, 39, 59);
     textSize(20);
     text("VIEW INTRO", sideButtonX + sideButtonWidth / 2, 345);
+
+    // ACHIEVEMENTS (nowy przycisk)
+  gradient = drawingContext.createLinearGradient(sideButtonX, 380, sideButtonX + sideButtonWidth, 380);
+  gradient.addColorStop(0, "#93D0CF");
+  gradient.addColorStop(1, "#FFD700");
+  drawingContext.fillStyle = gradient;
+  stroke(147, 208, 207);
+  strokeWeight(2);
+  rect(sideButtonX, 380, sideButtonWidth, sideButtonHeight, 10);
+  noStroke();
+  fill(14, 39, 59);
+  textSize(20);
+  text("ACHIEVEMENTS", sideButtonX + sideButtonWidth / 2, 405);
   
     /// WhiteLogo w lewym dolnym rogu z miganiem i napisem
     let whiteLogoScale = 1 + sin(millis() * 0.003) * 0.05;
@@ -1332,6 +1356,40 @@ textStyle(NORMAL);
 textAlign(RIGHT, BOTTOM);
 text("Created by CratosPL", GAME_WIDTH - 20, GAME_HEIGHT - 10);
 
+  }
+
+  else if (gameState === "achievements") {
+    // Tło modala
+    fill(14, 39, 59, 230);
+    rect(GAME_WIDTH / 2 - 300, GAME_HEIGHT / 2 - 400, 600, 800, 20);
+    
+    // Nagłówek
+    fill(255, 215, 0);
+    textSize(32);
+    textStyle(BOLD);
+    text("Achievements", GAME_WIDTH / 2, GAME_HEIGHT / 2 - 350);
+  
+    // Lista osiągnięć
+    let yOffset = -300;
+    if (mainnetBadgeEarned) {
+      drawMainnetBadge(GAME_WIDTH / 2 - 250, GAME_HEIGHT / 2 + yOffset, 40);
+      fill(255, 215, 0);
+      textSize(16);
+      text("Mainnet Badge Earned!", GAME_WIDTH / 2 - 200, GAME_HEIGHT / 2 + yOffset + 50);
+    } else {
+      fill(128, 131, 134);
+      textSize(16);
+      text("Mainnet Badge: Locked", GAME_WIDTH / 2 - 200, GAME_HEIGHT / 2 + yOffset + 50);
+    }
+    // Miejsce na przyszłe odznaki
+    yOffset += 100;
+  
+    // Przycisk zamknięcia
+    fill(93, 208, 207);
+    rect(GAME_WIDTH / 2 - 60, GAME_HEIGHT / 2 + 350, 120, 50, 10);
+    fill(255);
+    textSize(20);
+    text("CLOSE", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 375);
   }
 
 else if (gameState === "info") {
@@ -1830,31 +1888,108 @@ text(savedGameState ? "RESUME SYNC" : "START SYNC", GAME_WIDTH / 2, buttonY + TU
     text("Build the Superseed Network\nSync Nodes, Earn Rewards, Decentralize Tomorrow!", GAME_WIDTH / 2, GAME_HEIGHT / 2);
   } else if (gameState === "playing" || gameState === "supernova") {
     if (soundInitialized) {
+      // Slowdown mechanic – bez zmian
+      if (slowdownActive) {
+        slowdownTimer -= deltaTime;
+        if (slowdownTimer <= 0) {
+          slowdownActive = false;
+          pulseSpeed = basePulseSpeed;
+          obstacles.forEach(o => {
+            o.speedX /= SLOWDOWN_FACTOR;
+            o.speedY /= SLOWDOWN_FACTOR;
+          });
+          baseRotationSpeed = 0.01;
+        }
+      }
+  
+      if (slowdownCooldown > 0) {
+        slowdownCooldown -= deltaTime;
+      }
+  
+      // Efekty wizualne dla spowolnienia – bez zmian
+      if (slowdownActive) {
+        fill(100, 150, 200, 50);
+        rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+        noFill();
+        stroke(100, 150, 200, 200);
+        strokeWeight(4);
+        ellipse(logoX, logoY, circleSize + 20);
+        noStroke();
+        fill(255, 200);
+        textSize(20);
+        text(`Tłumik Pulsu: ${floor(slowdownTimer / 1000)}s`, GAME_WIDTH / 2, GAME_HEIGHT - 120);
+      }
+  
+      // Przycisk "How to Play" – bez zmian
+      fill(93, 208, 207);
+      rect(GAME_WIDTH - HOW_TO_PLAY_BUTTON_WIDTH - 10, 10, HOW_TO_PLAY_BUTTON_WIDTH, HOW_TO_PLAY_BUTTON_HEIGHT, 10);
+      fill(255);
+      textSize(18);
+      textAlign(CENTER, CENTER);
+      text("How to Play", GAME_WIDTH - HOW_TO_PLAY_BUTTON_WIDTH / 2 - 10, 10 + HOW_TO_PLAY_BUTTON_HEIGHT / 2);
+  
+      // Przycisk "Pulse Dampener" – bez zmian (y = 100)
+      let buttonX = GAME_WIDTH - 120 - 10;
+let buttonY = 100;
+let buttonWidth = 120;
+let buttonHeight = 50;
+let SLOWDOWN_COST = level >= 10 ? 20 : 15; // Dodane lokalnie
+if (level >= 7 && !slowdownActive && slowdownCooldown <= 0 && score >= SLOWDOWN_COST) {
+  let gradient = drawingContext.createLinearGradient(buttonX, buttonY, buttonX + buttonWidth, buttonY);
+  gradient.addColorStop(0, "#93D0CF");
+  gradient.addColorStop(1, "#FFD700");
+  drawingContext.fillStyle = gradient;
+  stroke(147, 208, 207);
+  strokeWeight(2);
+  rect(buttonX, buttonY, buttonWidth, buttonHeight, 10);
+  noStroke();
+  fill(14, 39, 59);
+  textSize(16);
+  textAlign(CENTER, CENTER);
+  text(`Pulse Dampener\n-${SLOWDOWN_COST} pkt`, buttonX + buttonWidth / 2, buttonY + buttonHeight / 2);
+}
+  
       // Zatrzymaj introMusic, jeśli nadal gra
       if (introMusic.isPlaying()) {
         introMusic.stop();
         console.log("introMusic stopped in playing state");
       }
       
-      if (level >= 5) {
-        if (!backgroundMusic2.isPlaying()) {
-          console.log("Switching to backgroundMusic2");
-          backgroundMusic.stop(); // Zatrzymaj pierwszą muzykę
-          backgroundMusic2.loop(); // Uruchom drugą
-          musicSwitched = true; // Oznacz przełączenie
-        }
-      } else {
-        if (!backgroundMusic.isPlaying()) {
-          console.log("Playing backgroundMusic");
-          backgroundMusic2.stop(); // Zatrzymaj drugą muzykę
-          backgroundMusic.loop(); // Uruchom pierwszą
-          musicSwitched = false; // Reset przełączenia
-        }
+      // Odtwarzaj odpowiednią muzykę w zależności od poziomu
+      if (level >= 5 && !musicSwitched) {
+        console.log("Switching to backgroundMusic2 at level 5+");
+        backgroundMusic.stop();
+        backgroundMusic2.loop();
+        musicSwitched = true;
+      } else if (level < 5 && musicSwitched) {
+        console.log("Switching back to backgroundMusic below level 5");
+        backgroundMusic2.stop();
+        backgroundMusic.loop();
+        musicSwitched = false;
       }
+      
+      // Upewnij się, że odpowiednia muzyka gra
+      if (level >= 5 && !backgroundMusic2.isPlaying()) {
+        console.log("Restarting backgroundMusic2 as it stopped unexpectedly");
+        backgroundMusic2.loop();
+      } else if (level < 5 && !backgroundMusic.isPlaying()) {
+        console.log("Restarting backgroundMusic as it stopped unexpectedly");
+        backgroundMusic.loop();
+      }
+    
     }
 
+    // Aktualizacja obrotu logo z uwzględnieniem spowolnienia
+    if (slowdownActive) {
+      if (combo >= 20) logoAngle += baseRotationSpeed * 0.03 / SLOWDOWN_FACTOR;
+      else logoAngle += baseRotationSpeed / SLOWDOWN_FACTOR;
+    } else {
+      if (combo >= 20) logoAngle += 0.03;
+      else logoAngle += 0.01;
+    }
+  
     gameTime = millis();
-
+  
     if (pulseProgress > 1 && !freezeActive) {
       pulseProgress = 0;
       lastPulse = currentTime;
@@ -1865,19 +2000,20 @@ text(savedGameState ? "RESUME SYNC" : "START SYNC", GAME_WIDTH / 2, buttonY + TU
     circleSize = lerp(minSize, maxSize, sin(pulseProgress * TWO_PI));
     if (starBoostActive) circleSize *= 1.2;
     isReadyToClick = abs(circleSize - (starBoostActive ? maxSize * 1.2 : maxSize)) < (level <= 2 ? 10 : 5);
-
+  
     orbitShiftTimer -= deltaTime;
-if (orbitShiftTimer <= 0) {
-  orbitType = floor(random(2)); // Ograniczamy do 0 i 1 (usuwamy 2)
-  orbitShiftTimer = 20000;
-}
-if (orbitType === 0) {
-  logoX = GAME_WIDTH / 2 + sin(millis() * 0.001) * min(40 * level, GAME_WIDTH * 0.3);
-  logoY = GAME_HEIGHT / 2 + cos(millis() * 0.001) * min(30 * level, GAME_HEIGHT * 0.25);
-} else {
-  logoX = GAME_WIDTH / 2 + cos(millis() * 0.002) * min(60 * level, 300); // Eliptyczny ruch
-  logoY = GAME_HEIGHT / 2 + sin(millis() * 0.002) * min(60 * level, 300);
-}
+  
+    if (orbitShiftTimer <= 0) {
+      orbitType = floor(random(2)); // Ograniczamy do 0 i 1 (usuwamy 2)
+      orbitShiftTimer = 20000;
+    }
+    if (orbitType === 0) {
+      logoX = GAME_WIDTH / 2 + sin(millis() * 0.001) * min(40 * level, GAME_WIDTH * 0.3);
+      logoY = GAME_HEIGHT / 2 + cos(millis() * 0.001) * min(30 * level, GAME_HEIGHT * 0.25);
+    } else {
+      logoX = GAME_WIDTH / 2 + cos(millis() * 0.002) * min(60 * level, 300); // Eliptyczny ruch
+      logoY = GAME_HEIGHT / 2 + sin(millis() * 0.002) * min(60 * level, 300);
+    }
 
     if (level >= 7 && random(1) < 0.005 && !activeEvent) {
       activeEvent = "overload";
@@ -1895,20 +2031,15 @@ if (orbitType === 0) {
   }
   
   // Obsługa efektów czarnej dziury
-if (activeEvent === "blackHole") {
-  eventTimeLeft -= deltaTime;
-
-  // Rysowanie czarnej dziury
-  fill(0, 0, 0, 200); // Czarny kolor z lekką przezroczystością
-  let blackHoleSize = 200 + sin(millis() * 0.005) * 20; // Pulsujący rozmiar
-  ellipse(eventX, eventY, blackHoleSize, blackHoleSize);
-
-  // Odtwarzanie dźwięku przy starcie
-  if (!blackHoleSoundPlayed && soundInitialized) {
-    holeSound.play();
-    blackHoleSoundPlayed = true; // Oznacz, że dźwięk został odtworzony
-    console.log("Black hole sound played"); // Debugowanie
-  }
+  if (activeEvent === "blackHole") {
+    eventTimeLeft -= deltaTime;
+    fill(0, 0, 0, 200);
+    let blackHoleSize = 200 + sin(millis() * 0.005) * 20;
+    ellipse(eventX, eventY, blackHoleSize, blackHoleSize);
+    if (!blackHoleSoundPlayed && soundInitialized) {
+      holeSound.play();
+      blackHoleSoundPlayed = true;
+    }
 
   // Wciąganie przeszkód i power-upów
   obstacles = obstacles.filter(o => {
@@ -2024,6 +2155,7 @@ if (activeEvent === "blackHole") {
       if (mainnetChallengeScore >= mainnetChallengeGoal) {
         mainnetChallengeActive = false;
         mainnetBadgeEarned = true;
+        badgeMessageTimer = 3000; // Reset timera przy każdym zdobyciu
         lives += 1;
         lifeBar = min(lifeBar + 20, 100);
         score += 50;
@@ -2043,7 +2175,7 @@ if (activeEvent === "blackHole") {
       rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
       fill(255);
       textSize(20);
-      text(`Supernova Rush: ${floor(supernovaTimer / 1000)}s`, GAME_WIDTH - 100, 50);
+      text(`Supernova Rush: ${floor(supernovaTimer / 1000)}s`, GAME_WIDTH / 2, 190); // Nowa pozycja y = 190
       if (supernovaTimer <= 0) {
         gameState = "playing";
         pulseSpeed *= 2;
@@ -2064,7 +2196,7 @@ if (activeEvent === "blackHole") {
 
     if (!challengeActive && random(1) < 0.002) {
       challengeActive = true;
-      challengeTimer = 10000;
+      challengeTimer = 12000;
       challengeClicks = 0;
       challengeGoal = 5;
     }
@@ -2076,8 +2208,7 @@ if (activeEvent === "blackHole") {
       if (challengeTimer <= 0) {
         challengeActive = false;
         if (challengeClicks < challengeGoal) {
-          lives -= 1;
-          lifeBar -= 20;
+          lifeBar -= 10;
           shakeTimer = 500;
         } else {
           score += 10;
@@ -2113,37 +2244,50 @@ if (activeEvent === "blackHole") {
       nebulaTimer -= deltaTime;
     }
 
-    if (combo >= 20) logoAngle += 0.03;
-    else logoAngle += 0.01;
+    if (slowdownActive) {
+      if (combo >= 20) logoAngle += baseRotationSpeed * 0.03 / SLOWDOWN_FACTOR;
+      else logoAngle += baseRotationSpeed / SLOWDOWN_FACTOR;
+    } else {
+      if (combo >= 20) logoAngle += 0.03;
+      else logoAngle += 0.01;
+    }
 
     drawingContext.shadowBlur = 20;
-    drawingContext.shadowColor = "rgba(0, 255, 0, 0.5)";
-    imageMode(CENTER);
-    push();
-    translate(logoX, logoY);
-    rotate(logoAngle);
-    let isRedPulse = random(1) < 0.01;
-    if (isRedPulse && !isReadyToClick) {
-      tint(255, 0, 0, 200);
-    } else if (isReadyToClick) {
-      tint(seedColor.r, seedColor.g, seedColor.b, 200);
-    } else if (activeEvent === "overload") {
-      if (eventColor === 0) tint(0, 255, 0, 200);
-      else if (eventColor === 1) tint(147, 112, 219, 200);
-      else tint(255, 215, 0, 200);
-    } else {
-      noTint();
-    }
-    image(logo, 0, 0, circleSize, circleSize);
-    pop();
-    drawingContext.shadowBlur = 0;
+  drawingContext.shadowColor = "rgba(0, 255, 0, 0.5)";
+  imageMode(CENTER);
+  push();
+  translate(logoX, logoY);
+  rotate(logoAngle);
+  let isRedPulse = random(1) < 0.01;
+  if (isRedPulse && !isReadyToClick) {
+    tint(255, 0, 0, 200);
+  } else if (isReadyToClick) {
+    tint(seedColor.r, seedColor.g, seedColor.b, 200);
+  } else if (activeEvent === "overload") {
+    if (eventColor === 0) tint(0, 255, 0, 200);
+    else if (eventColor === 1) tint(147, 112, 219, 200);
+    else tint(255, 215, 0, 200);
+  } else {
+    noTint();
+  }
+  image(logo, 0, 0, circleSize, circleSize);
+  pop();
+  drawingContext.shadowBlur = 0;
 
-    if (isReadyToClick) {
-      fill(255, 200);
-      textSize(28);
-      textStyle(BOLD);
-      text("Sync!", logoX, logoY + 70);
-    }
+  // TUTAJ ODZNAKA
+  if (mainnetBadgeEarned) {
+    drawMainnetBadge(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 150, 60);
+    fill(255, 215, 0, 200);
+    textSize(16);
+    text("Mainnet Badge", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 200);
+  }
+
+  if (isReadyToClick) {
+    fill(255, 200);
+    textSize(28);
+    textStyle(BOLD);
+    text("Sync!", logoX, logoY + 70);
+  }
 
     if (chainPoint && chainPoint.timer > 0) {
       stroke(seedColor.r, seedColor.g, seedColor.b, 200);
@@ -2283,6 +2427,22 @@ if (isConnected && userAddress) {
   textSize(16);
   text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 160);
 }
+
+// "Supernova Rush" – przeniesiony na środek, poniżej innych napisów
+if (gameState === "supernova") {
+  supernovaTimer -= deltaTime;
+  fill(255, 100, 0, 50);
+  rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+  fill(255);
+  textSize(20);
+  text(`Supernova Rush: ${floor(supernovaTimer / 1000)}s`, GAME_WIDTH / 2, 190); // Nowa pozycja y = 190
+  if (supernovaTimer <= 0) {
+    gameState = "playing";
+    pulseSpeed *= 2;
+    obstacleTimer *= 2;
+  }
+}
+
     noFill();
     stroke(seedColor.r, seedColor.g, seedColor.b);
     strokeWeight(4);
@@ -2329,17 +2489,13 @@ if (isConnected && userAddress) {
     if (score >= goal) {
       level += 1;
       if (soundInitialized) {
-        if (level === 5) {
-          console.log("Level 5 reached, switching music");
+        if (level === 5 && !musicSwitched) { // Przełącz tylko raz na poziom 5
+          console.log("Level 5 reached, switching to backgroundMusic2");
           backgroundMusic.stop();
-          backgroundMusic2.stop(); // Zatrzymaj, jeśli gra
-          backgroundMusic2.loop(); // Uruchom od nowa
+          backgroundMusic2.loop(); // Uruchom raz i niech gra
           musicSwitched = true;
-        } else if (level > 5) {
-          console.log(`Level ${level} reached, restarting backgroundMusic2`);
-          backgroundMusic2.stop(); // Zatrzymaj bieżącą muzykę
-          backgroundMusic2.loop(); // Uruchom od nowa
         }
+        // Usuwamy else if (level > 5), bo nie chcemy resetować muzyki
       }
       goal = level <= 2 ? 50 : (level === 3 ? 70 : goal + 30);
       lives += 1;
@@ -2400,10 +2556,10 @@ if (isConnected && userAddress) {
   
     // Mainnet Badge (if earned)
     if (mainnetBadgeEarned) {
-      drawMainnetBadge(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 150, 100);
-      fill(255, 215, 0);
-      textSize(20);
-      text("Mainnet Badge Earned!", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 200);
+      drawMainnetBadge(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 150, 60); // Środek, pod komunikatami
+      fill(255, 215, 0, 200);
+      textSize(16);
+      text("Mainnet Badge", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 200); // Tekst pod odznaką
       let buttonX = GAME_WIDTH / 2 - RESTART_BUTTON_WIDTH / 2;
       let buttonY = GAME_HEIGHT / 2 + 270;
       let gradient = drawingContext.createLinearGradient(buttonX, buttonY, buttonX + RESTART_BUTTON_WIDTH, buttonY);
@@ -2641,18 +2797,19 @@ function startGame() {
     mainnetBadgeEarned = false;
     musicSwitched = false; // Reset flagi przy nowej grze
 
-    // Resetowanie muzyki
+    // Resetowanie i uruchamianie muzyki
     if (soundInitialized) {
-      introMusic.stop(); // Zatrzymaj muzykę intro
-      backgroundMusic2.stop(); // Zatrzymaj drugą muzykę, jeśli gra
-      backgroundMusic.stop();  // Zatrzymaj pierwszą muzykę
-      backgroundMusic.loop();  // Uruchom pierwszą muzykę od nowa
-      console.log("Music reset: backgroundMusic restarted");
+      introMusic.stop();
+      backgroundMusic2.stop();
+      backgroundMusic.stop();
+      backgroundMusic.loop(); // Zawsze startuj z backgroundMusic na poziomie 1
+      console.log("Music reset: backgroundMusic started for new game");
     }
   }
   gameState = "playing";
   if (!soundInitialized) {
     soundInitialized = true;
+    backgroundMusic.loop(); // Inicjalizacja muzyki przy pierwszym dźwięku
   }
 }
 
@@ -2703,10 +2860,17 @@ function pauseGame() {
     mainnetChallengeScore,
     mainnetBadgeEarned,
     mainnetChallengeTriggered,
-    gameStartTime
+    gameStartTime,
+    musicSwitched // Zapisz stan przełączenia muzyki
   };
   gameState = "howToPlay";
-  if (soundInitialized) backgroundMusic.pause();
+  if (soundInitialized) {
+    if (level >= 5 && musicSwitched) {
+      backgroundMusic2.pause();
+    } else {
+      backgroundMusic.pause();
+    }
+  }
 }
 
 function resumeGame() {
@@ -2743,7 +2907,7 @@ function resumeGame() {
     supernovaTimer = savedGameState.supernovaTimer;
     orbitShiftTimer = savedGameState.orbitShiftTimer;
     lastPulse = savedGameState.lastPulse;
-    gameState = savedGameState.gameState; // Przywraca np. "playing" lub "supernova"
+    gameState = savedGameState.gameState;
     challengeActive = savedGameState.challengeActive;
     challengeTimer = savedGameState.challengeTimer;
     challengeClicks = savedGameState.challengeClicks;
@@ -2757,16 +2921,17 @@ function resumeGame() {
     mainnetBadgeEarned = savedGameState.mainnetBadgeEarned;
     mainnetChallengeTriggered = savedGameState.mainnetChallengeTriggered;
     gameStartTime = savedGameState.gameStartTime;
-    savedGameState = null; // Czyści zapisany stan
+    musicSwitched = savedGameState.musicSwitched; // Przywróć stan przełączenia muzyki
+    savedGameState = null;
     if (soundInitialized) {
       if (level >= 5 && musicSwitched) {
-        backgroundMusic2.play(); // Wznawia odpowiednią muzykę
+        backgroundMusic2.play(); // Wznów backgroundMusic2
       } else {
-        backgroundMusic.play();
+        backgroundMusic.play(); // Wznów backgroundMusic
       }
     }
   } else {
-    startGame(); // Nowa gra, jeśli brak zapisu
+    startGame();
   }
 }
 
@@ -2777,6 +2942,7 @@ const loginMessageDuration = 3000;
 function mousePressed() {
   let adjustedMouseX = mouseX - (width - GAME_WIDTH) / 2;
   let adjustedMouseY = mouseY - (height - GAME_HEIGHT) / 2;
+  
 
   if (gameState === "howToPlay") {
     // Kliknięcie na whiteLogo w lewym dolnym rogu – bez zmian
@@ -2940,6 +3106,27 @@ function mousePressed() {
       }
     }
 
+    // ACHIEVEMENTS
+  if (
+    adjustedMouseX >= sideButtonX &&
+    adjustedMouseX <= sideButtonX + 120 &&
+    adjustedMouseY >= 380 &&
+    adjustedMouseY <= 430
+  ) {
+    gameState = "achievements";
+  }
+} else if (gameState === "achievements") {
+  // CLOSE
+  if (
+    adjustedMouseX >= GAME_WIDTH / 2 - 60 &&
+    adjustedMouseX <= GAME_WIDTH / 2 + 60 &&
+    adjustedMouseY >= GAME_HEIGHT / 2 + 350 &&
+    adjustedMouseY <= GAME_HEIGHT / 2 + 400
+  ) {
+    gameState = "howToPlay";
+  }
+
+
     // Usunięto redundantny kod rysujący gradient dla Logout – przeniesiono do draw()
   } else if (gameState === "info") {
     let offsetX = (width - GAME_WIDTH) / 2;
@@ -3092,6 +3279,39 @@ function mousePressed() {
   } else if (gameState === "playing" || gameState === "supernova") {
     lastClickTime = millis();
     if (inactivityWarning) inactivityWarning = false;
+
+// Aktywacja przycisku Pulse Dampener
+let buttonX = GAME_WIDTH - 120 - 10;
+let buttonY = 100;
+let buttonWidth = 120;
+let buttonHeight = 50;
+let SLOWDOWN_COST = level >= 10 ? 20 : 15; // Dodane lokalnie
+if (
+  adjustedMouseX >= buttonX &&
+  adjustedMouseX <= buttonX + buttonWidth &&
+  adjustedMouseY >= buttonY &&
+  adjustedMouseY <= buttonY + buttonHeight &&
+  level >= 7 &&
+  !slowdownActive &&
+  slowdownCooldown <= 0 &&
+  score >= SLOWDOWN_COST
+) {
+  slowdownActive = true;
+  slowdownTimer = SLOWDOWN_DURATION;
+  slowdownCooldown = SLOWDOWN_COOLDOWN;
+  score -= SLOWDOWN_COST;
+  pulseSpeed *= SLOWDOWN_FACTOR;
+  basePulseSpeed = pulseSpeed / SLOWDOWN_FACTOR;
+  obstacles.forEach(o => {
+    o.speedX *= SLOWDOWN_FACTOR;
+    o.speedY *= SLOWDOWN_FACTOR;
+  });
+  baseRotationSpeed = 0.01 / SLOWDOWN_FACTOR;
+  for (let i = 0; i < 20; i++) {
+    particles.push(new Particle(logoX, logoY, { r: 255, g: 215, b: 0 }));
+  }
+  if (soundInitialized) powerUpSound.play();
+}
 
     let howToX = GAME_WIDTH - HOW_TO_PLAY_BUTTON_WIDTH - 10;
     let howToY = 10;
