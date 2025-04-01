@@ -87,6 +87,8 @@ let synchronizacjaBg; // Przeniesione tutaj
 let nagrodaBg; // Przeniesione tutaj
 let isConnecting = false;
 
+let hasCompletedGame = localStorage.getItem('hasCompletedGame') === 'true';
+
 let blackHoleSoundPlayed = false;
 
 let baseRotationSpeed = 0.01;
@@ -98,6 +100,7 @@ const SLOWDOWN_DURATION = 10000;  // Czas trwania spowolnienia (5 sekund)
 const SLOWDOWN_COOLDOWN = 30000; // Cooldown (30 sekund)
 const SLOWDOWN_FACTOR = 1.5; // Współczynnik spowolnienia (50% wolniej)
 
+let animationTime = 0; // Globalna zmienna do płynnej animacji
 
 let hasSeenIntro = localStorage.getItem('hasSeenIntro') === 'true'; // Czy intro już widziane
 let introState = 0; // Aktualny ekran intro (0, 1, 2)
@@ -1085,13 +1088,13 @@ function draw() {
   }
 
 
- if (gameState === "howToPlay") {
-  // Wczytanie tła z subtelnym rozmyciem
-  drawingContext.filter = 'blur(5px)';
+  if (gameState === "howToPlay") {
+    // Wczytanie tła z subtelnym rozmyciem
+    drawingContext.filter = 'blur(5px)';
   image(cosmicMenuBg, 0, 0, GAME_WIDTH, GAME_HEIGHT);
   drawingContext.filter = 'none';
 
-  // Winietka i overlay gradientu (bez zmian)
+  // Winietka i overlay gradientu – bez zmian
   let vignette = drawingContext.createRadialGradient(
     GAME_WIDTH / 2, 
     GAME_HEIGHT / 2, 
@@ -1111,15 +1114,15 @@ function draw() {
   drawingContext.fillStyle = gradient;
   rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
 
-  // Większe pulsujące logo na górze
-  let logoScale = 1 + sin(millis() * 0.002) * 0.05; // Subtelne pulsowanie
-  let logoSize = 400 * logoScale; // Zwiększono z 300 do 400
-  image(mainLogo, GAME_WIDTH / 2 - logoSize / 2, 30, logoSize, logoSize); // Pozycja Y bez zmian
+  // Większe pulsujące logo na górze – bez zmian
+  let logoScale = 1 + sin(millis() * 0.002) * 0.05;
+  let logoSize = 400 * logoScale;
+  image(mainLogo, GAME_WIDTH / 2 - logoSize / 2, 30, logoSize, logoSize);
 
-  // Przesunięcie wszystkich elementów w dół o 100 pikseli (możesz dostosować wartość)
+  // Przesunięcie wszystkich elementów w dół o 100 pikseli
   let verticalOffset = 100;
 
-  // Choose Your Seed Color
+  // Choose Your Seed Color – bez zmian
   fill(249, 249, 242);
   textSize(24);
   text("Choose Your Seed Color", GAME_WIDTH / 2, 320 + verticalOffset);
@@ -1147,7 +1150,7 @@ function draw() {
   }
   noStroke();
 
-  // Enter Your Nick
+  // Enter Your Nick – bez zmian
   fill(249, 249, 242);
   textSize(24);
   text("Enter Your Nick", GAME_WIDTH / 2, 450 + verticalOffset);
@@ -1166,7 +1169,7 @@ function draw() {
   }
   noStroke();
 
-  // Start Button
+  // Start Button – bez zmian
   gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 120, 540 + verticalOffset, GAME_WIDTH / 2 + 120, 540 + verticalOffset);
   gradient.addColorStop(0, "#93D0CF");
   gradient.addColorStop(1, "#FFD700");
@@ -1180,7 +1183,7 @@ function draw() {
   let buttonText = savedGameState ? "RESUME" : "START";
   text(buttonText, GAME_WIDTH / 2, 570 + verticalOffset);
 
-  // Login/Logout Button
+  // Login/Logout Button – ZAKTUALIZOWANE POZYCJE
   if (!isConnected) {
     gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 120, 620 + verticalOffset, GAME_WIDTH / 2 + 120, 620 + verticalOffset);
     gradient.addColorStop(0, "#0E273B");
@@ -1196,143 +1199,146 @@ function draw() {
   } else {
     fill(93, 208, 207);
     textSize(18);
-    text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 620 + verticalOffset);
-    gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 120, 660 + verticalOffset, GAME_WIDTH / 2 + 120, 660 + verticalOffset);
+    text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 610 + verticalOffset); // Przesunięte z 620 na 610
+    gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 120, 640 + verticalOffset, GAME_WIDTH / 2 + 120, 640 + verticalOffset); // Przesunięte z 660 na 640
     gradient.addColorStop(0, "#FF4500");
     gradient.addColorStop(1, "#FFD700");
     drawingContext.fillStyle = gradient;
     stroke(147, 208, 207);
     strokeWeight(3);
-    rect(GAME_WIDTH / 2 - 120, 660 + verticalOffset, 240, 60, 15);
+    rect(GAME_WIDTH / 2 - 120, 640 + verticalOffset, 240, 60, 15); // Przesunięte z 660–720 na 640–700
     noStroke();
     fill(249, 249, 242);
     textSize(28);
-    text("LOGOUT", GAME_WIDTH / 2, 690 + verticalOffset);
+    text("LOGOUT", GAME_WIDTH / 2, 670 + verticalOffset); // Przesunięte z 690 na 670
   }
 
-  // Komunikat o wersji desktopowej
-  fill(255, 50, 50, 255); // Brighter red, fully opaque
-textSize(32); // Larger text for readability
-textStyle(BOLD);
-drawingContext.shadowBlur = 0; // Disable blur for this text
-text("NOTICE: Desktop only for now", GAME_WIDTH / 2, 770 + verticalOffset);
+  // *** DODANY PRZYCISK "Claim Your NFT" – ZAKTUALIZOWANA POZYCJA ***
+  if (hasCompletedGame) {
+    fill(93, 208, 207);
+    rect(GAME_WIDTH / 2 - 120, 720 + verticalOffset, 240, 60, 10); // Przesunięte z 700–760 na 720–780
+    fill(255);
+    textSize(24);
+    text("Claim Your NFT", GAME_WIDTH / 2, 750 + verticalOffset); // Przesunięte z 730 na 750
+  }
+
+  // Komunikat o wersji desktopowej – bez zmian
+  fill(255, 50, 50, 255);
+  textSize(32);
+  textStyle(BOLD);
+  drawingContext.shadowBlur = 0;
+  text("NOTICE: Desktop only for now", GAME_WIDTH / 2, 820 + verticalOffset);
   fill(255, 215, 0, 200);
   textSize(16);
-  text("Mobile version coming soon!", GAME_WIDTH / 2, 800 + verticalOffset);
-  
-    // Wyświetlanie komunikatu o błędzie lub prośbie o zalogowanie
-    if (showLoginMessage) {
-      let elapsed = millis() - loginMessageStartTime;
-      if (elapsed < loginMessageDuration) {
-        fill(255, 0, 0, 220);
-        textSize(20);
-        text("Please log in to start the game", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 170);
-      } else {
-        showLoginMessage = false;
-      }
+  text("Mobile version coming soon!", GAME_WIDTH / 2, 850 + verticalOffset);
+
+  // Wyświetlanie komunikatu o błędzie lub prośbie o zalogowanie – bez zmian
+  if (showLoginMessage) {
+    let elapsed = millis() - loginMessageStartTime;
+    if (elapsed < loginMessageDuration) {
+      fill(255, 0, 0, 220);
+      textSize(20);
+      text("Please log in to start the game", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 170);
+    } else {
+      showLoginMessage = false;
     }
-  
-    // Przyciski boczne (INFO, TUTORIAL, VIEW INTRO) – bardziej nowoczesne
-    let sideButtonWidth = 120; // Zachowana oryginalna szerokość
-let sideButtonHeight = 50; // Zachowana oryginalna wysokość
-let sideButtonX = GAME_WIDTH - sideButtonWidth - 20;
-
-// INFO Button
-gradient = drawingContext.createLinearGradient(sideButtonX, 200, sideButtonX + sideButtonWidth, 200);
-gradient.addColorStop(0, "#93D0CF");
-gradient.addColorStop(1, "#FFD700");
-drawingContext.fillStyle = gradient;
-stroke(147, 208, 207);
-strokeWeight(2);
-rect(sideButtonX, 200, sideButtonWidth, sideButtonHeight, 10);
-noStroke();
-fill(14, 39, 59);
-textSize(16); // Zmniejszono z 20 na 16
-textAlign(CENTER, CENTER); // Wyrównanie do środka
-text("INFO", sideButtonX + sideButtonWidth / 2, 200 + sideButtonHeight / 2);
-
-// TUTORIAL Button
-gradient = drawingContext.createLinearGradient(sideButtonX, 260, sideButtonX + sideButtonWidth, 260);
-gradient.addColorStop(0, "#93D0CF");
-gradient.addColorStop(1, "#FFD700");
-drawingContext.fillStyle = gradient;
-stroke(147, 208, 207);
-strokeWeight(2);
-rect(sideButtonX, 260, sideButtonWidth, sideButtonHeight, 10);
-noStroke();
-fill(14, 39, 59);
-textSize(16); // Zmniejszono z 20 na 16
-textAlign(CENTER, CENTER);
-text("TUTORIAL", sideButtonX + sideButtonWidth / 2, 260 + sideButtonHeight / 2);
-
-// VIEW INTRO Button
-gradient = drawingContext.createLinearGradient(sideButtonX, 320, sideButtonX + sideButtonWidth, 320);
-gradient.addColorStop(0, "#93D0CF");
-gradient.addColorStop(1, "#FFD700");
-drawingContext.fillStyle = gradient;
-stroke(147, 208, 207);
-strokeWeight(2);
-rect(sideButtonX, 320, sideButtonWidth, sideButtonHeight, 10);
-noStroke();
-fill(14, 39, 59);
-textSize(16); // Zmniejszono z 20 na 16
-textAlign(CENTER, CENTER);
-text("VIEW INTRO", sideButtonX + sideButtonWidth / 2, 320 + sideButtonHeight / 2);
-
-// ACHIEVEMENTS Button
-gradient = drawingContext.createLinearGradient(sideButtonX, 380, sideButtonX + sideButtonWidth, 380);
-gradient.addColorStop(0, "#93D0CF");
-gradient.addColorStop(1, "#FFD700");
-drawingContext.fillStyle = gradient;
-stroke(147, 208, 207);
-strokeWeight(2);
-rect(sideButtonX, 380, sideButtonWidth, sideButtonHeight, 10);
-noStroke();
-fill(14, 39, 59);
-textSize(16); // Zmniejszono z 20 na 16
-textAlign(CENTER, CENTER);
-text("ACHIEVEMENTS", sideButtonX + sideButtonWidth / 2, 380 + sideButtonHeight / 2);
-  
-    /// WhiteLogo w lewym dolnym rogu z miganiem i napisem
-    let whiteLogoScale = 1 + sin(millis() * 0.003) * 0.05;
-    let whiteLogoWidth = 100 * whiteLogoScale;
-    let whiteLogoHeight = 50 * whiteLogoScale;
-    let whiteLogoX = 20;
-    let whiteLogoY = GAME_HEIGHT - 100; // Przesunięte z -60 na -100 dla większego odstępu
-    image(whiteLogo, whiteLogoX, whiteLogoY, whiteLogoWidth, whiteLogoHeight);
-  
-    // Mały napis pod logo – dostosowany do nowej pozycji
-    fill(147, 208, 207, 200); // Superseed Light Green z lekką przezroczystością
-    textSize(12);
-    textStyle(NORMAL);
-    textAlign(LEFT, TOP);
-    text("Powered by Superseed", whiteLogoX, whiteLogoY + whiteLogoHeight + 5);
-  
-    textAlign(CENTER, BASELINE); // Reset wyrównania tekstu
-
-// Informacja o twórcy w prawym dolnym rogu z efektem hover
-let adjustedMouseX = mouseX - (width - GAME_WIDTH) / 2;
-let adjustedMouseY = mouseY - (height - GAME_HEIGHT) / 2;
-let creatorTextX = GAME_WIDTH - 140; // Początek tekstu
-let creatorTextY = GAME_HEIGHT - 30; // Góra obszaru tekstu
-let creatorTextWidth = 120; // Przybliżona szerokość tekstu
-let creatorTextHeight = 20; // Wysokość obszaru klikalnego
-if (
-  adjustedMouseX >= creatorTextX &&
-  adjustedMouseX <= creatorTextX + creatorTextWidth &&
-  adjustedMouseY >= creatorTextY &&
-  adjustedMouseY <= creatorTextY + creatorTextHeight
-) {
-  fill(255, 215, 0, 200); // Złoty kolor przy najechaniu (#FFD700)
-} else {
-  fill(147, 208, 207, 200); // Standardowy Superseed Light Green
-}
-textSize(12);
-textStyle(NORMAL);
-textAlign(RIGHT, BOTTOM);
-text("Created by CratosPL", GAME_WIDTH - 20, GAME_HEIGHT - 10);
-
   }
+
+  // Przyciski boczne (INFO, TUTORIAL, VIEW INTRO, ACHIEVEMENTS) – bez zmian
+  let sideButtonWidth = 120;
+  let sideButtonHeight = 50;
+  let sideButtonX = GAME_WIDTH - sideButtonWidth - 20;
+
+  gradient = drawingContext.createLinearGradient(sideButtonX, 200, sideButtonX + sideButtonWidth, 200);
+  gradient.addColorStop(0, "#93D0CF");
+  gradient.addColorStop(1, "#FFD700");
+  drawingContext.fillStyle = gradient;
+  stroke(147, 208, 207);
+  strokeWeight(2);
+  rect(sideButtonX, 200, sideButtonWidth, sideButtonHeight, 10);
+  noStroke();
+  fill(14, 39, 59);
+  textSize(16);
+  textAlign(CENTER, CENTER);
+  text("INFO", sideButtonX + sideButtonWidth / 2, 200 + sideButtonHeight / 2);
+
+  gradient = drawingContext.createLinearGradient(sideButtonX, 260, sideButtonX + sideButtonWidth, 260);
+  gradient.addColorStop(0, "#93D0CF");
+  gradient.addColorStop(1, "#FFD700");
+  drawingContext.fillStyle = gradient;
+  stroke(147, 208, 207);
+  strokeWeight(2);
+  rect(sideButtonX, 260, sideButtonWidth, sideButtonHeight, 10);
+  noStroke();
+  fill(14, 39, 59);
+  textSize(16);
+  textAlign(CENTER, CENTER);
+  text("TUTORIAL", sideButtonX + sideButtonWidth / 2, 260 + sideButtonHeight / 2);
+
+  gradient = drawingContext.createLinearGradient(sideButtonX, 320, sideButtonX + sideButtonWidth, 320);
+  gradient.addColorStop(0, "#93D0CF");
+  gradient.addColorStop(1, "#FFD700");
+  drawingContext.fillStyle = gradient;
+  stroke(147, 208, 207);
+  strokeWeight(2);
+  rect(sideButtonX, 320, sideButtonWidth, sideButtonHeight, 10);
+  noStroke();
+  fill(14, 39, 59);
+  textSize(16);
+  textAlign(CENTER, CENTER);
+  text("VIEW INTRO", sideButtonX + sideButtonWidth / 2, 320 + sideButtonHeight / 2);
+
+  gradient = drawingContext.createLinearGradient(sideButtonX, 380, sideButtonX + sideButtonWidth, 380);
+  gradient.addColorStop(0, "#93D0CF");
+  gradient.addColorStop(1, "#FFD700");
+  drawingContext.fillStyle = gradient;
+  stroke(147, 208, 207);
+  strokeWeight(2);
+  rect(sideButtonX, 380, sideButtonWidth, sideButtonHeight, 10);
+  noStroke();
+  fill(14, 39, 59);
+  textSize(16);
+  textAlign(CENTER, CENTER);
+  text("ACHIEVEMENTS", sideButtonX + sideButtonWidth / 2, 380 + sideButtonHeight / 2);
+
+  // WhiteLogo w lewym dolnym rogu z miganiem i napisem – bez zmian
+  let whiteLogoScale = 1 + sin(millis() * 0.003) * 0.05;
+  let whiteLogoWidth = 100 * whiteLogoScale;
+  let whiteLogoHeight = 50 * whiteLogoScale;
+  let whiteLogoX = 20;
+  let whiteLogoY = GAME_HEIGHT - 100;
+  image(whiteLogo, whiteLogoX, whiteLogoY, whiteLogoWidth, whiteLogoHeight);
+
+  fill(147, 208, 207, 200);
+  textSize(12);
+  textStyle(NORMAL);
+  textAlign(LEFT, TOP);
+  text("Powered by Superseed", whiteLogoX, whiteLogoY + whiteLogoHeight + 5);
+
+  textAlign(CENTER, BASELINE);
+
+  // Informacja o twórcy w prawym dolnym rogu z efektem hover – bez zmian
+  let adjustedMouseX = mouseX - (width - GAME_WIDTH) / 2;
+  let adjustedMouseY = mouseY - (height - GAME_HEIGHT) / 2;
+  let creatorTextX = GAME_WIDTH - 140;
+  let creatorTextY = GAME_HEIGHT - 30;
+  let creatorTextWidth = 120;
+  let creatorTextHeight = 20;
+  if (
+    adjustedMouseX >= creatorTextX &&
+    adjustedMouseX <= creatorTextX + creatorTextWidth &&
+    adjustedMouseY >= creatorTextY &&
+    adjustedMouseY <= creatorTextY + creatorTextHeight
+  ) {
+    fill(255, 215, 0, 200);
+  } else {
+    fill(147, 208, 207, 200);
+  }
+  textSize(12);
+  textStyle(NORMAL);
+  textAlign(RIGHT, BOTTOM);
+  text("Created by CratosPL", GAME_WIDTH - 20, GAME_HEIGHT - 10);
+}
 
   else if (gameState === "achievements") {
     // Tło modala
@@ -1368,291 +1374,213 @@ text("Created by CratosPL", GAME_WIDTH - 20, GAME_HEIGHT - 10);
     text("CLOSE", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 375);
   }
 
-else if (gameState === "info") {
-  // Gradient tła z trzema kolorami i zaokrąglonymi rogami (spójny z tutorialem)
-  let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
-  gradient.addColorStop(0, "#0E273B"); // Tangaroa
-  gradient.addColorStop(0.5, "#93D0CF"); // Morning Glory
-  gradient.addColorStop(1, "#808386"); // Aluminium
-  drawingContext.fillStyle = gradient;
-  rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
-
-  // Pulsujące obramowanie (jak w tutorialu)
-  let pulseProgress = sin(millis() * 0.002) * 0.5 + 0.5;
-  stroke(93, 208, 207, map(pulseProgress, 0, 1, 100, 255));
-  strokeWeight(5 + pulseProgress * 2);
-  noFill();
-  rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
-  noStroke();
-
-  // Gwiazdki w tle (dynamiczne tło jak w tutorialu)
-  for (let i = bgParticles.length - 1; i >= 0; i--) {
-    bgParticles[i].update();
-    bgParticles[i].show(pulseProgress); // Użycie pulseProgress dla spójności
-  }
-
-  // Nagłówek (mniejszy i bardziej elegancki)
-  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 150, 50, GAME_WIDTH / 2 + 150, 50);
-  gradient.addColorStop(0, "#93D0CF");
-  gradient.addColorStop(1, "#FFD700");
-  drawingContext.fillStyle = gradient;
-  textSize(36); // Zmniejszono z 48 dla harmonii
-  textStyle(BOLD);
-  textAlign(CENTER, CENTER);
-  text("Game Info", GAME_WIDTH / 2, 70);
-
-  // Sekcja Scoring
-  let sectionY = 120;
-  fill(14, 39, 59, 230); // Tangaroa z lekką przezroczystością
-  stroke(147, 208, 207); // Superseed Light Green
-  strokeWeight(3);
-  rect(100, sectionY, GAME_WIDTH - 200, 120, 20); // Zmniejszona wysokość
-  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, sectionY + 20, GAME_WIDTH / 2 + 100, sectionY + 20);
-  gradient.addColorStop(0, "#93D0CF");
-  gradient.addColorStop(1, "#FFD700");
-  drawingContext.fillStyle = gradient;
-  textSize(24);
-  textStyle(BOLD);
-  text("Scoring", GAME_WIDTH / 2, sectionY + 30);
-  fill(249, 249, 242); // White (#F9F9F2)
-  textSize(14); // Zmniejszono z 18 dla elegancji
-  textStyle(NORMAL);
-  text("Sync the Cosmic Seed when it pulses green!\nStart is easy – sync nodes slowly on Orbit 1 & 2!", GAME_WIDTH / 2, sectionY + 70);
-  noStroke();
-
-  // Sekcja Combos
-  sectionY += 150; // Większy odstęp
-  fill(14, 39, 59, 230);
-  stroke(147, 208, 207);
-  strokeWeight(3);
-  rect(100, sectionY, GAME_WIDTH - 200, 120, 20);
-  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, sectionY + 20, GAME_WIDTH / 2 + 100, sectionY + 20);
-  gradient.addColorStop(0, "#93D0CF");
-  gradient.addColorStop(1, "#FFD700");
-  drawingContext.fillStyle = gradient;
-  textSize(24);
-  textStyle(BOLD);
-  text("Combos", GAME_WIDTH / 2, sectionY + 30);
-  fill(249, 249, 242);
-  textSize(14);
-  textStyle(NORMAL);
-  text("Chain syncs for multipliers (x1, x2, ...).\n15+ syncs grants +1 life.", GAME_WIDTH / 2, sectionY + 70);
-  noStroke();
-
-  // Sekcja Power-Ups (jedna kolumna z animacjami)
-  sectionY += 150;
-  fill(14, 39, 59, 230);
-  stroke(147, 208, 207);
-  strokeWeight(3);
-  rect(100, sectionY, GAME_WIDTH - 200, 400, 20); // Zwiększona wysokość dla jednej kolumny
-  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 200, sectionY + 20, GAME_WIDTH / 2 + 200, sectionY + 20);
-  gradient.addColorStop(0, "#93D0CF");
-  gradient.addColorStop(1, "#FFD700");
-  drawingContext.fillStyle = gradient;
-  textSize(24);
-  textStyle(BOLD);
-  text("Power-Ups (click to activate)", GAME_WIDTH / 2, sectionY + 30);
-  textSize(14);
-  textStyle(NORMAL);
-  textAlign(LEFT, CENTER);
-
-  let mx = mouseX - (width - GAME_WIDTH) / 2;
-  let my = mouseY - (height - GAME_HEIGHT) / 2;
-
-  // Ikony Power-Ups z animacjami
-  let iconY = sectionY + 70;
-  let iconSpacing = 50;
-
-  // 1. Life
-  push();
-  translate(150, iconY);
-  let gradientLife = drawingContext.createRadialGradient(0, 0, 0, 0, 0, 20);
-  gradientLife.addColorStop(0, "rgb(255, 255, 255)");
-  gradientLife.addColorStop(1, "rgb(0, 255, 0)");
-  drawingContext.fillStyle = gradientLife;
-  star(0, 0, 15, 25 + sin(millis() * 0.005) * 5, 8); // Pulsująca animacja
-  pop();
-  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
+  else if (gameState === "info") {
+    // Gradient Background z trzema kolorami
+    let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    gradient.addColorStop(0, "#0E273B"); // Tangaroa
+    gradient.addColorStop(0.5, "#93D0CF"); // Morning Glory
+    gradient.addColorStop(1, "#808386"); // Aluminium
+    drawingContext.fillStyle = gradient;
+    rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
+  
+    // Pulsująca ramka
+    let pulseProgress = sin(millis() * 0.002) * 0.5 + 0.5;
+    stroke(93, 208, 207, map(pulseProgress, 0, 1, 100, 255)); // Superseed Light Green
+    strokeWeight(5 + pulseProgress * 2);
     noFill();
-    stroke(255, 215, 0, 200);
-    strokeWeight(2);
-    ellipse(150, iconY, 50);
+    rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
     noStroke();
-  }
-  fill(249, 249, 242);
-  text("Life: +1 Life", 220, iconY);
+  
+    // Dynamiczne tło z gwiazdkami
+    for (let i = bgParticles.length - 1; i >= 0; i--) {
+      bgParticles[i].update();
+      bgParticles[i].show(pulseProgress);
+    }
+  
+    // Nagłówek
+    gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 200, 50, GAME_WIDTH / 2 + 200, 50);
+    gradient.addColorStop(0, "#93D0CF"); // Morning Glory
+    gradient.addColorStop(1, "#FFD700"); // Gold
+    drawingContext.fillStyle = gradient;
+    textSize(48);
+    textStyle(BOLD);
+    textAlign(CENTER, CENTER);
+    text("Game Info", GAME_WIDTH / 2, 80);
+  
+    // Sekcje z informacjami
+    let sectionY = 180;
+  
+    // Scoring
+    fill(93, 208, 207); // Morning Glory
+    textSize(32);
+    textStyle(BOLD);
+    text("Scoring", GAME_WIDTH / 2, sectionY);
+    fill(249, 249, 242); // White (#F9F9F2)
+    textSize(18);
+    textStyle(NORMAL);
+    text("Sync the Cosmic Seed when it pulses green!\nStart is easy – sync nodes slowly on Orbit 1 & 2!", GAME_WIDTH / 2, sectionY + 50);
+    sectionY += 120;
+  
+    // Combos
+    fill(93, 208, 207);
+    textSize(32);
+    textStyle(BOLD);
+    text("Combos", GAME_WIDTH / 2, sectionY);
+    fill(249, 249, 242);
+    textSize(18);
+    textStyle(NORMAL);
+    text("Chain syncs for multipliers (x1, x2, ...).\n15+ syncs grants +1 life.", GAME_WIDTH / 2, sectionY + 50);
+    sectionY += 120;
+  
+    // Power-Ups & Boosts
+fill(93, 208, 207);
+textSize(32);
+textStyle(BOLD);
+text("Power-Ups & Boosts", GAME_WIDTH / 2, sectionY);
+fill(249, 249, 242);
+textSize(18);
+textStyle(NORMAL);
+let powerUpY = sectionY + 40;
+let iconX = GAME_WIDTH / 2 - 300;
 
-  // 2. Gas Nebula
-  iconY += iconSpacing;
-  noFill();
-  stroke(0, 191, 255, 200);
-  strokeWeight(3);
-  for (let i = 0; i < 4; i++) {
-    arc(150, iconY, 25 * (i + 1) / 4, 25 * (i + 1) / 4, 0, PI + i * HALF_PI + millis() * 0.001); // Lekka rotacja
-  }
-  noStroke();
-  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
-    noFill();
-    stroke(255, 215, 0, 200);
-    strokeWeight(2);
-    ellipse(150, iconY, 50);
-    noStroke();
-  }
-  fill(249, 249, 242);
-  text("Gas Nebula: x2 Points (3s)", 220, iconY);
+// 1. Life
+push();
+translate(iconX, powerUpY);
+let lifeGradient = drawingContext.createRadialGradient(0, 0, 0, 0, 0, 20);
+lifeGradient.addColorStop(0, "rgb(255, 255, 255)");
+lifeGradient.addColorStop(1, "rgb(0, 255, 0)");
+drawingContext.fillStyle = lifeGradient;
+star(0, 0, 10, 20 + sin(millis() * 0.005) * 5, 8);
+pop();
+text("Life: +1 Life", GAME_WIDTH / 2, powerUpY);
+powerUpY += 50;
 
-  // 3. Pulse Wave
-  iconY += iconSpacing;
-  noFill();
-  let pulse = (millis() % 1000) / 1000;
-  stroke(147, 208, 207, 200);
-  strokeWeight(3);
-  ellipse(150, iconY, 40 * pulse); // Pulsująca fala
-  noStroke();
-  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
-    noFill();
-    stroke(255, 215, 0, 200);
-    strokeWeight(2);
-    ellipse(150, iconY, 50);
-    noStroke();
-  }
-  fill(249, 249, 242);
-  text("Pulse Wave: Boost Pulse (3s)", 220, iconY);
-
-  // 4. Orbit Shield
-  iconY += iconSpacing;
-  fill(255, 215, 0, 150);
-  ellipse(150, iconY, 40 + sin(millis() * 0.005) * 5); // Pulsowanie
-  stroke(255, 255, 255, 200);
-  strokeWeight(2);
-  for (let i = -1; i <= 1; i++) {
-    line(150 + i * 15, iconY - 20, 150 + i * 15, iconY + 20);
-  }
-  noStroke();
-  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
-    noFill();
-    stroke(255, 215, 0, 200);
-    strokeWeight(2);
-    ellipse(150, iconY, 50);
-    noStroke();
-  }
-  fill(249, 249, 242);
-  text("Orbit Shield: Blocks Damage (3s) [Lv3+]", 220, iconY);
-
-  // 5. Freeze Nova
-  iconY += iconSpacing;
-  fill(0, 255, 255, 200 + sin(millis() * 0.01) * 55);
-  star(150, iconY, 20, 30, 6); // Pulsujący kryształ
-  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
-    noFill();
-    stroke(255, 215, 0, 200);
-    strokeWeight(2);
-    ellipse(150, iconY, 50);
-    noStroke();
-  }
-  fill(249, 249, 242);
-  text("Freeze Nova: Freezes Pulse (3s) [Lv3+]", 220, iconY);
-
-  // 6. Star Seed
-  iconY += iconSpacing;
-  fill(147, 208, 207, 200);
-  ellipse(150, iconY, 40, 25 + sin(millis() * 0.005) * 5); // Pulsowanie
-  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
-    noFill();
-    stroke(255, 215, 0, 200);
-    strokeWeight(2);
-    ellipse(150, iconY, 50);
-    noStroke();
-  }
-  fill(249, 249, 242);
-  text("Star Seed: Bigger Seed (3s) [Lv5+]", 220, iconY);
-
-  // 7. Mainnet Wave
-  iconY += iconSpacing;
-  gradient = drawingContext.createLinearGradient(135, iconY, 165, iconY);
-  gradient.addColorStop(0, "#93D0CF");
-  gradient.addColorStop(1, "#FFD700");
-  drawingContext.fillStyle = gradient;
-  beginShape();
-  for (let i = 0; i < 6; i++) {
-    let a = TWO_PI / 6 * i;
-    vertex(150 + cos(a) * (20 + sin(millis() * 0.005) * 5), iconY + sin(a) * 20); // Pulsowanie
-  }
-  endShape(CLOSE);
-  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
-    noFill();
-    stroke(255, 215, 0, 200);
-    strokeWeight(2);
-    ellipse(150, iconY, 50);
-    noStroke();
-  }
-  fill(249, 249, 242);
-  text("Mainnet Wave: Clears Traps [Lv7+]", 220, iconY);
-
-  // Sekcja Traps
-  sectionY += 450; // Większy odstęp
-  fill(14, 39, 59, 230);
-  stroke(147, 208, 207);
-  strokeWeight(3);
-  rect(100, sectionY, GAME_WIDTH - 200, 150, 20); // Zwiększona wysokość dla dwóch elementów
-  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, sectionY + 20, GAME_WIDTH / 2 + 100, sectionY + 20);
-  gradient.addColorStop(0, "#93D0CF");
-  gradient.addColorStop(1, "#FFD700");
-  drawingContext.fillStyle = gradient;
-  textSize(24);
-  textStyle(BOLD);
-  text("Traps", GAME_WIDTH / 2, sectionY + 30);
-  textSize(14);
-  textStyle(NORMAL);
-
-  // 1. Avoid Meteor Strikes
-  iconY = sectionY + 70;
-  fill(255, 0, 0, 200);
-  ellipse(150, iconY, 30 + sin(millis() * 0.005) * 5); // Pulsowanie
-  stroke(255, 100);
-  strokeWeight(2);
-  line(135, iconY - 15, 165, iconY + 15);
-  noStroke();
-  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
-    noFill();
-    stroke(255, 215, 0, 200);
-    strokeWeight(2);
-    ellipse(150, iconY, 50);
-    noStroke();
-  }
-  fill(249, 249, 242);
-  text("Avoid Meteor Strikes: 5 misses = -1 life", 220, iconY);
-
-  // 2. Meteor Strike
-  iconY += iconSpacing;
-  fill(255, 100, 0, 200);
-  ellipse(150, iconY, 40); // Stały rozmiar dla kontrastu
-  fill(255, 0, 0, 150);
-  let tailLength = 20 + sin(millis() * 0.01) * 5;
-  triangle(150, iconY - 20, 150 - tailLength, iconY - 30, 150 + tailLength, iconY - 30); // Pulsujący ogon
-  if (mx >= 150 && mx <= 200 && my >= iconY - 20 && my <= iconY + 20) {
-    noFill();
-    stroke(255, 215, 0, 200);
-    strokeWeight(2);
-    ellipse(150, iconY, 50);
-    noStroke();
-  }
-  fill(249, 249, 242);
-  text("Meteor Strike: More Traps, x2 Points (3s) [Lv5+]", 220, iconY);
-
-  // Przycisk BACK (spójny z tutorialem)
-  let backX = 20;
-  let backY = 20;
-  let isBackHovering = mx >= backX && mx <= backX + 120 && my >= backY && my <= backY + 50;
-  fill(93, 208, 207, isBackHovering ? 255 : 200);
-  rect(backX, backY, 120, 50, 10);
-  fill(249, 249, 242);
-  textSize(20);
-  textAlign(CENTER, CENTER);
-  text("BACK", backX + 60, backY + 25);
-
-  textAlign(CENTER, BASELINE); // Reset wyrównania
+// 2. Gas Nebula
+noFill();
+stroke(0, 191, 255, 200);
+strokeWeight(2);
+for (let i = 0; i < 3; i++) {
+  arc(iconX, powerUpY, 20 * (i + 1) / 3, 20 * (i + 1) / 3, 0, PI + i * HALF_PI + millis() * 0.001);
 }
+noStroke();
+fill(249, 249, 242);
+text("Gas Nebula: x2 Points (5s+)", GAME_WIDTH / 2, powerUpY);
+powerUpY += 50;
+
+// 3. Pulse Wave
+noFill();
+let pulse = (millis() % 1000) / 1000;
+stroke(147, 208, 207, 200);
+strokeWeight(2);
+ellipse(iconX, powerUpY, 35 * pulse);
+noStroke();
+fill(249, 249, 242);
+text("Pulse Wave: Boost Pulse (4s+)", GAME_WIDTH / 2, powerUpY);
+powerUpY += 50;
+
+// 4. Orbit Shield
+fill(255, 215, 0, 150);
+ellipse(iconX, powerUpY, 35 + sin(millis() * 0.005) * 5);
+stroke(255, 255, 255, 200);
+strokeWeight(1);
+for (let i = -1; i <= 1; i++) {
+  line(iconX + i * 11, powerUpY - 15, iconX + i * 11, powerUpY + 15);
+}
+noStroke();
+fill(249, 249, 242);
+text("Orbit Shield: Blocks Damage (6s+) [Lv3+]", GAME_WIDTH / 2, powerUpY);
+powerUpY += 50;
+
+// 5. Freeze Nova
+fill(0, 255, 255, 200 + sin(millis() * 0.01) * 55);
+star(iconX, powerUpY, 15, 20, 6);
+fill(249, 249, 242);
+text("Freeze Nova: Freezes Pulse (10s+) [Lv3+]", GAME_WIDTH / 2, powerUpY);
+powerUpY += 50;
+
+// 6. Meteor Strike
+fill(255, 100, 0, 200);
+ellipse(iconX, powerUpY, 35);
+fill(255, 0, 0, 150);
+let tailLength = 15 + sin(millis() * 0.01) * 5;
+triangle(iconX, powerUpY - 15, iconX - tailLength, powerUpY - 25, iconX + tailLength, powerUpY - 25);
+fill(249, 249, 242);
+text("Meteor Strike: More Traps, x2 Points (6s+) [Lv5+]", GAME_WIDTH / 2, powerUpY);
+powerUpY += 50;
+
+// 7. Star Seed
+fill(147, 208, 207, 200);
+ellipse(iconX, powerUpY, 35, 20 + sin(millis() * 0.005) * 5);
+fill(249, 249, 242);
+text("Star Seed: Bigger Seed (6s+) [Lv5+]", GAME_WIDTH / 2, powerUpY);
+powerUpY += 50;
+
+// 8. Mainnet Wave
+gradient = drawingContext.createLinearGradient(iconX - 15, powerUpY, iconX + 15, powerUpY);
+gradient.addColorStop(0, "#93D0CF");
+gradient.addColorStop(1, "#FFD700");
+drawingContext.fillStyle = gradient;
+beginShape();
+for (let i = 0; i < 6; i++) {
+  let a = TWO_PI / 6 * i;
+  vertex(iconX + cos(a) * (15 + sin(millis() * 0.005) * 3), powerUpY + sin(a) * 15);
+}
+endShape(CLOSE);
+fill(249, 249, 242);
+text("Mainnet Wave: Clears Traps [Lv7+]", GAME_WIDTH / 2, powerUpY);
+sectionY += 440;
+  
+    // Traps
+    fill(93, 208, 207);
+    textSize(32);
+    textStyle(BOLD);
+    text("Traps", GAME_WIDTH / 2, sectionY);
+    fill(249, 249, 242);
+    textSize(18);
+    textStyle(NORMAL);
+    let trapY = sectionY + 40;
+  
+    // 1. Avoid Meteor Strikes
+    fill(255, 0, 0, 200);
+    ellipse(iconX, trapY, 35 + sin(millis() * 0.005) * 5); // Zmniejszono z 40/6 na 35/5
+    stroke(255, 100);
+    strokeWeight(2); // Zmniejszono z 3 na 2
+    line(iconX - 15, trapY - 15, iconX + 15, trapY + 15); // Zmniejszono z 18 na 15
+    noStroke();
+    fill(249, 249, 242);
+    text("Avoid Meteor Strikes: 5 misses = -1 life", GAME_WIDTH / 2, trapY);
+    trapY += 50;
+  
+    // 2. Meteor Strike
+    fill(255, 100, 0, 200);
+    ellipse(iconX, trapY, 35); // Zmniejszono z 40 na 35
+    fill(255, 0, 0, 150);
+    tailLength = 15 + sin(millis() * 0.01) * 5; // Zmniejszono z 18/6 na 15/5
+    triangle(iconX, trapY - 15, iconX - tailLength, trapY - 25, iconX + tailLength, trapY - 25); // Dostosowano z 18/30 na 15/25
+    fill(249, 249, 242);
+    text("Meteor Strike: Spawns Traps, x2 Points (3s) [Lv5+]", GAME_WIDTH / 2, trapY);
+    sectionY += 140;
+  
+    // Przycisk BACK
+    let backX = 20;
+let backY = 20;
+let mx = mouseX - (width - GAME_WIDTH) / 2;
+let my = mouseY - (height - GAME_HEIGHT) / 2;
+let isBackHovering = mx > backX && mx < backX + 120 && my > backY && my < backY + 50;
+fill(93, 208, 207, isBackHovering ? 255 : 200);
+rect(backX, backY, 120, 50, 10);
+fill(249, 249, 242);
+textSize(20);
+textAlign(CENTER, CENTER);
+text("BACK", backX + 60, backY + 25);
+  
+    // Stopka
+    fill(128, 131, 134, 150); // Aluminium z przezroczystością
+    textSize(16);
+    text("#SuperseedGrok3 – Powered by xAI", GAME_WIDTH / 2, GAME_HEIGHT - 30);
+  
+    textAlign(CENTER, BASELINE); // Reset wyrównania
+  }
 
   else if (gameState === "tutorial") {
     // Gradient Background with Dynamic Pulse Effect
@@ -2626,7 +2554,11 @@ if (gameState === "supernova") {
     particles.push(new Particle(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 50, { r: seedColor.r, g: seedColor.g, b: seedColor.b }));
   }
 } else if (gameState === "endgame") {
-  // Tło z gradientem
+  if (!hasCompletedGame) {
+    localStorage.setItem('hasCompletedGame', 'true');
+    hasCompletedGame = true;
+  }
+  // Tło z gradientem – bez zmian
   let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
   gradient.addColorStop(0, "#0E273B");
   gradient.addColorStop(1, "#93D0CF");
@@ -2661,43 +2593,61 @@ if (gameState === "supernova") {
   strokeWeight(2);
   rect(-cardWidth / 2 + 10, -cardHeight / 2 + 10, cardWidth - 20, cardHeight - 20, 10);
 
-  // Logo smallsuperseedintro z rotacją
+  // Główne logo superseedcosmicnet-gamelogo.png – WRÓCONO NA POPRZEDNIĄ POZYCJĘ
   push();
-  translate(0, -50); // Przesunięcie logo w górę karty
-  rotate(millis() * 0.001); // Rotacja logo
-  tint(255, 215, 0, 200); // Złoty odcień holograficzny
+  translate(0, -cardHeight / 4); // Przesunięcie na ~112 pikseli w górę od środka
+  let mainLogoWidth = cardWidth * 0.9; // 90% szerokości karty (~270 pikseli)
+  let mainLogoHeight = mainLogoWidth; // Kwadratowe proporcje
+  tint(255, 215, 0, 220); // Lekko jaśniejszy złoty odcień
+  drawingContext.shadowBlur = 15;
+  drawingContext.shadowColor = `rgba(255, 215, 0, 0.7)`; // Subtelny złoty cień
   imageMode(CENTER);
-  image(smallSuperseedIntro, 0, 0, cardWidth * 0.7, cardWidth * 0.7); // Logo w górnej części karty
+  image(mainLogo, 0, 0, mainLogoWidth, mainLogoHeight); // Główne logo
+  drawingContext.shadowBlur = 0;
   pop();
 
-  // Linie obwodów blockchain (dekoracja)
+  // Małe logo smallSuperseedIntro – PRZESUNIĘTE NIŻEJ
+  push();
+  translate(0, cardHeight / 6); // Przesunięcie ~75 pikseli w dół od środka
+  rotate(millis() * 0.001); // Subtelna rotacja dla efektu
+  let smallLogoWidth = cardWidth * 0.4; // 40% szerokości karty (~120 pikseli)
+  let smallLogoHeight = smallLogoWidth; // Kwadratowe proporcje
+  tint(255, 255, 255, 180); // Biały odcień z lekką przezroczystością dla kontrastu
+  drawingContext.shadowBlur = 10;
+  drawingContext.shadowColor = `rgba(147, 208, 207, 0.5)`; // Subtelny cień w kolorze seedColor
+  imageMode(CENTER);
+  image(smallSuperseedIntro, 0, 0, smallLogoWidth, smallLogoHeight); // Małe logo
+  drawingContext.shadowBlur = 0;
+  pop();
+
+  // Linie obwodów blockchain (dekoracja) – dostosowane do nowego układu
   noFill();
   stroke(93, 208, 207, 100);
   strokeWeight(1);
   for (let i = 0; i < 5; i++) {
-    let y = map(i, 0, 4, -cardHeight / 2 + 20, cardHeight / 2 - 20);
+    let y = map(i, 0, 4, cardHeight / 2 - 80, cardHeight / 2 - 20); // Przesunięte w dół, aby nie nachodziły na loga
     line(-cardWidth / 2 + 20, y, cardWidth / 2 - 20, y);
   }
 
   // Nazwa gry nad tytułem NFT
-  stroke(14, 39, 59, 200); // Tangaroa (#0E273B) jako obwódka
+  stroke(14, 39, 59, 200);
   strokeWeight(1);
-  fill(147, 208, 207); // Superseed Light Green (#93D0CF)
+  fill(147, 208, 207);
   textSize(16);
   textStyle(NORMAL);
   textAlign(CENTER, CENTER);
   text("Superseed Cosmic Network", 0, cardHeight / 2 - 90);
 
   // Nazwa NFT na dole karty
-  stroke(14, 39, 59, 200); // Tangaroa (#0E273B) jako obwódka
+  stroke(14, 39, 59, 200);
   strokeWeight(1);
-  fill(255, 215, 0); // Złoty kolor
+  fill(255, 215, 0);
   textSize(24);
   textStyle(BOLD);
   text("Superseed Cosmic Core", 0, cardHeight / 2 - 60);
 
   // Subtelny napis "NFT"
-  stroke(14, 39, 59, 200); // Tangaroa (#0E273B) jako obwódka
+  stroke(14, 39, 59, 200);
   strokeWeight(1);
   fill(255, 255, 255, 150);
   textSize(16);
@@ -2707,30 +2657,29 @@ if (gameState === "supernova") {
   noStroke();
   pop();
 
-  // Tekst poniżej karty
-  stroke(14, 39, 59, 200); // Tangaroa (#0E273B) jako obwódka
+  // Tekst poniżej karty – bez zmian
+  stroke(14, 39, 59, 200);
   strokeWeight(1);
-  fill(147, 208, 207); // Superseed Light Green (#93D0CF)
+  fill(147, 208, 207);
   textSize(36);
   textStyle(BOLD);
   text("Superseed Cosmic Core Unlocked!", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 250);
   textSize(20);
   text("Claim your NFT on Supersync Network soon! #SuperseedGrok3", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 290);
 
-  // Przyciski
-  // Claim NFT
+  // Przycisk "Claim NFT" – bez zmian
   fill(93, 208, 207);
-  rect(GAME_WIDTH / 2 - 220, GAME_HEIGHT / 2 + 320, 200, 50, 10);
+  rect(GAME_WIDTH / 2 - 100, GAME_HEIGHT / 2 + 320, 200, 50, 10);
   fill(255);
   textSize(24);
-  text("Claim NFT", GAME_WIDTH / 2 - 120, GAME_HEIGHT / 2 + 345);
+  text("Claim NFT", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 345);
 
-  // Mint NFT
-  fill(255, 215, 0); // Złoty kolor dla wyróżnienia
-  rect(GAME_WIDTH / 2 + 20, GAME_HEIGHT / 2 + 320, 200, 50, 10);
-  fill(14, 39, 59); // Tangaroa dla tekstu w przycisku
+  // Przycisk "Back to Menu" – bez zmian
+  fill(147, 208, 207);
+  rect(GAME_WIDTH / 2 - 100, GAME_HEIGHT / 2 + 400, 200, 50, 10);
+  fill(255);
   textSize(24);
-  text("Mint NFT", GAME_WIDTH / 2 + 120, GAME_HEIGHT / 2 + 345);
+  text("Back to Menu", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 425);
 }
 pop(); // Zamknięcie push() z początku draw()
 } // Zamknięcie funkcji draw()
@@ -2956,7 +2905,7 @@ function mousePressed() {
     ) {
       window.open("https://www.superseed.xyz/", "_blank");
     }
-
+  
     // Kliknięcie na "Created by CratosPL" w prawym dolnym rogu – bez zmian
     let creatorTextX = GAME_WIDTH - 140;
     let creatorTextY = GAME_HEIGHT - 30;
@@ -2970,11 +2919,11 @@ function mousePressed() {
     ) {
       window.open("https://x.com/sebbtgk", "_blank");
     }
-
+  
     // Przesunięcie dla wszystkich elementów menu o verticalOffset
     let verticalOffset = 100;
-
-    // Choose Your Seed Color – zaktualizowane współrzędne Y
+  
+    // Choose Your Seed Color – bez zmian
     let colorBoxSize = 60;
     let colorBoxSpacing = 30;
     let startX = GAME_WIDTH / 2 - (colorBoxSize * 3 + colorBoxSpacing * 2) / 2;
@@ -2993,8 +2942,8 @@ function mousePressed() {
         seedColor = { r: 255, g: 215, b: 0 }; // Złoty
       }
     }
-
-    // Enter Your Nick – zaktualizowane współrzędne Y
+  
+    // Enter Your Nick – bez zmian
     if (
       adjustedMouseY >= 470 + verticalOffset &&
       adjustedMouseY <= 520 + verticalOffset &&
@@ -3005,8 +2954,8 @@ function mousePressed() {
     } else {
       isTypingNick = false;
     }
-
-    // Start/Resume Button – zaktualizowane współrzędne Y
+  
+    // Start/Resume Button – bez zmian
     if (
       adjustedMouseX >= GAME_WIDTH / 2 - 120 &&
       adjustedMouseX <= GAME_WIDTH / 2 + 120 &&
@@ -3023,8 +2972,8 @@ function mousePressed() {
         startGame();
       }
     }
-
-    // Login/Logout Button – zaktualizowane współrzędne Y
+  
+    // Login/Logout Button – ZAKTUALIZOWANE POZYCJE
     if (
       !isConnected &&
       adjustedMouseX >= GAME_WIDTH / 2 - 120 &&
@@ -3051,8 +3000,8 @@ function mousePressed() {
       isConnected &&
       adjustedMouseX >= GAME_WIDTH / 2 - 120 &&
       adjustedMouseX <= GAME_WIDTH / 2 + 120 &&
-      adjustedMouseY >= 660 + verticalOffset &&
-      adjustedMouseY <= 720 + verticalOffset
+      adjustedMouseY >= 640 + verticalOffset &&
+      adjustedMouseY <= 700 + verticalOffset // Przesunięte z 660–720 na 640–700
     ) {
       console.log("Logout clicked - disconnecting wallet");
       if (web3Modal) {
@@ -3066,7 +3015,19 @@ function mousePressed() {
       signer = null;
       connectionError = null;
     }
-
+  
+    // *** OBSŁUGA KLIKNIĘCIA W "Claim Your NFT" – ZAKTUALIZOWANA POZYCJA ***
+    if (
+      hasCompletedGame &&
+      adjustedMouseX >= GAME_WIDTH / 2 - 120 &&
+      adjustedMouseX <= GAME_WIDTH / 2 + 120 &&
+      adjustedMouseY >= 720 + verticalOffset &&
+      adjustedMouseY <= 780 + verticalOffset // Przesunięte z 700–760 na 720–780
+    ) {
+      gameState = "endgame";
+      console.log("Returning to claim NFT!");
+    }
+  
     // INFO Button – bez zmian
     let sideButtonX = GAME_WIDTH - 120 - 20;
     if (
@@ -3077,7 +3038,7 @@ function mousePressed() {
     ) {
       gameState = "info";
     }
-
+  
     // Tutorial Button – bez zmian
     if (
       adjustedMouseX >= sideButtonX &&
@@ -3087,7 +3048,7 @@ function mousePressed() {
     ) {
       gameState = "tutorial";
     }
-
+  
     // View Intro Button – bez zmian
     if (
       adjustedMouseX >= sideButtonX &&
@@ -3103,29 +3064,26 @@ function mousePressed() {
         introMusic.loop();
       }
     }
-
-    // ACHIEVEMENTS
-  if (
-    adjustedMouseX >= sideButtonX &&
-    adjustedMouseX <= sideButtonX + 120 &&
-    adjustedMouseY >= 380 &&
-    adjustedMouseY <= 430
-  ) {
-    gameState = "achievements";
-  }
-} else if (gameState === "achievements") {
-  // CLOSE
-  if (
-    adjustedMouseX >= GAME_WIDTH / 2 - 60 &&
-    adjustedMouseX <= GAME_WIDTH / 2 + 60 &&
-    adjustedMouseY >= GAME_HEIGHT / 2 + 350 &&
-    adjustedMouseY <= GAME_HEIGHT / 2 + 400
-  ) {
-    gameState = "howToPlay";
-  }
-
-
-    // Usunięto redundantny kod rysujący gradient dla Logout – przeniesiono do draw()
+  
+    // ACHIEVEMENTS – bez zmian
+    if (
+      adjustedMouseX >= sideButtonX &&
+      adjustedMouseX <= sideButtonX + 120 &&
+      adjustedMouseY >= 380 &&
+      adjustedMouseY <= 430
+    ) {
+      gameState = "achievements";
+    }
+  } else if (gameState === "achievements") {
+    // CLOSE
+    if (
+      adjustedMouseX >= GAME_WIDTH / 2 - 60 &&
+      adjustedMouseX <= GAME_WIDTH / 2 + 60 &&
+      adjustedMouseY >= GAME_HEIGHT / 2 + 350 &&
+      adjustedMouseY <= GAME_HEIGHT / 2 + 400
+    ) {
+      gameState = "howToPlay";
+    }
   } else if (gameState === "info") {
     let offsetX = (width - GAME_WIDTH) / 2;
     let offsetY = (height - GAME_HEIGHT) / 2;
@@ -3203,22 +3161,68 @@ function mousePressed() {
       console.log("Back clicked!");
       gameState = "howToPlay";
     }
-  
 
     if (adjustedMouseX >= 10 && adjustedMouseX <= 110 && adjustedMouseY >= 10 && adjustedMouseY <= 50) {
       gameState = "howToPlay";
     }
-
   } else if (gameState === "start" || gameState === "win" || gameState === "endgame") {
-    if (adjustedMouseX >= 0 && adjustedMouseX <= GAME_WIDTH && adjustedMouseY >= 0 && adjustedMouseY <= GAME_HEIGHT) {
-      startGame();
+    if (gameState === "endgame") {
+      let claimButtonX = GAME_WIDTH / 2 - 100;
+      let claimButtonY = GAME_HEIGHT / 2 + 320;
+      if (
+        adjustedMouseX >= claimButtonX &&
+        adjustedMouseX <= claimButtonX + 200 &&
+        adjustedMouseY >= claimButtonY &&
+        adjustedMouseY <= claimButtonY + 50
+      ) {
+        console.log("Claim NFT clicked!");
+        alert("NFT claim functionality coming soon on Supersync Network!");
+        // Z czasem tu podłączymy mintowanie
+      }
+      // Przycisk "Back to Menu" (NOWY)
+      let backButtonX = GAME_WIDTH / 2 - 100;
+      let backButtonY = GAME_HEIGHT / 2 + 400;
+      if (
+        adjustedMouseX >= backButtonX &&
+        adjustedMouseX <= backButtonX + 200 &&
+        adjustedMouseY >= backButtonY &&
+        adjustedMouseY <= backButtonY + 50
+      ) {
+        gameState = "howToPlay";
+        console.log("Back to menu clicked from endgame!");
+        if (soundInitialized) {
+          // Zatrzymaj tylko muzykę gry, jeśli gra
+          backgroundMusic.stop();
+          backgroundMusic2.stop();
+          backgroundMusic3.stop();
+          // Jeśli introMusic nie gra, uruchom je, ale nie restartuj, jeśli już gra
+          if (!introMusic.isPlaying()) {
+            introMusic.loop();
+          }
+        }
+      }
+    }
+
+
+    if (gameState === "start" || gameState === "win") {
+      let backButtonX = GAME_WIDTH / 2 - 100;
+      let backButtonY = GAME_HEIGHT / 2 + 320; // Taka sama pozycja jak "Claim NFT" w "endgame"
+      if (
+        adjustedMouseX >= backButtonX &&
+        adjustedMouseX <= backButtonX + 200 &&
+        adjustedMouseY >= backButtonY &&
+        adjustedMouseY <= backButtonY + 50
+      ) {
+        gameState = "howToPlay";
+        console.log("Back to menu clicked!");
+      }
     }
   } else if (gameState === "gameOver") {
     let buttonX = GAME_WIDTH / 2 - RESTART_BUTTON_WIDTH / 2;
     let relaunchButtonY = GAME_HEIGHT / 2 + 180;
     let shareScoreButtonY = GAME_HEIGHT / 2 + 260;
-    let menuButtonY = GAME_HEIGHT / 2 + 340; // Define menuButtonY to match draw()
-  
+    let menuButtonY = GAME_HEIGHT / 2 + 340;
+
     // Relaunch Button
     if (
       adjustedMouseX >= buttonX &&
@@ -3228,7 +3232,7 @@ function mousePressed() {
     ) {
       startGame();
     }
-  
+
     // Share Score Button
     if (
       adjustedMouseX >= buttonX &&
@@ -3240,7 +3244,7 @@ function mousePressed() {
       navigator.clipboard.writeText(shareText);
       alert("Score copied to clipboard: " + shareText);
     }
-  
+
     // Menu Button
     if (
       adjustedMouseX >= buttonX &&
@@ -3253,14 +3257,12 @@ function mousePressed() {
         backgroundMusic.stop(); // Stop game music
         backgroundMusic2.stop();
         introMusic.stop();
-        // Optionally restart intro music if desired
-        // introMusic.loop();
       }
     }
-  
+
     // Share Badge Button (if earned)
     if (mainnetBadgeEarned) {
-      let badgeButtonY = GAME_HEIGHT / 2 + 340; // Should this be 270 or another value?
+      let badgeButtonY = GAME_HEIGHT / 2 + 340;
       if (
         adjustedMouseX >= buttonX &&
         adjustedMouseX <= buttonX + RESTART_BUTTON_WIDTH &&
@@ -3272,44 +3274,42 @@ function mousePressed() {
         alert("Badge share text copied to clipboard: " + shareText);
       }
     }
-
-
   } else if (gameState === "playing" || gameState === "supernova") {
     lastClickTime = millis();
     if (inactivityWarning) inactivityWarning = false;
 
-// Aktywacja przycisku Pulse Dampener
-let buttonX = GAME_WIDTH - 120 - 10;
-let buttonY = 100;
-let buttonWidth = 120;
-let buttonHeight = 50;
-let SLOWDOWN_COST = level >= 10 ? 20 : 15; // Dodane lokalnie
-if (
-  adjustedMouseX >= buttonX &&
-  adjustedMouseX <= buttonX + buttonWidth &&
-  adjustedMouseY >= buttonY &&
-  adjustedMouseY <= buttonY + buttonHeight &&
-  level >= 7 &&
-  !slowdownActive &&
-  slowdownCooldown <= 0 &&
-  score >= SLOWDOWN_COST
-) {
-  slowdownActive = true;
-  slowdownTimer = SLOWDOWN_DURATION;
-  slowdownCooldown = SLOWDOWN_COOLDOWN;
-  score -= SLOWDOWN_COST;
-  pulseSpeed *= SLOWDOWN_FACTOR;
-  basePulseSpeed = pulseSpeed / SLOWDOWN_FACTOR;
-  obstacles.forEach(o => {
-    o.speedX *= SLOWDOWN_FACTOR;
-    o.speedY *= SLOWDOWN_FACTOR;
-  });
-  baseRotationSpeed = 0.01 / SLOWDOWN_FACTOR;
-  for (let i = 0; i < 20; i++) {
-    particles.push(new Particle(logoX, logoY, { r: 255, g: 215, b: 0 }));
-  }
-  if (soundInitialized) powerUpSound.play();
-}
+    // Aktywacja przycisku Pulse Dampener
+    let buttonX = GAME_WIDTH - 120 - 10;
+    let buttonY = 100;
+    let buttonWidth = 120;
+    let buttonHeight = 50;
+    let SLOWDOWN_COST = level >= 10 ? 20 : 15;
+    if (
+      adjustedMouseX >= buttonX &&
+      adjustedMouseX <= buttonX + buttonWidth &&
+      adjustedMouseY >= buttonY &&
+      adjustedMouseY <= buttonY + buttonHeight &&
+      level >= 7 &&
+      !slowdownActive &&
+      slowdownCooldown <= 0 &&
+      score >= SLOWDOWN_COST
+    ) {
+      slowdownActive = true;
+      slowdownTimer = SLOWDOWN_DURATION;
+      slowdownCooldown = SLOWDOWN_COOLDOWN;
+      score -= SLOWDOWN_COST;
+      pulseSpeed *= SLOWDOWN_FACTOR;
+      basePulseSpeed = pulseSpeed / SLOWDOWN_FACTOR;
+      obstacles.forEach(o => {
+        o.speedX *= SLOWDOWN_FACTOR;
+        o.speedY *= SLOWDOWN_FACTOR;
+      });
+      baseRotationSpeed = 0.01 / SLOWDOWN_FACTOR;
+      for (let i = 0; i < 20; i++) {
+        particles.push(new Particle(logoX, logoY, { r: 255, g: 215, b: 0 }));
+      }
+      if (soundInitialized) powerUpSound.play();
+    }
 
     let howToX = GAME_WIDTH - HOW_TO_PLAY_BUTTON_WIDTH - 10;
     let howToY = 10;
@@ -3325,13 +3325,9 @@ if (
 
     let d = dist(adjustedMouseX, adjustedMouseY, logoX, logoY);
     if (d < circleSize / 2 && isReadyToClick) {
-      // Sprawdzamy, czy logo jest zbyt blisko czarnej dziury
       if (activeEvent === "blackHole" && dist(logoX, logoY, eventX, eventY) < 300) {
-        // Jeśli logo jest w zasięgu czarnej dziury (300 pikseli), ignorujemy synchronizację
         return;
       }
-
-      // Jeśli logo nie jest w zasięgu czarnej dziury, kontynuujemy synchronizację
       combo += 1;
       comboBar = min(comboBar + 2, 10);
       let multiplier = (powerUpEffect === "gas" || meteorShowerActive || gameState === "supernova") ? 3 : 1;
@@ -3389,7 +3385,7 @@ if (
         if (powerUpEffect && powerUpEffectTime > 0) {
           if (powerUpEffect === "gas" && powerUps[i].type === "star") {
             powerUpCombo = "gas+star";
-            powerUpEffectTime = 5000 * (1 + level * 0.1); // Skalowanie dla combo Gas+Star
+            powerUpEffectTime = 5000 * (1 + level * 0.1);
           }
         }
         if (powerUps[i].type === "life" && lives < 5) {
@@ -3397,27 +3393,27 @@ if (
           lifeBar = min(lifeBar + 20, 100);
         } else if (powerUps[i].type === "gas") {
           powerUpEffect = "gas";
-          powerUpEffectTime = powerUpDurations.gas * (1 + level * 0.1); // Skalowanie z poziomem
+          powerUpEffectTime = powerUpDurations.gas * (1 + level * 0.1);
         } else if (powerUps[i].type === "pulse" && isReadyToClick) {
           pulseSpeed += 500;
           powerUpEffect = "pulse";
-          powerUpEffectTime = powerUpDurations.pulse * (1 + level * 0.1); // Skalowanie z poziomem
+          powerUpEffectTime = powerUpDurations.pulse * (1 + level * 0.1);
         } else if (powerUps[i].type === "orbit") {
           powerUpEffect = "orbit";
           shieldActive = true;
-          powerUpEffectTime = powerUpDurations.orbit * (1 + level * 0.1); // Skalowanie z poziomem
+          powerUpEffectTime = powerUpDurations.orbit * (1 + level * 0.1);
         } else if (powerUps[i].type === "nova" && isReadyToClick) {
           powerUpEffect = "nova";
           freezeActive = true;
-          powerUpEffectTime = powerUpDurations.nova * (1 + level * 0.1); // Skalowanie z poziomem
+          powerUpEffectTime = powerUpDurations.nova * (1 + level * 0.1);
         } else if (powerUps[i].type === "meteor") {
           powerUpEffect = "meteor";
           meteorShowerActive = true;
-          powerUpEffectTime = powerUpDurations.meteor * (1 + level * 0.1); // Skalowanie z poziomem
+          powerUpEffectTime = powerUpDurations.meteor * (1 + level * 0.1);
         } else if (powerUps[i].type === "star") {
           powerUpEffect = "star";
           starBoostActive = true;
-          powerUpEffectTime = powerUpDurations.star * (1 + level * 0.1); // Skalowanie z poziomem
+          powerUpEffectTime = powerUpDurations.star * (1 + level * 0.1);
         } else if (powerUps[i].type === "wave") {
           obstacles = [];
           for (let j = 0; j < 20; j++) {
