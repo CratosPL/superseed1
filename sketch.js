@@ -3177,9 +3177,7 @@ function mousePressed() {
       ) {
         console.log("Claim NFT clicked!");
         alert("NFT claim functionality coming soon on Supersync Network!");
-        // Z czasem tu podłączymy mintowanie
       }
-      // Przycisk "Back to Menu" (NOWY)
       let backButtonX = GAME_WIDTH / 2 - 100;
       let backButtonY = GAME_HEIGHT / 2 + 400;
       if (
@@ -3191,31 +3189,26 @@ function mousePressed() {
         gameState = "howToPlay";
         console.log("Back to menu clicked from endgame!");
         if (soundInitialized) {
-          // Zatrzymaj tylko muzykę gry, jeśli gra
           backgroundMusic.stop();
           backgroundMusic2.stop();
           backgroundMusic3.stop();
-          // Jeśli introMusic nie gra, uruchom je, ale nie restartuj, jeśli już gra
           if (!introMusic.isPlaying()) {
             introMusic.loop();
           }
         }
       }
-    }
-
-
-    if (gameState === "start" || gameState === "win") {
-      let backButtonX = GAME_WIDTH / 2 - 100;
-      let backButtonY = GAME_HEIGHT / 2 + 320; // Taka sama pozycja jak "Claim NFT" w "endgame"
-      if (
-        adjustedMouseX >= backButtonX &&
-        adjustedMouseX <= backButtonX + 200 &&
-        adjustedMouseY >= backButtonY &&
-        adjustedMouseY <= backButtonY + 50
-      ) {
-        gameState = "howToPlay";
-        console.log("Back to menu clicked!");
-      }
+    } else if (gameState === "start") {
+      startGame();
+    } else if (gameState === "win") {
+      // Kliknięcie w dowolnym miejscu ekranu przechodzi do następnego poziomu
+      gameState = "playing";
+      score = 0; // Reset punktów na nowy poziom
+      combo = 0;
+      comboBar = 0;
+      warpTimer = 0; // Zresetuj efekt warp, jeśli istnieje
+      lastPulse = millis(); // Zresetuj puls dla nowego poziomu
+      console.log(`Continuing to Orbit ${level}`);
+    
     }
   } else if (gameState === "gameOver") {
     let buttonX = GAME_WIDTH / 2 - RESTART_BUTTON_WIDTH / 2;
