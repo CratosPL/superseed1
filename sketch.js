@@ -4,6 +4,7 @@ let whiteLogo;
 let smallSuperseedIntro; 
 let clickSound;
 let backgroundMusic;
+let backgroundMusic3;
 let introMusic;
 let powerUpSound;
 let meteorSound;
@@ -663,6 +664,7 @@ function preload() {
   clickSound = loadSound('assets/background-beat.wav');
   backgroundMusic = loadSound('assets/background-music.mp3');
   backgroundMusic2 = loadSound('assets/background-music2.mp3');
+  backgroundMusic3 = loadSound('assets/background-music3.mp3');
   introMusic = loadSound('assets/intro1.mp3'); // Nowa muzyka intro
   powerUpSound = loadSound('assets/power-up.mp3');
   meteorSound = loadSound('assets/meteor-hit.mp3');
@@ -678,23 +680,8 @@ function preload() {
 // Poprawiony setup() – bez async, wywołanie asynchroniczne w tle
 function setup() {
   const canvas = createCanvas(windowWidth, windowHeight, { willReadFrequently: true });
-  let scaleFactor = min(windowWidth / 1200, windowHeight / 1000);
   GAME_WIDTH = windowWidth;
   GAME_HEIGHT = windowHeight;
-  RESTART_BUTTON_WIDTH = 200 * scaleFactor;
-  RESTART_BUTTON_HEIGHT = 50 * scaleFactor;
-  SYMBOL_SIZE = 18 * scaleFactor;
-  GAME_SYMBOL_SIZE = 40 * scaleFactor;
-  TABLE_CELL_WIDTH = 500 * scaleFactor;
-  TABLE_CELL_HEIGHT = 50 * scaleFactor;
-  TABLE_START_X = (GAME_WIDTH - TABLE_CELL_WIDTH * 2) / 2;
-  TABLE_START_Y = 300 * scaleFactor;
-  HOW_TO_PLAY_BUTTON_WIDTH = 100 * scaleFactor;
-  HOW_TO_PLAY_BUTTON_HEIGHT = 40 * scaleFactor;
-  TUTORIAL_BUTTON_WIDTH = 200 * scaleFactor;
-  TUTORIAL_BUTTON_HEIGHT = 50 * scaleFactor;
-  TUTORIAL_MENU_BUTTON_WIDTH = 200 * scaleFactor;
-  TUTORIAL_MENU_BUTTON_HEIGHT = 50 * scaleFactor;
   textAlign(CENTER, CENTER);
   textFont("Open Sans");
   logoX = GAME_WIDTH / 2;
@@ -705,6 +692,7 @@ function setup() {
   clickSound.setVolume(1.0);
   backgroundMusic.setVolume(0.5);
   backgroundMusic2.setVolume(0.5);
+  backgroundMusic3.setVolume(0.5); // Ustawienie głośności dla nowej muzyki
   introMusic.setVolume(0.6);
   powerUpSound.setVolume(0.5);
   meteorSound.setVolume(0.5);
@@ -723,14 +711,12 @@ function setup() {
     soundInitialized = true;
   }
 
-  // Resetowanie stanu Web3Modal
   isConnected = false;
   userAddress = null;
   provider = null;
   signer = null;
   connectionError = null;
 
-  // Inicjalizacja Web3Modal w tle
   waitForScripts().then(() => {
     initializeWeb3Modal();
     if (web3Modal && web3Modal.cachedProvider) {
@@ -789,40 +775,37 @@ function touchStarted() {
 }
 
 function drawBackground(pulseProgress) {
+  // Rysuj tło na całym oknie (windowWidth x windowHeight)
   let bgColor = lerpColor(color(14, 39, 59), color(40 + level * 10, 70 + level * 10, 100), sin(pulseProgress * TWO_PI) * 0.5 + 0.5);
-  background(bgColor);
+  background(bgColor); // Wypełnia cały canvas
   let c1 = color(14, 39, 59);
   let c2 = color(10, 30, 60);
-  for (let y = 0; y < height; y++) {
-    let inter = map(y, 0, height, 0, 1);
+  for (let y = 0; y < windowHeight; y++) {
+    let inter = map(y, 0, windowHeight, 0, 1);
     let c = lerpColor(c1, c2, inter);
     stroke(c);
-    line(0, y, width, y);
+    line(0, y, windowWidth, y); // Linie na całej szerokości okna
   }
 }
 
 function draw() {
+  
   let currentTime = millis();
   let pulseProgress = (currentTime - lastPulse) / pulseSpeed;
 
-
   
-  // Nowy stan preIntro
-  if (gameState === "preIntro") {
-    drawBackground(0);
-    fill(255);
-    textSize(40);
-    textStyle(BOLD);
-    text("Witaj w Superseed Cosmic Network", GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50);
-    textSize(24);
-    text("Kliknij gdziekolwiek, aby rozpocząć", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 50);
-    return;
-  }
+
+  // Rysuj tło na całym oknie jako pierwsze
+  drawBackground(pulseProgress);
+
+  // Centruj grę w oknie z letterboxingiem
+  let offsetX = (windowWidth - GAME_WIDTH) / 2;
+  let offsetY = (windowHeight - GAME_HEIGHT) / 2;
+  push();
+  translate(offsetX, offsetY);
 
   // Istniejący stan intro
   if (gameState === "intro") {
-    drawBackground(0);
-
     for (let i = bgParticles.length - 1; i >= 0; i--) {
       bgParticles[i].update();
       bgParticles[i].show(0);
@@ -832,270 +815,256 @@ function draw() {
     translate((width - GAME_WIDTH) / 2, (height - GAME_HEIGHT) / 2);
 
     // Zarządzanie dźwiękiem
-  if (soundInitialized) {
-    if (!introMusic.isPlaying()) {
-      introMusic.loop();
+    if (soundInitialized) {
+      if (!introMusic.isPlaying()) {
+        introMusic.loop();
+      }
     }
-  }
 
     // Odtwarzaj muzykę intro, gdy dźwięk jest zainicjalizowany
     if (!introMusic.isPlaying() && soundInitialized) {
       introMusic.loop();
     }
 
-// Wykrywanie urządzenia na podstawie szerokości ekranu
-let isMobile = GAME_WIDTH < 768; // Próg dla urządzeń mobilnych (możesz dostosować)
-let originalWidth = 1200; // Rzeczywista szerokość obrazów (dostosuj)
-let originalHeight = 1000; // Rzeczywista wysokość obrazów (dostosuj)
-let aspectRatio = originalWidth / originalHeight;
+    // Wykrywanie urządzenia na podstawie szerokości ekranu
+    let isMobile = GAME_WIDTH < 768; // Próg dla urządzeń mobilnych (możesz dostosować)
+    let originalWidth = 1200; // Rzeczywista szerokość obrazów
+    let originalHeight = 1000; // Rzeczywista wysokość obrazów
+    let aspectRatio = originalWidth / originalHeight;
 
     // Scene 1: "The Fall"
-  if (introState === 0) {
-    if (isMobile) {
-      // Na telefonie: zachowaj proporcje i przytnij
-      let bgWidth, bgHeight, bgX, bgY;
-      if (GAME_WIDTH / GAME_HEIGHT > aspectRatio) {
-        bgHeight = GAME_HEIGHT;
-        bgWidth = bgHeight * aspectRatio;
-        bgX = (GAME_WIDTH - bgWidth) / 2;
-        bgY = 0;
+    if (introState === 0) {
+      if (isMobile) {
+        let bgWidth, bgHeight, bgX, bgY;
+        if (GAME_WIDTH / GAME_HEIGHT > aspectRatio) {
+          bgHeight = GAME_HEIGHT;
+          bgWidth = bgHeight * aspectRatio;
+          bgX = (GAME_WIDTH - bgWidth) / 2;
+          bgY = 0;
+        } else {
+          bgWidth = GAME_WIDTH;
+          bgHeight = bgWidth / aspectRatio;
+          bgX = 0;
+          bgY = (GAME_HEIGHT - bgHeight) / 2;
+        }
+        image(upadekBg, bgX, bgY, bgWidth, bgHeight);
       } else {
-        bgWidth = GAME_WIDTH;
-        bgHeight = bgWidth / aspectRatio;
-        bgX = 0;
-        bgY = (GAME_HEIGHT - bgHeight) / 2;
+        image(upadekBg, 0, 0, GAME_WIDTH, GAME_HEIGHT);
       }
-      image(upadekBg, bgX, bgY, bgWidth, bgHeight);
-    } else {
-      // Na komputerze: pełne rozciąganie
-      image(upadekBg, 0, 0, GAME_WIDTH, GAME_HEIGHT);
+      let logoPulse = lerp(50, 100, sin(currentTime * 0.002));
+      tint(255, 200);
+      image(logo, GAME_WIDTH / 2, GAME_HEIGHT / 2, logoPulse, logoPulse);
+      fill(255, 200);
+      textSize(isMobile ? 18 : 24);
+      textStyle(BOLD);
+      textAlign(CENTER, CENTER);
+      text(
+        "In a galaxy bound by centralized chains,\nthe old networks fell silent.\nOne seed remained – a spark of hope.",
+        GAME_WIDTH / 2,
+        GAME_HEIGHT - (isMobile ? 100 : 150)
+      );
     }
-    let logoPulse = lerp(50, 100, sin(currentTime * 0.002));
-    tint(255, 200);
-    image(logo, GAME_WIDTH / 2, GAME_HEIGHT / 2, logoPulse, logoPulse);
+    // Scene 2: "Call to Sync"
+    else if (introState === 1) {
+      if (isMobile) {
+        let bgWidth, bgHeight, bgX, bgY;
+        if (GAME_WIDTH / GAME_HEIGHT > aspectRatio) {
+          bgHeight = GAME_HEIGHT;
+          bgWidth = bgHeight * aspectRatio;
+          bgX = (GAME_WIDTH - bgWidth) / 2;
+          bgY = 0;
+        } else {
+          bgWidth = GAME_WIDTH;
+          bgHeight = bgWidth / aspectRatio;
+          bgX = 0;
+          bgY = (GAME_HEIGHT - bgHeight) / 2;
+        }
+        image(synchronizacjaBg, bgX, bgY, bgWidth, bgHeight);
+      } else {
+        image(synchronizacjaBg, 0, 0, GAME_WIDTH, GAME_HEIGHT);
+      }
+      let logoPulse = lerp(minSize, maxSize, sin(currentTime * 0.002));
+      tint(seedColor.r, seedColor.g, seedColor.b, 200);
+      image(logo, GAME_WIDTH / 2, GAME_HEIGHT / 2, logoPulse, logoPulse);
+      for (let i = 0; i < 4; i++) {
+        let angle = TWO_PI / 4 * i + currentTime * 0.001;
+        let orbitRadius = isMobile ? min(100, GAME_WIDTH * 0.15) : 150;
+        let px = GAME_WIDTH / 2 + cos(angle) * orbitRadius;
+        let py = GAME_HEIGHT / 2 + sin(angle) * orbitRadius;
+        let p = new PowerUp(px, py);
+        p.type = ["life", "gas", "pulse", "orbit"][i];
+        p.show();
+      }
+      stroke(14, 39, 59);
+      strokeWeight(2);
+      fill(93, 208, 207);
+      textSize(isMobile ? 18 : 24);
+      textStyle(BOLD);
+      text(
+        "You’ve been chosen to awaken the Superseed Mainnet.\nSync cosmic nodes, harness power-ups,\nand forge a decentralized future – orbit by orbit.",
+        GAME_WIDTH / 2,
+        GAME_HEIGHT - (isMobile ? 100 : 150)
+      );
+      noStroke();
+    }
+    // Scene 3: "The Reward Awaits"
+    else if (introState === 2) {
+      if (isMobile) {
+        let bgWidth, bgHeight, bgX, bgY;
+        if (GAME_WIDTH / GAME_HEIGHT > aspectRatio) {
+          bgHeight = GAME_HEIGHT;
+          bgWidth = bgHeight * aspectRatio;
+          bgX = (GAME_WIDTH - bgWidth) / 2;
+          bgY = 0;
+        } else {
+          bgWidth = GAME_WIDTH;
+          bgHeight = bgWidth / aspectRatio;
+          bgX = 0;
+          bgY = (GAME_HEIGHT - bgHeight) / 2;
+        }
+        image(nagrodaBg, bgX, bgY, bgWidth, bgHeight);
+      } else {
+        image(nagrodaBg, 0, 0, GAME_WIDTH, GAME_HEIGHT);
+      }
+
+      if (random(1) < 0.2) {
+        particles.push(new Particle(GAME_WIDTH / 2, GAME_HEIGHT / 2, { r: seedColor.r, g: seedColor.g, b: seedColor.b }));
+      }
+      for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update();
+        particles[i].show();
+        if (particles[i].isDead()) particles.splice(i, 1);
+      }
+
+      let logoWidth = isMobile ? min(200, GAME_WIDTH * 0.4) : 300;
+      let logoHeight = logoWidth / 2;
+      image(whiteLogo, GAME_WIDTH / 2 - logoWidth / 2, isMobile ? 30 : 50, logoWidth, logoHeight);
+
+      push();
+      translate(GAME_WIDTH / 2, GAME_HEIGHT / 2);
+      rotate(sin(currentTime * 0.001) * 0.1);
+      let pulseScale = 1 + sin(currentTime * 0.005) * 0.05;
+
+      let cardWidth = (isMobile ? min(200, GAME_WIDTH * 0.5) : 300) * pulseScale;
+      let cardHeight = cardWidth * 1.5;
+
+      let gradient = drawingContext.createLinearGradient(-cardWidth / 2, -cardHeight / 2, cardWidth / 2, cardHeight / 2);
+      gradient.addColorStop(0, `rgba(${seedColor.r}, ${seedColor.g}, ${seedColor.b}, 0.8)`);
+      gradient.addColorStop(1, "rgba(14, 39, 59, 0.9)");
+      drawingContext.fillStyle = gradient;
+      drawingContext.shadowBlur = 20;
+      drawingContext.shadowColor = `rgba(255, 215, 0, 0.5)`;
+      rect(-cardWidth / 2, -cardHeight / 2, cardWidth, cardHeight, 20);
+
+      noFill();
+      stroke(255, 215, 0, 200);
+      strokeWeight(4);
+      rect(-cardWidth / 2 + 5, -cardHeight / 2 + 5, cardWidth - 10, cardHeight - 10, 15);
+      stroke(seedColor.r, seedColor.g, seedColor.b, 150);
+      strokeWeight(2);
+      rect(-cardWidth / 2 + 10, -cardHeight / 2 + 10, cardWidth - 20, cardHeight - 20, 10);
+
+      push();
+      translate(0, -50);
+      rotate(currentTime * 0.001);
+      tint(255, 215, 0, 200);
+      imageMode(CENTER);
+      image(smallSuperseedIntro, 0, 0, cardWidth * 0.7, cardWidth * 0.7);
+      pop();
+
+      noFill();
+      stroke(93, 208, 207, 100);
+      strokeWeight(1);
+      for (let i = 0; i < 5; i++) {
+        let y = map(i, 0, 4, -cardHeight / 2 + 20, cardHeight / 2 - 20);
+        line(-cardWidth / 2 + 20, y, cardWidth / 2 - 20, y);
+      }
+
+      stroke(14, 39, 59, 200);
+      strokeWeight(1);
+      fill(147, 208, 207);
+      textSize(isMobile ? 12 : 16);
+      textStyle(NORMAL);
+      textAlign(CENTER, CENTER);
+      text("Superseed Cosmic Network", 0, cardHeight / 2 - 90);
+
+      stroke(14, 39, 59, 200);
+      strokeWeight(1);
+      fill(255, 215, 0);
+      textSize(isMobile ? 18 : 24);
+      textStyle(BOLD);
+      text("Superseed Cosmic Core", 0, cardHeight / 2 - 60);
+
+      stroke(14, 39, 59, 200);
+      strokeWeight(1);
+      fill(255, 255, 255, 150);
+      textSize(isMobile ? 12 : 16);
+      text("NFT", 0, cardHeight / 2 - 30);
+
+      drawingContext.shadowBlur = 0;
+      noStroke();
+      pop();
+
+      stroke(14, 39, 59, 200);
+      strokeWeight(3);
+      fill(255, 245, 102);
+      textSize(isMobile ? 18 : 24);
+      textStyle(BOLD);
+      textAlign(CENTER, CENTER);
+      text(
+        "Reach Orbit 10, sync the Mainnet,\nand claim your Superseed Cosmic Core NFT\non the Supersync Network!",
+        GAME_WIDTH / 2,
+        GAME_HEIGHT - (isMobile ? 100 : 150)
+      );
+      noStroke();
+
+      stroke(14, 39, 59, 200);
+      strokeWeight(1);
+      fill(147, 208, 207);
+      textSize(isMobile ? 12 : 16);
+      text("#SuperseedGrok3", GAME_WIDTH / 2, GAME_HEIGHT - (isMobile ? 30 : 50));
+      noStroke();
+    }
+
+    // Add "NEXT" button
+    let nextButtonX = GAME_WIDTH - 100;
+    let nextButtonY = GAME_HEIGHT - 50;
+    fill(93, 208, 207);
+    rect(nextButtonX, nextButtonY, 80, 30, 5);
+    fill(255);
+    textSize(16);
+    text("NEXT", nextButtonX + 40, nextButtonY + 15);
+
+    // Display remaining time
+    let timeLeft = introDuration - (currentTime - introTimer);
     fill(255, 200);
-    textSize(isMobile ? 18 : 24); // Mniejszy tekst na telefonie
-    textStyle(BOLD);
-    textAlign(CENTER, CENTER);
-    text(
-      "In a galaxy bound by centralized chains,\nthe old networks fell silent.\nOne seed remained – a spark of hope.",
-      GAME_WIDTH / 2,
-      GAME_HEIGHT - (isMobile ? 100 : 150) // Mniejszy odstęp na telefonie
-    );
-  }
-  // Scene 2: "Call to Sync"
-  else if (introState === 1) {
-    if (isMobile) {
-      let bgWidth, bgHeight, bgX, bgY;
-      if (GAME_WIDTH / GAME_HEIGHT > aspectRatio) {
-        bgHeight = GAME_HEIGHT;
-        bgWidth = bgHeight * aspectRatio;
-        bgX = (GAME_WIDTH - bgWidth) / 2;
-        bgY = 0;
-      } else {
-        bgWidth = GAME_WIDTH;
-        bgHeight = bgWidth / aspectRatio;
-        bgX = 0;
-        bgY = (GAME_HEIGHT - bgHeight) / 2;
-      }
-      image(synchronizacjaBg, bgX, bgY, bgWidth, bgHeight);
-    } else {
-      image(synchronizacjaBg, 0, 0, GAME_WIDTH, GAME_HEIGHT);
-    }
-    let logoPulse = lerp(minSize, maxSize, sin(currentTime * 0.002));
-    tint(seedColor.r, seedColor.g, seedColor.b, 200);
-    image(logo, GAME_WIDTH / 2, GAME_HEIGHT / 2, logoPulse, logoPulse);
-    for (let i = 0; i < 4; i++) {
-      let angle = TWO_PI / 4 * i + currentTime * 0.001;
-      let orbitRadius = isMobile ? min(100, GAME_WIDTH * 0.15) : 150;
-      let px = GAME_WIDTH / 2 + cos(angle) * orbitRadius;
-      let py = GAME_HEIGHT / 2 + sin(angle) * orbitRadius;
-      let p = new PowerUp(px, py);
-      p.type = ["life", "gas", "pulse", "orbit"][i];
-      p.show();
-    }
-    // Dodajemy obrys dla lepszej widoczności
-    stroke(14, 39, 59); // Ciemny kolor Tangaroa (#0E273B) dla obrysu
-    strokeWeight(2);    // Subtelny obrys o grubości 1 piksel
-    fill(93, 208, 207); // Wypełnienie pozostaje bez zmian
-    textSize(isMobile ? 18 : 24);
-    textStyle(BOLD);    // Opcjonalnie: pogrubienie dla dodatkowego kontrastu
-    text(
-      "You’ve been chosen to awaken the Superseed Mainnet.\nSync cosmic nodes, harness power-ups,\nand forge a decentralized future – orbit by orbit.",
-      GAME_WIDTH / 2,
-      GAME_HEIGHT - (isMobile ? 100 : 150)
-    );
-    noStroke(); // Wyłączamy obrys po tekście, aby nie wpływał na inne elementy
-  }
-  // Scene 3: "The Reward Awaits" – NFT jako karta z obracającym się logo i nazwą gry
-  else if (introState === 2) {
-    if (isMobile) {
-      let bgWidth, bgHeight, bgX, bgY;
-      if (GAME_WIDTH / GAME_HEIGHT > aspectRatio) {
-        bgHeight = GAME_HEIGHT;
-        bgWidth = bgHeight * aspectRatio;
-        bgX = (GAME_WIDTH - bgWidth) / 2;
-        bgY = 0;
-      } else {
-        bgWidth = GAME_WIDTH;
-        bgHeight = bgWidth / aspectRatio;
-        bgX = 0;
-        bgY = (GAME_HEIGHT - bgHeight) / 2;
-      }
-      image(nagrodaBg, bgX, bgY, bgWidth, bgHeight);
-    } else {
-      image(nagrodaBg, 0, 0, GAME_WIDTH, GAME_HEIGHT);
-    }
+    textSize(16);
+    text(`${floor(timeLeft / 1000)}s`, GAME_WIDTH / 2, 50);
 
-    // Cząsteczki wokół karty
-    if (random(1) < 0.2) {
-      particles.push(new Particle(GAME_WIDTH / 2, GAME_HEIGHT / 2, { r: seedColor.r, g: seedColor.g, b: seedColor.b }));
-    }
-    for (let i = particles.length - 1; i >= 0; i--) {
-      particles[i].update();
-      particles[i].show();
-      if (particles[i].isDead()) particles.splice(i, 1);
-    }
-
-    // Logo Superseed (whiteLogo) na górze
-    let logoWidth = isMobile ? min(200, GAME_WIDTH * 0.4) : 300;
-    let logoHeight = logoWidth / 2;
-    image(whiteLogo, GAME_WIDTH / 2 - logoWidth / 2, isMobile ? 30 : 50, logoWidth, logoHeight);
-
-    // Karta NFT – Superseed Cosmic Core
-    push();
-    translate(GAME_WIDTH / 2, GAME_HEIGHT / 2);
-    rotate(sin(currentTime * 0.001) * 0.1);
-    let pulseScale = 1 + sin(currentTime * 0.005) * 0.05;
-
-    let cardWidth = (isMobile ? min(200, GAME_WIDTH * 0.5) : 300) * pulseScale;
-    let cardHeight = cardWidth * 1.5;
-
-    let gradient = drawingContext.createLinearGradient(-cardWidth / 2, -cardHeight / 2, cardWidth / 2, cardHeight / 2);
-    gradient.addColorStop(0, `rgba(${seedColor.r}, ${seedColor.g}, ${seedColor.b}, 0.8)`);
-    gradient.addColorStop(1, "rgba(14, 39, 59, 0.9)");
-    drawingContext.fillStyle = gradient;
-    drawingContext.shadowBlur = 20;
-    drawingContext.shadowColor = `rgba(255, 215, 0, 0.5)`;
-    rect(-cardWidth / 2, -cardHeight / 2, cardWidth, cardHeight, 20);
-
-    noFill();
-    stroke(255, 215, 0, 200);
-    strokeWeight(4);
-    rect(-cardWidth / 2 + 5, -cardHeight / 2 + 5, cardWidth - 10, cardHeight - 10, 15);
-    stroke(seedColor.r, seedColor.g, seedColor.b, 150);
-    strokeWeight(2);
-    rect(-cardWidth / 2 + 10, -cardHeight / 2 + 10, cardWidth - 20, cardHeight - 20, 10);
-
-    push();
-    translate(0, -50);
-    rotate(currentTime * 0.001);
-    tint(255, 215, 0, 200);
-    imageMode(CENTER);
-    image(smallSuperseedIntro, 0, 0, cardWidth * 0.7, cardWidth * 0.7);
     pop();
 
-    noFill();
-    stroke(93, 208, 207, 100);
-    strokeWeight(1);
-    for (let i = 0; i < 5; i++) {
-      let y = map(i, 0, 4, -cardHeight / 2 + 20, cardHeight / 2 - 20);
-      line(-cardWidth / 2 + 20, y, cardWidth / 2 - 20, y);
-    }
-
-    stroke(14, 39, 59, 200);
-    strokeWeight(1);
-    fill(147, 208, 207);
-    textSize(isMobile ? 12 : 16);
-    textStyle(NORMAL);
-    textAlign(CENTER, CENTER);
-    text("Superseed Cosmic Network", 0, cardHeight / 2 - 90);
-
-    stroke(14, 39, 59, 200);
-    strokeWeight(1);
-    fill(255, 215, 0);
-    textSize(isMobile ? 18 : 24);
-    textStyle(BOLD);
-    text("Superseed Cosmic Core", 0, cardHeight / 2 - 60);
-
-    stroke(14, 39, 59, 200);
-    strokeWeight(1);
-    fill(255, 255, 255, 150);
-    textSize(isMobile ? 12 : 16);
-    text("NFT", 0, cardHeight / 2 - 30);
-
-    drawingContext.shadowBlur = 0;
-    noStroke();
-    pop();
-
-    stroke(14, 39, 59, 200); // Obrys w kolorze Tangaroa dla kontrastu
-  strokeWeight(3);         // Grubszy obrys (z 1.5 na 2) dla lepszej widoczności
-  fill(255, 245, 102);     // Jasny żółty (#FFF566) bez zmian
-  textSize(isMobile ? 18 : 24);
-  textStyle(BOLD);         // Pogrubienie dla lepszej widoczności
-  textAlign(CENTER, CENTER);
-  text(
-    "Reach Orbit 10, sync the Mainnet,\nand claim your Superseed Cosmic Core NFT\non the Supersync Network!",
-    GAME_WIDTH / 2,
-    GAME_HEIGHT - (isMobile ? 100 : 150)
-  );
-  noStroke();
-
-    stroke(14, 39, 59, 200);
-    strokeWeight(1);
-    fill(147, 208, 207);
-    textSize(isMobile ? 12 : 16);
-    text("#SuperseedGrok3", GAME_WIDTH / 2, GAME_HEIGHT - (isMobile ? 30 : 50));
-    noStroke();
-  }
-
-  // Add "NEXT" button
-  let nextButtonX = GAME_WIDTH - 100;
-  let nextButtonY = GAME_HEIGHT - 50;
-  fill(93, 208, 207);
-  rect(nextButtonX, nextButtonY, 80, 30, 5);
-  fill(255);
-  textSize(16);
-  text("NEXT", nextButtonX + 40, nextButtonY + 15);
-
-  // Display remaining time
-  let timeLeft = introDuration - (currentTime - introTimer);
-  fill(255, 200);
-  textSize(16);
-  text(`${floor(timeLeft / 1000)}s`, GAME_WIDTH / 2, 50);
-
-  pop();
-
-  // Automatyczne przejście
-  if (currentTime - introTimer > introDuration) {
-    introState++;
-    introTimer = currentTime;
-    if (introState > 2) {
-      gameState = "howToPlay";
-      introState = 0;
-      if (soundInitialized) {
-        introMusic.stop();
-        backgroundMusic.loop();
+    // Automatyczne przejście
+    if (currentTime - introTimer > introDuration) {
+      introState++;
+      introTimer = currentTime;
+      if (introState > 2) {
+        gameState = "howToPlay";
+        introState = 0;
+        if (soundInitialized) {
+          introMusic.stop();
+          backgroundMusic.loop();
+        }
+        if (!hasSeenIntro) {
+          localStorage.setItem('hasSeenIntro', 'true');
+          hasSeenIntro = true;
+        }
       }
-      if (!hasSeenIntro) {
-        localStorage.setItem('hasSeenIntro', 'true');
-        hasSeenIntro = true;
-      }
+      if (soundInitialized && introState <= 2) warpSound.play();
     }
-    if (soundInitialized && introState <= 2) warpSound.play();
+    return;
   }
-  return;
-}
 
-  drawBackground(pulseProgress);
-  let offsetX = (width - GAME_WIDTH) / 2;
-  let offsetY = (height - GAME_HEIGHT) / 2;
-  push();
-  if (shakeTimer > 0) {
-    translate(random(-5, 5), random(-5, 5));
-    shakeTimer -= deltaTime;
-  }
-  translate(offsetX, offsetY);
+  // Reszta kodu – ramka gry i particles
   stroke(93, 208, 207);
   strokeWeight(5);
   noFill();
@@ -1264,58 +1233,65 @@ text("NOTICE: Desktop only for now", GAME_WIDTH / 2, 770 + verticalOffset);
     }
   
     // Przyciski boczne (INFO, TUTORIAL, VIEW INTRO) – bardziej nowoczesne
-    let sideButtonWidth = 120;
-    let sideButtonHeight = 50;
-    let sideButtonX = GAME_WIDTH - sideButtonWidth - 20;
-  
-    gradient = drawingContext.createLinearGradient(sideButtonX, 200, sideButtonX + sideButtonWidth, 200);
-    gradient.addColorStop(0, "#93D0CF");
-    gradient.addColorStop(1, "#FFD700");
-    drawingContext.fillStyle = gradient;
-    stroke(147, 208, 207);
-    strokeWeight(2);
-    rect(sideButtonX, 200, sideButtonWidth, sideButtonHeight, 10);
-    noStroke();
-    fill(14, 39, 59);
-    textSize(20);
-    text("INFO", sideButtonX + sideButtonWidth / 2, 225);
-  
-    gradient = drawingContext.createLinearGradient(sideButtonX, 260, sideButtonX + sideButtonWidth, 260);
-    gradient.addColorStop(0, "#93D0CF");
-    gradient.addColorStop(1, "#FFD700");
-    drawingContext.fillStyle = gradient;
-    stroke(147, 208, 207);
-    strokeWeight(2);
-    rect(sideButtonX, 260, sideButtonWidth, sideButtonHeight, 10);
-    noStroke();
-    fill(14, 39, 59);
-    textSize(20);
-    text("TUTORIAL", sideButtonX + sideButtonWidth / 2, 285);
-  
-    gradient = drawingContext.createLinearGradient(sideButtonX, 320, sideButtonX + sideButtonWidth, 320);
-    gradient.addColorStop(0, "#93D0CF");
-    gradient.addColorStop(1, "#FFD700");
-    drawingContext.fillStyle = gradient;
-    stroke(147, 208, 207);
-    strokeWeight(2);
-    rect(sideButtonX, 320, sideButtonWidth, sideButtonHeight, 10);
-    noStroke();
-    fill(14, 39, 59);
-    textSize(20);
-    text("VIEW INTRO", sideButtonX + sideButtonWidth / 2, 345);
+    let sideButtonWidth = 120; // Zachowana oryginalna szerokość
+let sideButtonHeight = 50; // Zachowana oryginalna wysokość
+let sideButtonX = GAME_WIDTH - sideButtonWidth - 20;
 
-    // ACHIEVEMENTS (nowy przycisk)
-  gradient = drawingContext.createLinearGradient(sideButtonX, 380, sideButtonX + sideButtonWidth, 380);
-  gradient.addColorStop(0, "#93D0CF");
-  gradient.addColorStop(1, "#FFD700");
-  drawingContext.fillStyle = gradient;
-  stroke(147, 208, 207);
-  strokeWeight(2);
-  rect(sideButtonX, 380, sideButtonWidth, sideButtonHeight, 10);
-  noStroke();
-  fill(14, 39, 59);
-  textSize(20);
-  text("ACHIEVEMENTS", sideButtonX + sideButtonWidth / 2, 405);
+// INFO Button
+gradient = drawingContext.createLinearGradient(sideButtonX, 200, sideButtonX + sideButtonWidth, 200);
+gradient.addColorStop(0, "#93D0CF");
+gradient.addColorStop(1, "#FFD700");
+drawingContext.fillStyle = gradient;
+stroke(147, 208, 207);
+strokeWeight(2);
+rect(sideButtonX, 200, sideButtonWidth, sideButtonHeight, 10);
+noStroke();
+fill(14, 39, 59);
+textSize(16); // Zmniejszono z 20 na 16
+textAlign(CENTER, CENTER); // Wyrównanie do środka
+text("INFO", sideButtonX + sideButtonWidth / 2, 200 + sideButtonHeight / 2);
+
+// TUTORIAL Button
+gradient = drawingContext.createLinearGradient(sideButtonX, 260, sideButtonX + sideButtonWidth, 260);
+gradient.addColorStop(0, "#93D0CF");
+gradient.addColorStop(1, "#FFD700");
+drawingContext.fillStyle = gradient;
+stroke(147, 208, 207);
+strokeWeight(2);
+rect(sideButtonX, 260, sideButtonWidth, sideButtonHeight, 10);
+noStroke();
+fill(14, 39, 59);
+textSize(16); // Zmniejszono z 20 na 16
+textAlign(CENTER, CENTER);
+text("TUTORIAL", sideButtonX + sideButtonWidth / 2, 260 + sideButtonHeight / 2);
+
+// VIEW INTRO Button
+gradient = drawingContext.createLinearGradient(sideButtonX, 320, sideButtonX + sideButtonWidth, 320);
+gradient.addColorStop(0, "#93D0CF");
+gradient.addColorStop(1, "#FFD700");
+drawingContext.fillStyle = gradient;
+stroke(147, 208, 207);
+strokeWeight(2);
+rect(sideButtonX, 320, sideButtonWidth, sideButtonHeight, 10);
+noStroke();
+fill(14, 39, 59);
+textSize(16); // Zmniejszono z 20 na 16
+textAlign(CENTER, CENTER);
+text("VIEW INTRO", sideButtonX + sideButtonWidth / 2, 320 + sideButtonHeight / 2);
+
+// ACHIEVEMENTS Button
+gradient = drawingContext.createLinearGradient(sideButtonX, 380, sideButtonX + sideButtonWidth, 380);
+gradient.addColorStop(0, "#93D0CF");
+gradient.addColorStop(1, "#FFD700");
+drawingContext.fillStyle = gradient;
+stroke(147, 208, 207);
+strokeWeight(2);
+rect(sideButtonX, 380, sideButtonWidth, sideButtonHeight, 10);
+noStroke();
+fill(14, 39, 59);
+textSize(16); // Zmniejszono z 20 na 16
+textAlign(CENTER, CENTER);
+text("ACHIEVEMENTS", sideButtonX + sideButtonWidth / 2, 380 + sideButtonHeight / 2);
   
     /// WhiteLogo w lewym dolnym rogu z miganiem i napisem
     let whiteLogoScale = 1 + sin(millis() * 0.003) * 0.05;
@@ -1906,7 +1882,6 @@ text(savedGameState ? "RESUME SYNC" : "START SYNC", GAME_WIDTH / 2, buttonY + TU
         slowdownCooldown -= deltaTime;
       }
   
-      // Efekty wizualne dla spowolnienia – bez zmian
       if (slowdownActive) {
         fill(100, 150, 200, 50);
         rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -1920,7 +1895,6 @@ text(savedGameState ? "RESUME SYNC" : "START SYNC", GAME_WIDTH / 2, buttonY + TU
         text(`Tłumik Pulsu: ${floor(slowdownTimer / 1000)}s`, GAME_WIDTH / 2, GAME_HEIGHT - 120);
       }
   
-      // Przycisk "How to Play" – bez zmian
       fill(93, 208, 207);
       rect(GAME_WIDTH - HOW_TO_PLAY_BUTTON_WIDTH - 10, 10, HOW_TO_PLAY_BUTTON_WIDTH, HOW_TO_PLAY_BUTTON_HEIGHT, 10);
       fill(255);
@@ -1928,55 +1902,70 @@ text(savedGameState ? "RESUME SYNC" : "START SYNC", GAME_WIDTH / 2, buttonY + TU
       textAlign(CENTER, CENTER);
       text("How to Play", GAME_WIDTH - HOW_TO_PLAY_BUTTON_WIDTH / 2 - 10, 10 + HOW_TO_PLAY_BUTTON_HEIGHT / 2);
   
-      // Przycisk "Pulse Dampener" – bez zmian (y = 100)
       let buttonX = GAME_WIDTH - 120 - 10;
-let buttonY = 100;
-let buttonWidth = 120;
-let buttonHeight = 50;
-let SLOWDOWN_COST = level >= 10 ? 20 : 15; // Dodane lokalnie
-if (level >= 7 && !slowdownActive && slowdownCooldown <= 0 && score >= SLOWDOWN_COST) {
-  let gradient = drawingContext.createLinearGradient(buttonX, buttonY, buttonX + buttonWidth, buttonY);
-  gradient.addColorStop(0, "#93D0CF");
-  gradient.addColorStop(1, "#FFD700");
-  drawingContext.fillStyle = gradient;
-  stroke(147, 208, 207);
-  strokeWeight(2);
-  rect(buttonX, buttonY, buttonWidth, buttonHeight, 10);
-  noStroke();
-  fill(14, 39, 59);
-  textSize(16);
-  textAlign(CENTER, CENTER);
-  text(`Pulse Dampener\n-${SLOWDOWN_COST} pkt`, buttonX + buttonWidth / 2, buttonY + buttonHeight / 2);
-}
+      let buttonY = 100;
+      let buttonWidth = 120;
+      let buttonHeight = 50;
+      let SLOWDOWN_COST = level >= 10 ? 20 : 15;
+      if (level >= 7 && !slowdownActive && slowdownCooldown <= 0 && score >= SLOWDOWN_COST) {
+        let gradient = drawingContext.createLinearGradient(buttonX, buttonY, buttonX + buttonWidth, buttonY);
+        gradient.addColorStop(0, "#93D0CF");
+        gradient.addColorStop(1, "#FFD700");
+        drawingContext.fillStyle = gradient;
+        stroke(147, 208, 207);
+        strokeWeight(2);
+        rect(buttonX, buttonY, buttonWidth, buttonHeight, 10);
+        noStroke();
+        fill(14, 39, 59);
+        textSize(16);
+        textAlign(CENTER, CENTER);
+        text(`Pulse Dampener\n-${SLOWDOWN_COST} pkt`, buttonX + buttonWidth / 2, buttonY + buttonHeight / 2);
+      }
   
       // Zatrzymaj introMusic, jeśli nadal gra
       if (introMusic.isPlaying()) {
         introMusic.stop();
         console.log("introMusic stopped in playing state");
       }
-      
-      // Odtwarzaj odpowiednią muzykę w zależności od poziomu
-      if (level >= 5 && !musicSwitched) {
-        console.log("Switching to backgroundMusic2 at level 5+");
+  
+      // Nowa logika przełączania muzyki
+      if (level === 10 && musicSwitched !== "level10") {
+        console.log("Switching to backgroundMusic3 at level 10");
         backgroundMusic.stop();
-        backgroundMusic2.loop();
-        musicSwitched = true;
-      } else if (level < 5 && musicSwitched) {
-        console.log("Switching back to backgroundMusic below level 5");
         backgroundMusic2.stop();
+        backgroundMusic3.loop();
+        musicSwitched = "level10"; // Nowa wartość dla poziomu 10
+      } else if (level >= 5 && level <= 9 && musicSwitched !== "level5-9") {
+        console.log("Switching to backgroundMusic2 at level 5-9");
+        backgroundMusic.stop();
+        backgroundMusic3.stop();
+        backgroundMusic2.loop();
+        musicSwitched = "level5-9"; // Wartość dla poziomów 5-9
+      } else if (level < 5 && musicSwitched !== "level1-4") {
+        console.log("Switching to backgroundMusic at level 1-4");
+        backgroundMusic2.stop();
+        backgroundMusic3.stop();
         backgroundMusic.loop();
-        musicSwitched = false;
+        musicSwitched = "level1-4"; // Wartość dla poziomów 1-4
       }
-      
+  
       // Upewnij się, że odpowiednia muzyka gra
-      if (level >= 5 && !backgroundMusic2.isPlaying()) {
+      if (level === 10 && !backgroundMusic3.isPlaying()) {
+        console.log("Restarting backgroundMusic3 as it stopped unexpectedly");
+        backgroundMusic.stop();
+        backgroundMusic2.stop();
+        backgroundMusic3.loop();
+      } else if (level >= 5 && level <= 9 && !backgroundMusic2.isPlaying()) {
         console.log("Restarting backgroundMusic2 as it stopped unexpectedly");
+        backgroundMusic.stop();
+        backgroundMusic3.stop();
         backgroundMusic2.loop();
       } else if (level < 5 && !backgroundMusic.isPlaying()) {
         console.log("Restarting backgroundMusic as it stopped unexpectedly");
+        backgroundMusic2.stop();
+        backgroundMusic3.stop();
         backgroundMusic.loop();
       }
-    
     }
 
     // Aktualizacja obrotu logo z uwzględnieniem spowolnienia
@@ -2795,13 +2784,13 @@ function startGame() {
     mainnetChallengeActive = false;
     mainnetChallengeScore = 0;
     mainnetBadgeEarned = false;
-    musicSwitched = false; // Reset flagi przy nowej grze
+    musicSwitched = "level1-4"; // Reset do poziomu 1-4
 
     // Resetowanie i uruchamianie muzyki
     if (soundInitialized) {
       introMusic.stop();
       backgroundMusic2.stop();
-      backgroundMusic.stop();
+      backgroundMusic3.stop(); // Zatrzymaj nową muzykę
       backgroundMusic.loop(); // Zawsze startuj z backgroundMusic na poziomie 1
       console.log("Music reset: backgroundMusic started for new game");
     }
@@ -2861,15 +2850,20 @@ function pauseGame() {
     mainnetBadgeEarned,
     mainnetChallengeTriggered,
     gameStartTime,
-    musicSwitched // Zapisz stan przełączenia muzyki
+    musicSwitched
   };
   gameState = "howToPlay";
   if (soundInitialized) {
-    if (level >= 5 && musicSwitched) {
+    // Pauzuj aktualną muzykę tła w zależności od poziomu
+    if (level === 10) {
+      backgroundMusic3.pause();
+    } else if (level >= 5 && musicSwitched === "level5-9") {
       backgroundMusic2.pause();
     } else {
       backgroundMusic.pause();
     }
+    // Włącz muzykę z intra
+    introMusic.loop();
   }
 }
 
@@ -2921,13 +2915,17 @@ function resumeGame() {
     mainnetBadgeEarned = savedGameState.mainnetBadgeEarned;
     mainnetChallengeTriggered = savedGameState.mainnetChallengeTriggered;
     gameStartTime = savedGameState.gameStartTime;
-    musicSwitched = savedGameState.musicSwitched; // Przywróć stan przełączenia muzyki
+    musicSwitched = savedGameState.musicSwitched;
     savedGameState = null;
     if (soundInitialized) {
-      if (level >= 5 && musicSwitched) {
-        backgroundMusic2.play(); // Wznów backgroundMusic2
+      introMusic.stop(); // Zatrzymaj muzykę intro
+      // Wznów odpowiednią muzykę tła w zależności od poziomu
+      if (level === 10) {
+        backgroundMusic3.play();
+      } else if (level >= 5 && musicSwitched === "level5-9") {
+        backgroundMusic2.play();
       } else {
-        backgroundMusic.play(); // Wznów backgroundMusic
+        backgroundMusic.play();
       }
     }
   } else {
