@@ -1,7 +1,7 @@
 // Global Variables
 let logo;
 let whiteLogo;
-let smallSuperseedIntro; 
+let smallSuperseedIntro;
 let clickSound;
 let backgroundMusic;
 let backgroundMusic3;
@@ -78,13 +78,14 @@ let mainnetChallengeScore = 0;
 let mainnetBadgeEarned = false;
 let mainnetChallengeTriggered = false;
 let gameStartTime = 0;
+let stateStartTime;
 let tutorialClicks = 0;
 let tutorialPulseProgress = 0;
 let tutorialLastPulse = 0;
 let musicSwitched = false;
-let upadekBg; // Przeniesione tutaj
-let synchronizacjaBg; // Przeniesione tutaj
-let nagrodaBg; // Przeniesione tutaj
+let upadekBg;
+let synchronizacjaBg;
+let nagrodaBg;
 let isConnecting = false;
 
 let hasCompletedGame = localStorage.getItem('hasCompletedGame') === 'true';
@@ -92,21 +93,52 @@ let hasCompletedGame = localStorage.getItem('hasCompletedGame') === 'true';
 let blackHoleSoundPlayed = false;
 
 let baseRotationSpeed = 0.01;
-let slowdownActive = false; // Czy spowolnienie jest aktywne
-let slowdownTimer = 0; // Czas pozostały do końca spowolnienia
-let slowdownCooldown = 0; // Czas pozostały do końca cooldownu
-const SLOWDOWN_DURATION = 10000;  // Czas trwania spowolnienia (5 sekund)
+let slowdownActive = false;
+let slowdownTimer = 0;
+let slowdownCooldown = 0;
+const SLOWDOWN_DURATION = 10000;
+const SLOWDOWN_COOLDOWN = 30000;
+const SLOWDOWN_FACTOR = 1.5;
 
-const SLOWDOWN_COOLDOWN = 30000; // Cooldown (30 sekund)
-const SLOWDOWN_FACTOR = 1.5; // Współczynnik spowolnienia (50% wolniej)
+let animationTime = 0;
 
-let animationTime = 0; // Globalna zmienna do płynnej animacji
-
-let hasSeenIntro = localStorage.getItem('hasSeenIntro') === 'true'; // Czy intro już widziane
-let introState = 0; // Aktualny ekran intro (0, 1, 2)
-let introTimer = 0; // Timer do przechodzenia między ekranami
+let introClicked = false;
+let hasSeenIntro = localStorage.getItem('hasSeenIntro') === 'true';
+let introState = 0;
+let introTimer = 0;
 let introDuration = 30000;
-let teslaImage; // Opcjonalna sylwetka Tesli dla sceny 3
+let teslaImage;
+
+// Zmienne dla bossa (usuwamy cosmicCoreGuardian i integrujemy nowe)
+let bossImage; // Sprite sheet bossa (2000x200 px, 10 klatek 200x200 px)
+let bossFrameWidth = 200; // Szerokość jednej klatki
+let bossHealth = 0;
+let bossPhase = 1; // Nowa logika faz oparta na zdrowiu
+let bossActive = false;
+let bossSize = 200;
+let cosmicNodes = []; // Tablica na Cosmic Nodes (do usunięcia w nowej mechanice, jeśli niepotrzebne)
+let bossMusic;
+let bossIntroImage;
+let nodesCollected = 0; // Licznik zebranych węzłów (do usunięcia w nowej mechanice, jeśli niepotrzebne)
+let bossAttackTimer = 0; // Nowy timer ataku bossa
+let bossAttackType = null; // Do usunięcia w nowej mechanice, jeśli niepotrzebne
+let yellowRingActive = false; // Do usunięcia w nowej mechanice, jeśli niepotrzebne
+let syncTimer = 0; // Timer dla pasywnego SYNC (do usunięcia w nowej mechanice, jeśli niepotrzebne)
+let bossDefeatTimer = 0;
+let zoomLevel = 1;
+
+
+const SYNC_INTERVAL = 2000; // Do usunięcia w nowej mechanice, jeśli niepotrzebne
+
+// Nowe zmienne dla gracza (SuperSeed)
+let playerImage; // Ikona SuperSeed (później Final Form)
+let player; // Obiekt gracza
+
+// Pociski
+let playerBullets = []; // Pociski gracza
+let bossBullets = []; // Pociski bossa
+let lastFireTime = 0; // Ostatni czas strzału gracza
+let fireRate = 400; // Częstotliwość strzelania (ms)
 
 let powerUpDurations = {
   gas: 5000,
@@ -606,6 +638,79 @@ class Obstacle {
     return this.timer <= 0;
   }
 }
+// Tutaj dodajemy klasę CosmicNode
+class CosmicNode {
+  constructor() {
+    this.x = random(100, GAME_WIDTH - 100);
+    this.y = random(100, GAME_HEIGHT - 100);
+    this.size = 30;
+    this.timer = 7000; // 7 sekund życia
+  }
+  show() {
+    push();
+    translate(this.x, this.y);
+    rotate(millis() * 0.05);
+    fill(255, 215, 0, 200);
+    star(0, 0, this.size / 2, this.size, 5);
+    pop();
+  }
+  update() {
+    this.timer -= deltaTime;
+  }
+  isExpired() {
+    return this.timer <= 0;
+  }
+}
+
+// Tutaj wstawiamy nowe klasy
+class Player {
+  constructor() {
+    this.x = GAME_WIDTH / 2;
+    this.y = GAME_HEIGHT - 50;
+    this.size = 60; // Z 40 na 60
+    this.speed = 5;
+  }
+  show() {
+    image(playerImage, this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
+  }
+
+  update() {
+    let targetX = mouseX - (width - GAME_WIDTH) / 2;
+    let targetY = mouseY - (height - GAME_HEIGHT) / 2;
+    this.x = lerp(this.x, targetX, 0.2); // Z 0.1 na 0.2
+    this.y = lerp(this.y, targetY, 0.2); // Z 0.1 na 0.2
+    this.x = constrain(this.x, 0, GAME_WIDTH);
+    this.y = constrain(this.y, 0, GAME_HEIGHT);
+  }
+  show() {
+    image(playerImage, this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
+  }
+}
+
+class Bullet {
+  constructor(x, y, targetX, targetY, isPlayer = true) {
+    this.x = x;
+    this.y = y;
+    this.size = isPlayer ? 5 : 10;
+    this.speed = isPlayer ? 10 : 7;
+    let angle = atan2(targetY - y, targetX - x);
+    this.vx = cos(angle) * this.speed;
+    this.vy = sin(angle) * this.speed;
+    this.isPlayer = isPlayer;
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+  }
+  show() {
+    fill(this.isPlayer ? 0 : 255, this.isPlayer ? 255 : 0, this.isPlayer ? 255 : 0);
+    noStroke();
+    ellipse(this.x, this.y, this.size);
+  }
+  isOffScreen() {
+    return this.x < 0 || this.x > GAME_WIDTH || this.y < 0 || this.y > GAME_HEIGHT;
+  }
+}
 
 function star(x, y, radius1, radius2, npoints) {
   let angle = TWO_PI / npoints;
@@ -662,13 +767,13 @@ function preload() {
   logo = loadImage('assets/superseed-logo.png');
   whiteLogo = loadImage('assets/White.webp');
   smallSuperseedIntro = loadImage('assets/smallsuperseedintro.png');
-  cosmicMenuBg = loadImage('assets/cosmicMenuBg.png'); // Nowe tło
-  mainLogo = loadImage('assets/superseedcosmicnet-gamelogo.png'); // Nowe główne logo
+  cosmicMenuBg = loadImage('assets/cosmicMenuBg.png');
+  mainLogo = loadImage('assets/superseedcosmicnet-gamelogo.png');
   clickSound = loadSound('assets/background-beat.wav');
   backgroundMusic = loadSound('assets/background-music.mp3');
   backgroundMusic2 = loadSound('assets/background-music2.mp3');
   backgroundMusic3 = loadSound('assets/background-music3.mp3');
-  introMusic = loadSound('assets/intro1.mp3'); // Nowa muzyka intro
+  introMusic = loadSound('assets/intro1.mp3');
   powerUpSound = loadSound('assets/power-up.mp3');
   meteorSound = loadSound('assets/meteor-hit.mp3');
   levelSound = loadSound('assets/level-up.mp3');
@@ -678,8 +783,11 @@ function preload() {
   upadekBg = loadImage('assets/upadek-background.png');
   synchronizacjaBg = loadImage('assets/synchronizacja-background.png');
   nagrodaBg = loadImage('assets/nagroda-background.png');
+  bossImage = loadImage('assets/boss_sprite_sheet.png'); // Nowy sprite sheet bossa
+  playerImage = loadImage('assets/superseed-final-form.png'); // Final Form SuperSeed
+  bossMusic = loadSound("assets/boss_music.mp3");
+  bossIntroImage = loadImage('assets/boss_intro.png');
 }
-
 // Poprawiony setup() – bez async, wywołanie asynchroniczne w tle
 function setup() {
   const canvas = createCanvas(windowWidth, windowHeight, { willReadFrequently: true });
@@ -792,6 +900,8 @@ function drawBackground(pulseProgress) {
 }
 
 function draw() {
+
+  let deltaTime = 1000 / frameRate(); // Przybliżona wartość w ms na klatkę
   
   let currentTime = millis();
   let pulseProgress = (currentTime - lastPulse) / pulseSpeed;
@@ -2406,13 +2516,12 @@ if (gameState === "supernova") {
     if (score >= goal) {
       level += 1;
       if (soundInitialized) {
-        if (level === 5 && !musicSwitched) { // Przełącz tylko raz na poziom 5
+        if (level === 5 && !musicSwitched) {
           console.log("Level 5 reached, switching to backgroundMusic2");
           backgroundMusic.stop();
-          backgroundMusic2.loop(); // Uruchom raz i niech gra
-          musicSwitched = true;
+          backgroundMusic2.loop();
+          musicSwitched = "level5-9";
         }
-        // Usuwamy else if (level > 5), bo nie chcemy resetować muzyki
       }
       goal = level <= 2 ? 50 : (level === 3 ? 70 : goal + 30);
       lives += 1;
@@ -2420,13 +2529,33 @@ if (gameState === "supernova") {
       score = 0;
       combo = 0;
       comboBar = 0;
-      gameState = level >= 10 ? "endgame" : "win";
-      warpTimer = 1000;
+      if (level >= 10) {
+        gameState = "bossIntro"; // Zmień na bossIntro
+        stateStartTime = millis(); // Ustaw czas rozpoczęcia
+        introClicked = false; // Reset zmiennej introClicked
+        bossHealth = 1000;
+        bossPhase = 1;
+        bossActive = true;
+        bossAttackTimer = 4000;
+        cosmicNodes = [];
+        nodesCollected = 0;
+        powerUps = [];
+        obstacles = [];
+        if (soundInitialized) {
+          backgroundMusic.stop();
+          backgroundMusic2.stop();
+          backgroundMusic3.stop();
+          bossMusic.loop();
+        }
+      } else {
+        gameState = "win";
+        warpTimer = 1000;
+      }
       if (soundInitialized) levelSound.play();
       for (let i = 0; i < 20; i++) {
         particles.push(new Particle(GAME_WIDTH / 2, GAME_HEIGHT / 2, { r: 255, g: 255, b: 255 }));
       }
-    } else if (lives <= 0 || lifeBar <= 0) {
+    }else if (lives <= 0 || lifeBar <= 0) {
       leaderboard.push({ nick: playerNick || "Anonymous", score: score });
       leaderboard.sort((a, b) => b.score - a.score);
       leaderboard = leaderboard.slice(0, 5);
@@ -2443,7 +2572,13 @@ if (gameState === "supernova") {
   } // Zamknięcie bloku if (gameState === "playing" || gameState === "supernova") – poprawne miejsce
 
   else if (gameState === "gameOver") {
-    // Gradient background
+    // Zatrzymanie muzyki bossa i powrót do tła
+    if (bossMusic.isPlaying()) {
+      bossMusic.stop();
+      backgroundMusic.loop(); // Wróć do muzyki tła
+    }
+  
+    // Gradient background (Twój istniejący kod)
     let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
     gradient.addColorStop(0, "rgb(14, 39, 59)");
     gradient.addColorStop(1, "rgb(93, 208, 207)");
@@ -2557,6 +2692,11 @@ if (gameState === "supernova") {
   if (!hasCompletedGame) {
     localStorage.setItem('hasCompletedGame', 'true');
     hasCompletedGame = true;
+  }
+  // Zatrzymanie muzyki bossa i powrót do tła
+  if (bossMusic.isPlaying()) {
+    bossMusic.stop();
+    backgroundMusic.loop(); // Wróć do muzyki tła
   }
   // Tło z gradientem – bez zmian
   let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -2681,13 +2821,283 @@ if (gameState === "supernova") {
   textSize(24);
   text("Back to Menu", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 425);
 }
+
+else if (gameState === "bossIntro") {
+  // Wyświetl grafikę z poprawionym tekstem
+  image(bossIntroImage, 0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+  // Przejście do walki po 5 sekundach lub kliknięciu
+  if (millis() - stateStartTime > 30000 || introClicked) {
+    gameState = "bossFight";
+    stateStartTime = millis();
+    introClicked = false; // Reset po przejściu
+  }
+}
+// Końcówka sekcji "bossFight" w draw() – pełna implementacja z kroku 3
+else if (gameState === "bossFight") {
+  if (!bossMusic.isPlaying()) {
+    backgroundMusic.stop();
+    backgroundMusic2.stop();
+    backgroundMusic3.stop();
+    bossMusic.loop();
+  }
+
+  // Tło
+  let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
+  gradient.addColorStop(0, "#0E273B");
+  gradient.addColorStop(1, "#93D0CF");
+  drawingContext.fillStyle = gradient;
+  rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+  // Inicjalizacja gracza
+  if (!player) player = new Player();
+
+  // Aktualizacja i rysowanie gracza
+  player.update();
+  player.show();
+
+  // Automatyczne strzelanie gracza
+  if (millis() - lastFireTime > fireRate) {
+    playerBullets.push(new Bullet(player.x, player.y, GAME_WIDTH / 2, GAME_HEIGHT / 2));
+    lastFireTime = millis();
+    if (soundInitialized) clickSound.play();
+  }
+
+  // Pociski gracza
+  for (let i = playerBullets.length - 1; i >= 0; i--) {
+    playerBullets[i].update();
+    playerBullets[i].show();
+    let d = dist(playerBullets[i].x, playerBullets[i].y, GAME_WIDTH / 2, GAME_HEIGHT / 2);
+    if (d < bossSize / 2) {
+      bossHealth -= 5;
+      score += 10;
+      for (let j = 0; j < 5; j++) {
+        particles.push(new Particle(playerBullets[i].x, playerBullets[i].y, { r: 0, g: 255, b: 255 }));
+      }
+      playerBullets.splice(i, 1);
+    } else if (playerBullets[i].isOffScreen()) {
+      playerBullets.splice(i, 1);
+    }
+  }
+
+  // Timer dla apteczek
+  if (!window.hasOwnProperty('lifePowerUpTimer')) lifePowerUpTimer = 0;
+  lifePowerUpTimer -= deltaTime;
+  if (lifePowerUpTimer <= 0 && random(1) < 0.005) {
+    let lifePowerUp = new PowerUp(random(100, GAME_WIDTH - 100), random(100, GAME_HEIGHT - 100));
+    lifePowerUp.type = "life";
+    powerUps.push(lifePowerUp);
+    lifePowerUpTimer = random(10000, 15000);
+  }
+
+  // Rysowanie i aktualizacja power-upów
+  for (let i = powerUps.length - 1; i >= 0; i--) {
+    powerUps[i].update();
+    powerUps[i].show();
+    if (powerUps[i].isExpired()) {
+      powerUps.splice(i, 1);
+    }
+  }
+
+  // Boss – zmiana fazy na podstawie zdrowia
+  bossPhase = floor(map(bossHealth, 0, 1000, 9, 0));
+  bossPhase = constrain(bossPhase, 0, 9);
+  bossSize = 200;
+  image(
+    bossImage,
+    GAME_WIDTH / 2 - bossSize / 2, GAME_HEIGHT / 2 - bossSize / 2,
+    bossSize, bossSize,
+    bossPhase * bossFrameWidth, 0,
+    bossFrameWidth, bossFrameWidth
+  );
+
+  // Ataki bossa – wspólny timer
+  bossAttackTimer -= deltaTime;
+
+  // Laser – aktywny od fazy 1, częstotliwość zależy od fazy
+  if (random(1) < (0.01 + bossPhase * 0.005) && bossAttackTimer <= 0) { // 1% na fazę 0, rośnie do 5.5% na fazę 9
+    bossAttackType = "laser";
+    bossAttackTimer = 3000 + bossPhase * 500; // 3s na fazę 0, do 7.5s na fazę 9
+  }
+  if (bossAttackType === "laser" && bossAttackTimer > 0) {
+    // Ostrzeżenie przed laserem
+    if (bossAttackTimer > bossAttackTimer - 1000) { // Ostatnie 1000ms jako ostrzeżenie
+      noFill();
+      stroke(255, 0, 0, map(bossAttackTimer, bossAttackTimer - 1000, bossAttackTimer, 255, 0));
+      strokeWeight(4);
+      push();
+      translate(GAME_WIDTH / 2, GAME_HEIGHT / 2);
+      rotate(millis() * 0.002); // Szybszy obrót dla dynamiki
+      line(0, 0, 600, 0); // Dłuższy laser
+      pop();
+      noStroke();
+    }
+    // Laser
+    push();
+    translate(GAME_WIDTH / 2, GAME_HEIGHT / 2);
+    rotate(millis() * 0.002); // Szybszy obrót
+    stroke(255, 0, 0, 200);
+    strokeWeight(12); // Grubszy laser
+    line(0, 0, 600, 0); // Dłuższy laser
+    noStroke();
+    pop();
+    // Obrażenia – większy zasięg, sprawdzane wzdłuż linii lasera
+    let laserAngle = millis() * 0.002;
+    for (let i = 0; i < 600; i += 10) { // Sprawdzaj punkty wzdłuż lasera
+      let laserX = GAME_WIDTH / 2 + cos(laserAngle) * i;
+      let laserY = GAME_HEIGHT / 2 + sin(laserAngle) * i;
+      if (dist(player.x, player.y, laserX, laserY) < 20 && !shieldActive) {
+        lifeBar -= 5 * deltaTime / 16.67;
+        break; // Jedno trafienie na klatkę
+      }
+    }
+    if (bossAttackTimer <= 0) bossAttackType = null; // Reset po zakończeniu
+  }
+
+  // Pociski – fala i spirala jednocześnie z laserem
+  if (bossAttackTimer <= 0) {
+    // Fala – losowe odstępy i prędkości
+    let numBullets = 8 + bossPhase * 2; // 8-26 pocisków w zależności od fazy
+    for (let i = 0; i < numBullets; i++) {
+      let angle = random(TWO_PI); // Losowy kąt zamiast równomiernego
+      let bulletSpeed = random(5, 9 + bossPhase); // Losowa prędkość (5-18 w zależności od fazy)
+      let bullet = new Bullet(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH / 2 + cos(angle) * 1000, GAME_HEIGHT / 2 + sin(angle) * 1000, false);
+      bullet.speed = bulletSpeed;
+      bossBullets.push(bullet);
+    }
+
+    // Spirala – bardziej chaotyczna
+    if (bossPhase >= 3) { // Od fazy 3
+      let spiralBullets = 6 + bossPhase; // 6-15 pocisków
+      for (let i = 0; i < spiralBullets; i++) {
+        let angle = millis() * 0.001 + random(-0.5, 0.5); // Losowe odchylenie
+        let bulletSpeed = random(4, 8 + bossPhase * 0.5); // Losowa prędkość (4-12.5)
+        let bullet = new Bullet(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH / 2 + cos(angle) * 1000, GAME_HEIGHT / 2 + sin(angle) * 1000, false);
+        bullet.speed = bulletSpeed;
+        bossBullets.push(bullet);
+      }
+    }
+
+    bossAttackTimer = max(400, 1200 - bossPhase * 100); // 1200ms na fazę 0, do 400ms na fazę 9
+    if (soundInitialized) nebulaSound.play();
+  }
+
+  // Pociski bossa – aktualizacja i kolizja
+  for (let i = bossBullets.length - 1; i >= 0; i--) {
+    bossBullets[i].update();
+    bossBullets[i].show();
+    if (dist(bossBullets[i].x, bossBullets[i].y, player.x, player.y) < bossBullets[i].size / 2 + player.size / 2) {
+      if (!shieldActive) lifeBar -= 15;
+      else shieldActive = false;
+      shakeTimer = 500;
+      bossBullets.splice(i, 1);
+      if (soundInitialized) meteorSound.play();
+    } else if (bossBullets[i].isOffScreen()) {
+      bossBullets.splice(i, 1);
+    }
+  }
+
+  // Paski zdrowia
+  fill(255, 0, 0, 200);
+  rect(50, 20, map(bossHealth, 0, 1000, 0, GAME_WIDTH - 100), 20);
+  stroke(255, 215, 0);
+  strokeWeight(2);
+  noFill();
+  rect(50, 20, GAME_WIDTH - 100, 20);
+  noStroke();
+
+  fill(0, 255, 0, 200);
+  rect(50, GAME_HEIGHT - 40, map(lifeBar, 0, 100, 0, GAME_WIDTH - 100), 20);
+  stroke(255, 215, 0);
+  strokeWeight(2);
+  noFill();
+  rect(50, GAME_HEIGHT - 40, GAME_WIDTH - 100, 20);
+  noStroke();
+
+  // Tekst fazy
+  fill(255, 215, 0);
+  textSize(24);
+  text(`Phase ${bossPhase + 1}: Cosmic Core Guardian`, GAME_WIDTH / 2, 70);
+
+  // Cząstki
+  for (let i = particles.length - 1; i >= 0; i--) {
+    particles[i].update();
+    particles[i].show();
+    if (particles[i].isDead()) particles.splice(i, 1);
+  }
+
+  // Zwycięstwo
+  if (bossHealth <= 0) {
+    gameState = "bossDefeated";
+    bossDefeatTimer = 7500;
+    zoomLevel = 1;
+    playerBullets = [];
+    bossBullets = [];
+    if (soundInitialized) {
+      bossMusic.stop();
+      levelSound.play();
+    }
+  }
+  if (lifeBar <= 0) {
+    gameState = "gameOver";
+    shakeTimer = 500;
+  }
+} else if (gameState === "bossDefeated") {
+  introClicked = true; // Skip to endgame on click
+  // Background
+  let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
+  gradient.addColorStop(0, "#0E273B");
+  gradient.addColorStop(1, "#93D0CF");
+  drawingContext.fillStyle = gradient;
+  rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+  // Animation
+  bossDefeatTimer -= deltaTime;
+  if (bossDefeatTimer > 3000) { // First 4.5 seconds: stage 9 + zoom
+    zoomLevel = lerp(zoomLevel, 2, 0.05);
+    push();
+    translate(GAME_WIDTH / 2, GAME_HEIGHT / 2);
+    scale(zoomLevel);
+    image(bossImage, -bossSize / 2, -bossSize / 2, bossSize, bossSize, 9 * bossFrameWidth, 0, bossFrameWidth, bossFrameWidth);
+    pop();
+  } else { // Last 3 seconds: stage 10 + new text
+    push();
+    translate(GAME_WIDTH / 2, GAME_HEIGHT / 2);
+    scale(zoomLevel);
+    image(bossImage, -bossSize / 2, -bossSize / 2, bossSize, bossSize, 10 * bossFrameWidth, 0, bossFrameWidth, bossFrameWidth);
+    pop();
+    fill(255, 215, 0, 200);
+    textSize(32);
+    textStyle(BOLD);
+    textAlign(CENTER, CENTER);
+    text("Centralized Overseer defeated.\nSuperseed Testnet lives...\nThe true network (MAINNET) awakens...", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 100);
+  }
+
+  // Decay particles
+  if (random(1) < 0.2) {
+    particles.push(new Particle(GAME_WIDTH / 2, GAME_HEIGHT / 2, { r: 255, g: 215, b: 0 }));
+  }
+  for (let i = particles.length - 1; i >= 0; i--) {
+    particles[i].update();
+    particles[i].show();
+    if (particles[i].isDead()) particles.splice(i, 1);
+  }
+
+  // Transition to endgame
+  if (bossDefeatTimer <= -27000 || introClicked) { // -27000 = 3000 - 30000 (30s after initial 3s)
+    gameState = "endgame";
+    mainnetBadgeEarned = true;
+    bossActive = false;
+    if (soundInitialized) backgroundMusic.loop();
+  }
+}
 pop(); // Zamknięcie push() z początku draw()
 } // Zamknięcie funkcji draw()
 
-// Jeśli to koniec pliku, upewnij się, że nie ma nic po tym
-
+// Zaktualizowana funkcja startGame() – krok 5
 function startGame() {
   if (gameState === "start" || gameState === "gameOver" || gameState === "endgame" || gameState === "tutorial") {
+    // Istniejące zmienne
     score = 0;
     combo = 0;
     comboBar = 0;
@@ -2721,10 +3131,6 @@ function startGame() {
     obstacleTimer = 15000;
     supernovaTimer = 0;
     orbitShiftTimer = 0;
-    lastPulse = millis();
-    challengeActive = false;
-    challengeTimer = 0;
-    challengeClicks = 0;
     lastClickTime = millis();
     inactivityWarning = false;
     inactivityTimer = 0;
@@ -2734,12 +3140,24 @@ function startGame() {
     mainnetChallengeScore = 0;
     mainnetBadgeEarned = false;
     musicSwitched = "level1-4"; // Reset do poziomu 1-4
+    stateStartTime = 0;
+
+    // Nowe zmienne dla mechaniki strzelanki (wstawione tutaj)
+    player = null;
+    playerBullets = [];
+    bossBullets = [];
+    lastFireTime = 0;
+    fireRate = 200;
+    bossHealth = 0;
+    bossPhase = 1;
+    bossActive = false;
+    bossAttackTimer = 0; // Dodano, bo jest używane w draw()
 
     // Resetowanie i uruchamianie muzyki
     if (soundInitialized) {
       introMusic.stop();
       backgroundMusic2.stop();
-      backgroundMusic3.stop(); // Zatrzymaj nową muzykę
+      backgroundMusic3.stop();
       backgroundMusic.loop(); // Zawsze startuj z backgroundMusic na poziomie 1
       console.log("Music reset: backgroundMusic started for new game");
     }
@@ -2751,6 +3169,7 @@ function startGame() {
   }
 }
 
+// Funkcja pauseGame() – zaktualizowana o nowe zmienne
 function pauseGame() {
   savedGameState = {
     score,
@@ -2799,7 +3218,18 @@ function pauseGame() {
     mainnetBadgeEarned,
     mainnetChallengeTriggered,
     gameStartTime,
-    musicSwitched
+    stateStartTime, // Dodane: zapis stateStartTime
+    musicSwitched,
+    // Nowe zmienne dla mechaniki strzelanki
+    player,
+    playerBullets: [...playerBullets],
+    bossBullets: [...bossBullets],
+    lastFireTime,
+    fireRate,
+    bossHealth,
+    bossPhase,
+    bossActive,
+    bossAttackTimer
   };
   gameState = "howToPlay";
   if (soundInitialized) {
@@ -2811,11 +3241,15 @@ function pauseGame() {
     } else {
       backgroundMusic.pause();
     }
+    if (gameState === "bossFight") {
+      bossMusic.pause();
+    }
     // Włącz muzykę z intra
     introMusic.loop();
   }
 }
 
+// Funkcja resumeGame() – zaktualizowana o nowe zmienne
 function resumeGame() {
   if (savedGameState) {
     score = savedGameState.score;
@@ -2864,12 +3298,26 @@ function resumeGame() {
     mainnetBadgeEarned = savedGameState.mainnetBadgeEarned;
     mainnetChallengeTriggered = savedGameState.mainnetChallengeTriggered;
     gameStartTime = savedGameState.gameStartTime;
+    stateStartTime = savedGameState.stateStartTime; // Dodane: wczytywanie stateStartTime
     musicSwitched = savedGameState.musicSwitched;
+    // Nowe zmienne dla mechaniki strzelanki
+    player = savedGameState.player;
+    playerBullets = [...savedGameState.playerBullets];
+    bossBullets = [...savedGameState.bossBullets];
+    lastFireTime = savedGameState.lastFireTime;
+    fireRate = savedGameState.fireRate;
+    bossHealth = savedGameState.bossHealth;
+    bossPhase = savedGameState.bossPhase;
+    bossActive = savedGameState.bossActive;
+    bossAttackTimer = savedGameState.bossAttackTimer;
+
     savedGameState = null;
     if (soundInitialized) {
       introMusic.stop(); // Zatrzymaj muzykę intro
-      // Wznów odpowiednią muzykę tła w zależności od poziomu
-      if (level === 10) {
+      // Wznów odpowiednią muzykę tła w zależności od poziomu lub stanu
+      if (gameState === "bossFight") {
+        bossMusic.play();
+      } else if (level === 10) {
         backgroundMusic3.play();
       } else if (level >= 5 && musicSwitched === "level5-9") {
         backgroundMusic2.play();
@@ -2882,14 +3330,14 @@ function resumeGame() {
   }
 }
 
-
+// Zaktualizowana funkcja mousePressed() – krok 4 + poprawki
 let showLoginMessage = false;
 let loginMessageStartTime = 0;
 const loginMessageDuration = 3000;
+
 function mousePressed() {
   let adjustedMouseX = mouseX - (width - GAME_WIDTH) / 2;
   let adjustedMouseY = mouseY - (height - GAME_HEIGHT) / 2;
-  
 
   if (gameState === "howToPlay") {
     // Kliknięcie na whiteLogo w lewym dolnym rogu – bez zmian
@@ -2905,7 +3353,7 @@ function mousePressed() {
     ) {
       window.open("https://www.superseed.xyz/", "_blank");
     }
-  
+
     // Kliknięcie na "Created by CratosPL" w prawym dolnym rogu – bez zmian
     let creatorTextX = GAME_WIDTH - 140;
     let creatorTextY = GAME_HEIGHT - 30;
@@ -2919,10 +3367,10 @@ function mousePressed() {
     ) {
       window.open("https://x.com/sebbtgk", "_blank");
     }
-  
+
     // Przesunięcie dla wszystkich elementów menu o verticalOffset
     let verticalOffset = 100;
-  
+
     // Choose Your Seed Color – bez zmian
     let colorBoxSize = 60;
     let colorBoxSpacing = 30;
@@ -2942,7 +3390,7 @@ function mousePressed() {
         seedColor = { r: 255, g: 215, b: 0 }; // Złoty
       }
     }
-  
+
     // Enter Your Nick – bez zmian
     if (
       adjustedMouseY >= 470 + verticalOffset &&
@@ -2954,7 +3402,7 @@ function mousePressed() {
     } else {
       isTypingNick = false;
     }
-  
+
     // Start/Resume Button – bez zmian
     if (
       adjustedMouseX >= GAME_WIDTH / 2 - 120 &&
@@ -2972,8 +3420,8 @@ function mousePressed() {
         startGame();
       }
     }
-  
-    // Login/Logout Button – ZAKTUALIZOWANE POZYCJE
+
+    // Login/Logout Button – bez zmian
     if (
       !isConnected &&
       adjustedMouseX >= GAME_WIDTH / 2 - 120 &&
@@ -3001,7 +3449,7 @@ function mousePressed() {
       adjustedMouseX >= GAME_WIDTH / 2 - 120 &&
       adjustedMouseX <= GAME_WIDTH / 2 + 120 &&
       adjustedMouseY >= 640 + verticalOffset &&
-      adjustedMouseY <= 700 + verticalOffset // Przesunięte z 660–720 na 640–700
+      adjustedMouseY <= 700 + verticalOffset
     ) {
       console.log("Logout clicked - disconnecting wallet");
       if (web3Modal) {
@@ -3015,19 +3463,19 @@ function mousePressed() {
       signer = null;
       connectionError = null;
     }
-  
-    // *** OBSŁUGA KLIKNIĘCIA W "Claim Your NFT" – ZAKTUALIZOWANA POZYCJA ***
+
+    // OBSŁUGA KLIKNIĘCIA W "Claim Your NFT" – bez zmian
     if (
       hasCompletedGame &&
       adjustedMouseX >= GAME_WIDTH / 2 - 120 &&
       adjustedMouseX <= GAME_WIDTH / 2 + 120 &&
       adjustedMouseY >= 720 + verticalOffset &&
-      adjustedMouseY <= 780 + verticalOffset // Przesunięte z 700–760 na 720–780
+      adjustedMouseY <= 780 + verticalOffset
     ) {
       gameState = "endgame";
       console.log("Returning to claim NFT!");
     }
-  
+
     // INFO Button – bez zmian
     let sideButtonX = GAME_WIDTH - 120 - 20;
     if (
@@ -3038,7 +3486,7 @@ function mousePressed() {
     ) {
       gameState = "info";
     }
-  
+
     // Tutorial Button – bez zmian
     if (
       adjustedMouseX >= sideButtonX &&
@@ -3048,7 +3496,7 @@ function mousePressed() {
     ) {
       gameState = "tutorial";
     }
-  
+
     // View Intro Button – bez zmian
     if (
       adjustedMouseX >= sideButtonX &&
@@ -3064,7 +3512,7 @@ function mousePressed() {
         introMusic.loop();
       }
     }
-  
+
     // ACHIEVEMENTS – bez zmian
     if (
       adjustedMouseX >= sideButtonX &&
@@ -3114,7 +3562,7 @@ function mousePressed() {
       if (soundInitialized && introState <= 2) warpSound.play();
     }
   } else if (gameState === "tutorial") {
-    // Wybór koloru – bez zmian (z Twojego kodu)
+    // Wybór koloru – bez zmian
     let colorBoxSize = 50;
     let colorBoxSpacing = 40;
     let totalWidth = (colorBoxSize * 3) + (colorBoxSpacing * 2);
@@ -3200,15 +3648,13 @@ function mousePressed() {
     } else if (gameState === "start") {
       startGame();
     } else if (gameState === "win") {
-      // Kliknięcie w dowolnym miejscu ekranu przechodzi do następnego poziomu
       gameState = "playing";
-      score = 0; // Reset punktów na nowy poziom
+      score = 0;
       combo = 0;
       comboBar = 0;
-      warpTimer = 0; // Zresetuj efekt warp, jeśli istnieje
-      lastPulse = millis(); // Zresetuj puls dla nowego poziomu
+      warpTimer = 0;
+      lastPulse = millis();
       console.log(`Continuing to Orbit ${level}`);
-    
     }
   } else if (gameState === "gameOver") {
     let buttonX = GAME_WIDTH / 2 - RESTART_BUTTON_WIDTH / 2;
@@ -3216,62 +3662,68 @@ function mousePressed() {
     let shareScoreButtonY = GAME_HEIGHT / 2 + 260;
     let menuButtonY = GAME_HEIGHT / 2 + 340;
 
-    // Relaunch Button
+    // "RELAUNCH" Button
     if (
       adjustedMouseX >= buttonX &&
       adjustedMouseX <= buttonX + RESTART_BUTTON_WIDTH &&
       adjustedMouseY >= relaunchButtonY &&
       adjustedMouseY <= relaunchButtonY + RESTART_BUTTON_HEIGHT
     ) {
+      console.log("Relaunch clicked!");
       startGame();
     }
 
-    // Share Score Button
+    // "SHARE SCORE" Button
     if (
       adjustedMouseX >= buttonX &&
       adjustedMouseX <= buttonX + RESTART_BUTTON_WIDTH &&
       adjustedMouseY >= shareScoreButtonY &&
       adjustedMouseY <= shareScoreButtonY + RESTART_BUTTON_HEIGHT
     ) {
+      console.log("Share Score clicked!");
       let shareText = `I synced ${score.toFixed(1)} points in Superseed Cosmic Network! #SuperseedGrok3`;
       navigator.clipboard.writeText(shareText);
       alert("Score copied to clipboard: " + shareText);
     }
 
-    // Menu Button
+    // "MENU" Button
     if (
       adjustedMouseX >= buttonX &&
       adjustedMouseX <= buttonX + RESTART_BUTTON_WIDTH &&
       adjustedMouseY >= menuButtonY &&
       adjustedMouseY <= menuButtonY + RESTART_BUTTON_HEIGHT
     ) {
-      gameState = "howToPlay"; // Return to main menu
+      console.log("Menu clicked!");
+      gameState = "howToPlay";
       if (soundInitialized) {
-        backgroundMusic.stop(); // Stop game music
+        backgroundMusic.stop();
         backgroundMusic2.stop();
-        introMusic.stop();
+        backgroundMusic3.stop();
+        introMusic.loop();
       }
     }
 
-    // Share Badge Button (if earned)
+    // "SHARE BADGE" Button (jeśli zdobyto odznakę)
     if (mainnetBadgeEarned) {
-      let badgeButtonY = GAME_HEIGHT / 2 + 340;
+      let badgeButtonY = GAME_HEIGHT / 2 + 270; // Dostosuj pozycję, jeśli różni się od "SHARE SCORE"
       if (
         adjustedMouseX >= buttonX &&
         adjustedMouseX <= buttonX + RESTART_BUTTON_WIDTH &&
         adjustedMouseY >= badgeButtonY &&
         adjustedMouseY <= badgeButtonY + RESTART_BUTTON_HEIGHT
       ) {
+        console.log("Share Badge clicked!");
         let shareText = `I just unlocked the Superseed Mainnet in the Grok3 Game Contest! Join the challenge and win a Tesla! (virtual:) #SuperseedGrok3 [game link]`;
         navigator.clipboard.writeText(shareText);
         alert("Badge share text copied to clipboard: " + shareText);
       }
     }
-  } else if (gameState === "playing" || gameState === "supernova") {
+  }
+ else if (gameState === "playing" || gameState === "supernova" || gameState === "bossFight") {
     lastClickTime = millis();
     if (inactivityWarning) inactivityWarning = false;
 
-    // Aktywacja przycisku Pulse Dampener
+    // Aktywacja Pulse Dampener
     let buttonX = GAME_WIDTH - 120 - 10;
     let buttonY = 100;
     let buttonWidth = 120;
@@ -3304,6 +3756,7 @@ function mousePressed() {
       if (soundInitialized) powerUpSound.play();
     }
 
+    // Przycisk pauzy
     let howToX = GAME_WIDTH - HOW_TO_PLAY_BUTTON_WIDTH - 10;
     let howToY = 10;
     if (
@@ -3316,89 +3769,77 @@ function mousePressed() {
       return;
     }
 
-    let d = dist(adjustedMouseX, adjustedMouseY, logoX, logoY);
-    if (d < circleSize / 2 && isReadyToClick) {
-      if (activeEvent === "blackHole" && dist(logoX, logoY, eventX, eventY) < 300) {
-        return;
-      }
-      combo += 1;
-      comboBar = min(comboBar + 2, 10);
-      let multiplier = (powerUpEffect === "gas" || meteorShowerActive || gameState === "supernova") ? 3 : 1;
-      if (powerUpCombo === "gas+star") multiplier = 4;
-      let basePoints = level === 1 ? 2 : 1;
-      let points = combo * basePoints * multiplier;
-      if (activeEvent === "overload") {
-        if (eventColor === 2) points += 10;
-        else if (eventColor === 1) points -= 5;
-        activeEvent = null;
-      }
-      score += points;
-      if (soundInitialized) clickSound.rate(1 + combo * 0.1);
-      if (soundInitialized) clickSound.play();
-      shakeTimer = 100;
-      for (let i = 0; i < 15 + combo * 2; i++) {
-        particles.push(new Particle(logoX, logoY, { r: seedColor.r, g: seedColor.g, b: seedColor.b }));
-      }
-      seeds.push(new Seed(random(100, GAME_WIDTH - 100), random(100, GAME_HEIGHT - 100)));
-      if (challengeActive) {
-        challengeClicks += 1;
-      }
-      if (mainnetChallengeActive) {
-        mainnetChallengeScore += points;
-      }
-    } else if (d < circleSize / 2) {
-      combo = 0;
-      comboBar = 0;
-      misses += 1;
-      if (misses >= (level <= 2 ? 5 : 3) && !shieldActive) {
-        lives -= 1;
-        lifeBar -= 20;
-        misses = 0;
-        shakeTimer = 500;
-      }
-      score -= 5;
-      if (score < 0) score = 0;
-      for (let i = 0; i < 5; i++) {
-        particles.push(new Particle(logoX, logoY, { r: 255, g: 0, b: 0 }));
-      }
-    }
-
-    if (chainPoint && chainPoint.timer > 0) {
-      let cd = dist(adjustedMouseX, adjustedMouseY, chainPoint.x, chainPoint.y);
-      if (cd < 20) {
-        powerUps.push(new PowerUp(chainPoint.x, chainPoint.y));
-        chainPoint = null;
-        if (soundInitialized) powerUpSound.play();
+    // Logika klikania zależna od stanu gry
+    if (gameState === "playing" || gameState === "supernova") {
+      let d = dist(adjustedMouseX, adjustedMouseY, logoX, logoY);
+      if (d < circleSize / 2 && isReadyToClick) {
+        if (activeEvent === "blackHole" && dist(logoX, logoY, eventX, eventY) < 300) {
+          return;
+        }
+        combo += 1;
+        comboBar = min(comboBar + 2, 10);
+        let multiplier = (powerUpEffect === "gas" || meteorShowerActive || gameState === "supernova") ? 3 : 1;
+        if (powerUpCombo === "gas+star") multiplier = 4;
+        let basePoints = level === 1 ? 2 : 1;
+        let points = combo * basePoints * multiplier;
+        if (activeEvent === "overload") {
+          if (eventColor === 2) points += 10;
+          else if (eventColor === 1) points -= 5;
+          activeEvent = null;
+        }
+        score += points;
+        if (soundInitialized) clickSound.rate(1 + combo * 0.1);
+        if (soundInitialized) clickSound.play();
+        shakeTimer = 100;
+        for (let i = 0; i < 15 + combo * 2; i++) {
+          particles.push(new Particle(logoX, logoY, { r: seedColor.r, g: seedColor.g, b: seedColor.b }));
+        }
+        seeds.push(new Seed(random(100, GAME_WIDTH - 100), random(100, GAME_HEIGHT - 100)));
+        if (challengeActive) {
+          challengeClicks += 1;
+        }
+        if (mainnetChallengeActive) {
+          mainnetChallengeScore += points;
+        }
+      } else if (d < circleSize / 2) {
+        combo = 0;
+        comboBar = 0;
+        misses += 1;
+        if (misses >= (level <= 2 ? 5 : 3) && !shieldActive) {
+          lives -= 1;
+          lifeBar -= 20;
+          misses = 0;
+          shakeTimer = 500;
+        }
+        score -= 5;
+        if (score < 0) score = 0;
+        for (let i = 0; i < 5; i++) {
+          particles.push(new Particle(logoX, logoY, { r: 255, g: 0, b: 0 }));
+        }
       }
     }
 
+    // Power-upy i przeszkody
     for (let i = powerUps.length - 1; i >= 0; i--) {
       let pd = dist(adjustedMouseX, adjustedMouseY, powerUps[i].x, powerUps[i].y);
       if (pd < powerUps[i].size) {
-        if (powerUpEffect && powerUpEffectTime > 0) {
-          if (powerUpEffect === "gas" && powerUps[i].type === "star") {
-            powerUpCombo = "gas+star";
-            powerUpEffectTime = 5000 * (1 + level * 0.1);
+        if (powerUps[i].type === "life") {
+          lifeBar = min(lifeBar + 30, 100); // Przywraca 30 HP, max 100
+          for (let j = 0; j < 10; j++) {
+            particles.push(new Particle(powerUps[i].x, powerUps[i].y, { r: 0, g: 255, b: 0 }));
           }
-        }
-        if (powerUps[i].type === "life" && lives < 5) {
-          lives += 1;
-          lifeBar = min(lifeBar + 20, 100);
+          if (soundInitialized) powerUpSound.play();
         } else if (powerUps[i].type === "gas") {
           powerUpEffect = "gas";
           powerUpEffectTime = powerUpDurations.gas * (1 + level * 0.1);
-        } else if (powerUps[i].type === "pulse" && isReadyToClick) {
-          pulseSpeed += 500;
+        } else if (powerUps[i].type === "pulse") {
+          fireRate = max(fireRate - 50, 100); // Przyspieszenie strzelania w bossFight
           powerUpEffect = "pulse";
           powerUpEffectTime = powerUpDurations.pulse * (1 + level * 0.1);
         } else if (powerUps[i].type === "orbit") {
           powerUpEffect = "orbit";
           shieldActive = true;
           powerUpEffectTime = powerUpDurations.orbit * (1 + level * 0.1);
-        } else if (powerUps[i].type === "nova" && isReadyToClick) {
-          powerUpEffect = "nova";
-          freezeActive = true;
-          powerUpEffectTime = powerUpDurations.nova * (1 + level * 0.1);
         } else if (powerUps[i].type === "meteor") {
           powerUpEffect = "meteor";
           meteorShowerActive = true;
@@ -3408,12 +3849,14 @@ function mousePressed() {
           starBoostActive = true;
           powerUpEffectTime = powerUpDurations.star * (1 + level * 0.1);
         } else if (powerUps[i].type === "wave") {
-          obstacles = [];
-          for (let j = 0; j < 20; j++) {
-            particles.push(new Particle(logoX, logoY, { r: seedColor.r, g: seedColor.g, b: seedColor.b }));
+          if (gameState === "bossFight") {
+            bossBullets = []; // Czyści pociski bossa
+            for (let j = 0; j < 20; j++) {
+              particles.push(new Particle(player.x, player.y, { r: seedColor.r, g: seedColor.g, b: seedColor.b }));
+            }
           }
         }
-        if (powerUps[i].type !== "wave" && powerUps[i].type !== "life") {
+        if (powerUps[i].type !== "wave") { // "Wave" nie wymaga dodatkowych cząstek
           for (let j = 0; j < 20; j++) {
             particles.push(new Particle(powerUps[i].x, powerUps[i].y, { r: seedColor.r, g: seedColor.g, b: seedColor.b }));
           }
@@ -3422,13 +3865,15 @@ function mousePressed() {
         powerUps.splice(i, 1);
       }
     }
-    
+
+    // Przeszkody – scalona i poprawiona logika
     for (let i = obstacles.length - 1; i >= 0; i--) {
       let od = dist(adjustedMouseX, adjustedMouseY, obstacles[i].x, obstacles[i].y);
-      if (od < obstacles[i].size) {
+      if (od < obstacles[i].size / 2) { // Ujednolicono warunek
         if (!shieldActive) {
           lives -= 1;
-          lifeBar -= 20;
+          lifeBar -= 20; // Ujednolicono obrażenia
+          shakeTimer = 500; // Dodano z Twojego fragmentu
         }
         let obstacleX = obstacles[i].x;
         let obstacleY = obstacles[i].y;
@@ -3441,6 +3886,8 @@ function mousePressed() {
     }
   }
 }
+
+// Pozostałe funkcje bez zmian
 function keyPressed() {
   if (gameState === "howToPlay") {
     if (isTypingNick) {
