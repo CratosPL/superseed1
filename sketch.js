@@ -127,6 +127,7 @@ let syncTimer = 0; // Timer dla pasywnego SYNC (do usunięcia w nowej mechanice,
 let bossDefeatTimer = 0;
 let zoomLevel = 1;
 
+const ethersLib = window.ethers;
 
 const SYNC_INTERVAL = 2000; // Do usunięcia w nowej mechanice, jeśli niepotrzebne
 
@@ -148,6 +149,9 @@ let powerUpDurations = {
   meteor: 6000,
   star: 6000 // Zmień z 5000 na 6000 dla spójności
 };
+
+console.log("ethers object:", ethers);
+console.log("ethers keys:", Object.keys(ethers));
 
 // Classes
 class Particle {
@@ -495,7 +499,6 @@ async function connectWallet(forceReconnect = false) {
   isConnecting = true;
   try {
     console.log("Starting wallet connection...");
-
     if (!web3Modal) {
       console.log("Web3Modal not initialized, initializing now...");
       await initializeWeb3Modal();
@@ -521,8 +524,8 @@ async function connectWallet(forceReconnect = false) {
 
     console.log("Connected instance:", instance);
 
-    provider = new ethers.providers.Web3Provider(instance);
-    signer = provider.getSigner();
+    provider = new ethers.BrowserProvider(instance);
+    signer = await provider.getSigner();
     userAddress = await signer.getAddress();
 
     console.log("Accounts:", await provider.listAccounts());
