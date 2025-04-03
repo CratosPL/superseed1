@@ -3099,78 +3099,77 @@ pop(); // Zamknięcie push() z początku draw()
 
 // Zaktualizowana funkcja startGame() – krok 5
 function startGame() {
-  if (gameState === "start" || gameState === "gameOver" || gameState === "endgame" || gameState === "tutorial") {
-    // Istniejące zmienne
-    score = 0;
-    combo = 0;
-    comboBar = 0;
-    level = 1;
-    pulseSpeed = 2000;
-    basePulseSpeed = 2000;
-    goal = 50;
-    lives = 5;
-    lifeBar = 100;
-    misses = 0;
-    particles = [];
-    logoAngle = 0;
-    lastPulse = millis();
-    powerUps = [];
-    obstacles = [];
-    seeds = [];
-    chainPoint = null;
-    activeEvent = null;
-    powerUpEffect = null;
-    powerUpCombo = null;
-    shieldActive = false;
-    freezeActive = false;
-    meteorShowerActive = false;
-    starBoostActive = false;
-    logoTrail = [];
-    shakeTimer = 0;
-    nebulaTimer = 0;
-    warpTimer = 0;
-    eventTimer = 0;
-    powerUpTimer = 0;
-    obstacleTimer = 15000;
-    supernovaTimer = 0;
-    orbitShiftTimer = 0;
-    lastClickTime = millis();
-    inactivityWarning = false;
-    inactivityTimer = 0;
-    gameStartTime = millis();
-    mainnetChallengeTriggered = false;
-    mainnetChallengeActive = false;
-    mainnetChallengeScore = 0;
-    mainnetBadgeEarned = false;
-    musicSwitched = "level1-4"; // Reset do poziomu 1-4
-    stateStartTime = 0;
+  // Resetowanie wszystkich zmiennych gry
+  score = 0;
+  combo = 0;
+  comboBar = 0;
+  level = 1;
+  pulseSpeed = 2000;
+  basePulseSpeed = 2000;
+  goal = 50;
+  lives = 5;
+  lifeBar = 100;
+  misses = 0;
+  particles = [];
+  logoAngle = 0;
+  lastPulse = millis();
+  powerUps = [];
+  obstacles = [];
+  seeds = [];
+  chainPoint = null;
+  activeEvent = null;
+  powerUpEffect = null;
+  powerUpCombo = null;
+  shieldActive = false;
+  freezeActive = false;
+  meteorShowerActive = false;
+  starBoostActive = false;
+  logoTrail = [];
+  shakeTimer = 0;
+  nebulaTimer = 0;
+  warpTimer = 0;
+  eventTimer = 0;
+  powerUpTimer = 0;
+  obstacleTimer = 15000;
+  supernovaTimer = 0;
+  orbitShiftTimer = 0;
+  lastClickTime = millis();
+  inactivityWarning = false;
+  inactivityTimer = 0;
+  gameStartTime = millis();
+  mainnetChallengeTriggered = false;
+  mainnetChallengeActive = false;
+  mainnetChallengeScore = 0;
+  musicSwitched = "level1-4";
+  stateStartTime = 0;
 
-    // Nowe zmienne dla mechaniki strzelanki (wstawione tutaj)
-    player = null;
-    playerBullets = [];
-    bossBullets = [];
-    lastFireTime = 0;
-    fireRate = 200;
-    bossHealth = 0;
-    bossPhase = 1;
-    bossActive = false;
-    bossAttackTimer = 0; // Dodano, bo jest używane w draw()
+  // Zmienne dla mechaniki strzelanki
+  player = null;
+  playerBullets = [];
+  bossBullets = [];
+  lastFireTime = 0;
+  fireRate = 200;
+  bossHealth = 0;
+  bossPhase = 1;
+  bossActive = false;
+  bossAttackTimer = 0;
 
-    // Resetowanie i uruchamianie muzyki
-    if (soundInitialized) {
-      introMusic.stop();
-      backgroundMusic2.stop();
-      backgroundMusic3.stop();
-      backgroundMusic.loop(); // Zawsze startuj z backgroundMusic na poziomie 1
-      console.log("Music reset: backgroundMusic started for new game");
-    }
+  // Resetowanie muzyki
+  if (soundInitialized) {
+    introMusic.stop();
+    backgroundMusic2.stop();
+    backgroundMusic3.stop();
+    bossMusic.stop();
+    backgroundMusic.loop();
+    console.log("Music reset: backgroundMusic started for new game");
   }
+
+  // Ustawienie stanu gry na "playing" i czyszczenie savedGameState
   gameState = "playing";
-  if (!soundInitialized) {
-    soundInitialized = true;
-    backgroundMusic.loop(); // Inicjalizacja muzyki przy pierwszym dźwięku
-  }
+  savedGameState = null;
+  console.log("New game started – gameState: 'playing', lives:", lives, "lifeBar:", lifeBar);
 }
+
 
 // Funkcja pauseGame() – zaktualizowana o nowe zmienne
 function pauseGame() {
@@ -3254,7 +3253,8 @@ function pauseGame() {
 
 // Funkcja resumeGame() – zaktualizowana o nowe zmienne
 function resumeGame() {
-  if (savedGameState) {
+  if (savedGameState && savedGameState.gameState === "playing") {
+    // Wznów tylko jeśli stan był "playing"
     score = savedGameState.score;
     combo = savedGameState.combo;
     comboBar = savedGameState.comboBar;
@@ -3301,9 +3301,8 @@ function resumeGame() {
     mainnetBadgeEarned = savedGameState.mainnetBadgeEarned;
     mainnetChallengeTriggered = savedGameState.mainnetChallengeTriggered;
     gameStartTime = savedGameState.gameStartTime;
-    stateStartTime = savedGameState.stateStartTime; // Dodane: wczytywanie stateStartTime
+    stateStartTime = savedGameState.stateStartTime;
     musicSwitched = savedGameState.musicSwitched;
-    // Nowe zmienne dla mechaniki strzelanki
     player = savedGameState.player;
     playerBullets = [...savedGameState.playerBullets];
     bossBullets = [...savedGameState.bossBullets];
@@ -3316,11 +3315,8 @@ function resumeGame() {
 
     savedGameState = null;
     if (soundInitialized) {
-      introMusic.stop(); // Zatrzymaj muzykę intro
-      // Wznów odpowiednią muzykę tła w zależności od poziomu lub stanu
-      if (gameState === "bossFight") {
-        bossMusic.play();
-      } else if (level === 10) {
+      introMusic.stop();
+      if (level === 10) {
         backgroundMusic3.play();
       } else if (level >= 5 && musicSwitched === "level5-9") {
         backgroundMusic2.play();
@@ -3329,7 +3325,8 @@ function resumeGame() {
       }
     }
   } else {
-    startGame();
+    console.log("No valid saved game state or not in 'playing' – starting new game");
+    startGame(); // Zamiast przywracać "gameOver", zacznij nową grę
   }
 }
 
@@ -3418,8 +3415,10 @@ function mousePressed() {
         showLoginMessage = true;
         loginMessageStartTime = millis();
       } else if (savedGameState) {
+        console.log("Resuming paused game...");
         resumeGame();
       } else {
+        console.log("Starting new game from howToPlay...");
         startGame();
       }
     }
@@ -3698,10 +3697,13 @@ function mousePressed() {
     ) {
       console.log("Menu clicked!");
       gameState = "howToPlay";
+      savedGameState = null; // Czyść zapisany stan
       if (soundInitialized) {
         backgroundMusic.stop();
         backgroundMusic2.stop();
         backgroundMusic3.stop();
+        bossMusic.stop();
+        introMusic.stop();
         introMusic.loop();
       }
     }
