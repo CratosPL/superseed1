@@ -858,8 +858,9 @@ async function initWeb3() {
 
 
 function touchStarted() {
-  if (touches.length >= 2 && gameState === "howToPlay") {
-    return true; // Zoom tylko w menu
+  if (touches.length >= 2) {
+    // Jeśli są dwa palce, pozwól na domyślne zachowanie (zoomowanie)
+    return true;
   }
   if (!soundInitialized) {
     soundInitialized = true;
@@ -869,11 +870,12 @@ function touchStarted() {
   let adjustedTouchY = mouseY - (height - GAME_HEIGHT) / 2;
 
   if (gameState === "howToPlay" && !isConnected) {
+    let verticalOffset = 100; // Przesunięcie z draw()
     if (
-      adjustedTouchX >= GAME_WIDTH / 2 - 100 &&
-      adjustedTouchX <= GAME_WIDTH / 2 + 100 &&
-      adjustedTouchY >= 480 &&
-      adjustedTouchY <= 530
+      adjustedTouchX >= GAME_WIDTH / 2 - 120 && // Poprawiona szerokość z 100 na 120, zgodnie z draw()
+      adjustedTouchX <= GAME_WIDTH / 2 + 120 &&
+      adjustedTouchY >= 620 + verticalOffset &&
+      adjustedTouchY <= 680 + verticalOffset
     ) {
       console.log("Touch login initiated on mobile");
       connectWallet(true).then(() => {
