@@ -1056,91 +1056,119 @@ function draw() {
       let logoHeight = logoWidth / 2;
       image(whiteLogo, GAME_WIDTH / 2 - logoWidth / 2, isMobile ? 30 : 50, logoWidth, logoHeight);
 
-      push();
-      translate(GAME_WIDTH / 2, GAME_HEIGHT / 2);
-      rotate(sin(currentTime * 0.001) * 0.1);
-      let pulseScale = 1 + sin(currentTime * 0.005) * 0.05;
+      // Karta NFT – Superseed Cosmic Core (identyczna jak w endgame)
+  push();
+  translate(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50); // Przesunięcie w górę, aby zmieścić tekst poniżej
+  rotate(sin(currentTime * 0.001) * 0.1); // Lekka rotacja całej karty
+  let pulseScale = 1 + sin(currentTime * 0.005) * 0.05; // Subtelne pulsowanie
 
-      let cardWidth = (isMobile ? min(200, GAME_WIDTH * 0.5) : 300) * pulseScale;
-      let cardHeight = cardWidth * 1.5;
+  // Rozmiar karty (proporcje 2:3)
+  let cardWidth = 300 * pulseScale;
+  let cardHeight = 450 * pulseScale;
 
-      let gradient = drawingContext.createLinearGradient(-cardWidth / 2, -cardHeight / 2, cardWidth / 2, cardHeight / 2);
-      gradient.addColorStop(0, `rgba(${seedColor.r}, ${seedColor.g}, ${seedColor.b}, 0.8)`);
-      gradient.addColorStop(1, "rgba(14, 39, 59, 0.9)");
-      drawingContext.fillStyle = gradient;
-      drawingContext.shadowBlur = 20;
-      drawingContext.shadowColor = `rgba(255, 215, 0, 0.5)`;
-      rect(-cardWidth / 2, -cardHeight / 2, cardWidth, cardHeight, 20);
+  // Tło karty z gradientem
+  let cardGradient = drawingContext.createLinearGradient(-cardWidth / 2, -cardHeight / 2, cardWidth / 2, cardHeight / 2);
+  cardGradient.addColorStop(0, `rgba(${seedColor.r}, ${seedColor.g}, ${seedColor.b}, 0.8)`);
+  cardGradient.addColorStop(1, "rgba(14, 39, 59, 0.9)");
+  drawingContext.fillStyle = cardGradient;
+  drawingContext.shadowBlur = 20;
+  drawingContext.shadowColor = `rgba(255, 215, 0, 0.5)`;
+  rect(-cardWidth / 2, -cardHeight / 2, cardWidth, cardHeight, 20); // Zaokrąglone rogi
 
-      noFill();
-      stroke(255, 215, 0, 200);
-      strokeWeight(4);
-      rect(-cardWidth / 2 + 5, -cardHeight / 2 + 5, cardWidth - 10, cardHeight - 10, 15);
-      stroke(seedColor.r, seedColor.g, seedColor.b, 150);
-      strokeWeight(2);
-      rect(-cardWidth / 2 + 10, -cardHeight / 2 + 10, cardWidth - 20, cardHeight - 20, 10);
+  // Ramka karty
+  noFill();
+  stroke(255, 215, 0, 200); // Złoty kolor
+  strokeWeight(4);
+  rect(-cardWidth / 2 + 5, -cardHeight / 2 + 5, cardWidth - 10, cardHeight - 10, 15);
+  stroke(seedColor.r, seedColor.g, seedColor.b, 150);
+  strokeWeight(2);
+  rect(-cardWidth / 2 + 10, -cardHeight / 2 + 10, cardWidth - 20, cardHeight - 20, 10);
 
-      push();
-      translate(0, -50);
-      rotate(currentTime * 0.001);
-      tint(255, 215, 0, 200);
-      imageMode(CENTER);
-      image(smallSuperseedIntro, 0, 0, cardWidth * 0.7, cardWidth * 0.7);
-      pop();
+  // Główne logo superseedcosmicnet-gamelogo.png
+  push();
+  translate(0, -cardHeight / 4); // Przesunięcie na ~112 pikseli w górę od środka
+  let mainLogoWidth = cardWidth * 0.9; // 90% szerokości karty (~270 pikseli)
+  let mainLogoHeight = mainLogoWidth; // Kwadratowe proporcje
+  tint(255, 215, 0, 220); // Lekko jaśniejszy złoty odcień
+  drawingContext.shadowBlur = 15;
+  drawingContext.shadowColor = `rgba(255, 215, 0, 0.7)`; // Subtelny złoty cień
+  imageMode(CENTER);
+  image(mainLogo, 0, 0, mainLogoWidth, mainLogoHeight); // Główne logo
+  drawingContext.shadowBlur = 0;
+  pop();
 
-      noFill();
-      stroke(93, 208, 207, 100);
-      strokeWeight(1);
-      for (let i = 0; i < 5; i++) {
-        let y = map(i, 0, 4, -cardHeight / 2 + 20, cardHeight / 2 - 20);
-        line(-cardWidth / 2 + 20, y, cardWidth / 2 - 20, y);
-      }
+  // Małe logo smallSuperseedIntro
+  push();
+  translate(0, cardHeight / 6); // Przesunięcie ~75 pikseli w dół od środka
+  rotate(currentTime * 0.001); // Subtelna rotacja dla efektu
+  let smallLogoWidth = cardWidth * 0.4; // 40% szerokości karty (~120 pikseli)
+  let smallLogoHeight = smallLogoWidth; // Kwadratowe proporcje
+  tint(255, 255, 255, 180); // Biały odcień z lekką przezroczystością dla kontrastu
+  drawingContext.shadowBlur = 10;
+  drawingContext.shadowColor = `rgba(147, 208, 207, 0.5)`; // Subtelny cień w kolorze seedColor
+  imageMode(CENTER);
+  image(smallSuperseedIntro, 0, 0, smallLogoWidth, smallLogoHeight); // Małe logo
+  drawingContext.shadowBlur = 0;
+  pop();
 
-      stroke(14, 39, 59, 200);
-      strokeWeight(1);
-      fill(147, 208, 207);
-      textSize(isMobile ? 12 : 16);
-      textStyle(NORMAL);
-      textAlign(CENTER, CENTER);
-      text("Superseed Cosmic Network", 0, cardHeight / 2 - 90);
+  // Linie obwodów blockchain (dekoracja)
+  noFill();
+  stroke(93, 208, 207, 100);
+  strokeWeight(1);
+  for (let i = 0; i < 5; i++) {
+    let y = map(i, 0, 4, cardHeight / 2 - 80, cardHeight / 2 - 20); // Przesunięte w dół
+    line(-cardWidth / 2 + 20, y, cardWidth / 2 - 20, y);
+  }
 
-      stroke(14, 39, 59, 200);
-      strokeWeight(1);
-      fill(255, 215, 0);
-      textSize(isMobile ? 18 : 24);
-      textStyle(BOLD);
-      text("Superseed Cosmic Core", 0, cardHeight / 2 - 60);
+  // Nazwa gry nad tytułem NFT
+  stroke(14, 39, 59, 200);
+  strokeWeight(1);
+  fill(147, 208, 207);
+  textSize(16);
+  textStyle(NORMAL);
+  textAlign(CENTER, CENTER);
+  text("Superseed Cosmic Network", 0, cardHeight / 2 - 90);
 
-      stroke(14, 39, 59, 200);
-      strokeWeight(1);
-      fill(255, 255, 255, 150);
-      textSize(isMobile ? 12 : 16);
-      text("NFT", 0, cardHeight / 2 - 30);
+  // Nazwa NFT na dole karty
+  stroke(14, 39, 59, 200);
+  strokeWeight(1);
+  fill(255, 215, 0);
+  textSize(24);
+  textStyle(BOLD);
+  text("Superseed Cosmic Core", 0, cardHeight / 2 - 60);
 
-      drawingContext.shadowBlur = 0;
-      noStroke();
-      pop();
+  // Subtelny napis "NFT"
+  stroke(14, 39, 59, 200);
+  strokeWeight(1);
+  fill(255, 255, 255, 150);
+  textSize(16);
+  text("NFT", 0, cardHeight / 2 - 30);
 
-      stroke(14, 39, 59, 200);
-      strokeWeight(3);
-      fill(255, 245, 102);
-      textSize(isMobile ? 18 : 24);
-      textStyle(BOLD);
-      textAlign(CENTER, CENTER);
-      text(
-        "Reach Orbit 10, sync the Mainnet,\nand claim your Superseed Cosmic Core NFT\non the Supersync Network!",
-        GAME_WIDTH / 2,
-        GAME_HEIGHT - (isMobile ? 100 : 150)
-      );
-      noStroke();
+  drawingContext.shadowBlur = 0;
+  noStroke();
+  pop();
 
-      stroke(14, 39, 59, 200);
-      strokeWeight(1);
-      fill(147, 208, 207);
-      textSize(isMobile ? 12 : 16);
-      text("#SuperseedGrok3", GAME_WIDTH / 2, GAME_HEIGHT - (isMobile ? 30 : 50));
-      noStroke();
-    }
+  // Tekst poniżej karty – dostosowany do intro
+  stroke(14, 39, 59, 200);
+  strokeWeight(3);
+  fill(255, 245, 102);
+  textSize(isMobile ? 18 : 24);
+  textStyle(BOLD);
+  textAlign(CENTER, CENTER);
+  text(
+    "Reach Orbit 10, sync the Mainnet,\nand claim your Superseed Cosmic Core NFT\non the Supersync Network!",
+    GAME_WIDTH / 2,
+    GAME_HEIGHT - (isMobile ? 100 : 150)
+  );
+  noStroke();
+
+  stroke(14, 39, 59, 200);
+  strokeWeight(1);
+  fill(147, 208, 207);
+  textSize(isMobile ? 12 : 16);
+  text("#SuperseedGrok3", GAME_WIDTH / 2, GAME_HEIGHT - (isMobile ? 30 : 50));
+  noStroke();
+}
 
     // Add "NEXT" button
     let nextButtonX = GAME_WIDTH - 100;
@@ -1308,34 +1336,41 @@ function draw() {
     noStroke();
     fill(249, 249, 242);
     textSize(28);
-    text("LOGIN", GAME_WIDTH / 2, 650 + verticalOffset);
+    text("LOGIN (Opt.)", GAME_WIDTH / 2, 650 + verticalOffset); // Dodano "(Opt.)" dla jasności
   } else {
     fill(93, 208, 207);
     textSize(18);
-    text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 610 + verticalOffset); // Przesunięte z 620 na 610
-    gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 120, 640 + verticalOffset, GAME_WIDTH / 2 + 120, 640 + verticalOffset); // Przesunięte z 660 na 640
+    text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 610 + verticalOffset);
+    gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 120, 640 + verticalOffset, GAME_WIDTH / 2 + 120, 640 + verticalOffset);
     gradient.addColorStop(0, "#FF4500");
     gradient.addColorStop(1, "#FFD700");
     drawingContext.fillStyle = gradient;
     stroke(147, 208, 207);
     strokeWeight(3);
-    rect(GAME_WIDTH / 2 - 120, 640 + verticalOffset, 240, 60, 15); // Przesunięte z 660–720 na 640–700
+    rect(GAME_WIDTH / 2 - 120, 640 + verticalOffset, 240, 60, 15);
     noStroke();
     fill(249, 249, 242);
     textSize(28);
-    text("LOGOUT", GAME_WIDTH / 2, 670 + verticalOffset); // Przesunięte z 690 na 670
+    text("LOGOUT", GAME_WIDTH / 2, 670 + verticalOffset);
   }
-
-  // *** DODANY PRZYCISK "Claim Your NFT" – ZAKTUALIZOWANA POZYCJA ***
+  
+  // Dodany komunikat o opcjonalnym logowaniu po angielsku
+  fill(147, 208, 207, 200);
+textSize(16);
+textStyle(NORMAL);
+text("Login optional – save scores and claim NFT on Superseed Testnet", GAME_WIDTH / 2, 700 + verticalOffset);
+text("after completing 10 orbits and defeating the boss!", GAME_WIDTH / 2, 720 + verticalOffset);
+  
+  // *** DODANY PRZYCISK "Claim Your NFT" ***
   if (hasCompletedGame) {
     fill(93, 208, 207);
-    rect(GAME_WIDTH / 2 - 120, 720 + verticalOffset, 240, 60, 10); // Przesunięte z 700–760 na 720–780
+    rect(GAME_WIDTH / 2 - 120, 740 + verticalOffset, 240, 60, 10); // Przesunięto w dół o 20 pikseli
     fill(255);
     textSize(24);
-    text("Claim Your NFT", GAME_WIDTH / 2, 750 + verticalOffset); // Przesunięte z 730 na 750
+    text("Claim Your NFT", GAME_WIDTH / 2, 770 + verticalOffset); // Przesunięto w dół o 20 pikseli
   }
-
-  // Komunikat o wersji desktopowej – bez zmian
+  
+  // Komunikat o wersji desktopowej
   fill(255, 50, 50, 255);
   textSize(32);
   textStyle(BOLD);
@@ -1345,17 +1380,8 @@ function draw() {
   textSize(16);
   text("Mobile version coming soon!", GAME_WIDTH / 2, 850 + verticalOffset);
 
-  // Wyświetlanie komunikatu o błędzie lub prośbie o zalogowanie – bez zmian
-  if (showLoginMessage) {
-    let elapsed = millis() - loginMessageStartTime;
-    if (elapsed < loginMessageDuration) {
-      fill(255, 0, 0, 220);
-      textSize(20);
-      text("Please log in to start the game", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 170);
-    } else {
-      showLoginMessage = false;
-    }
-  }
+
+  
 
   // Przyciski boczne (INFO, TUTORIAL, VIEW INTRO, ACHIEVEMENTS) – bez zmian
   let sideButtonWidth = 120;
@@ -2118,7 +2144,7 @@ text(savedGameState ? "RESUME SYNC" : "START SYNC", GAME_WIDTH / 2, buttonY + TU
   // Wyświetl ostrzeżenie
   fill(255, 0, 0, 200);
   textSize(20);
-  text(`Czarna Dziura! ${floor(eventTimeLeft / 1000)}s`, GAME_WIDTH / 2, 50);
+  text(`Black Hole! ${floor(eventTimeLeft / 1000)}s`, GAME_WIDTH / 2, 50);
 
   // Dźwięk przy rozpoczęciu
   if (eventTimeLeft > 9990 && soundInitialized) { // Uruchom tylko raz na początku
@@ -2826,10 +2852,17 @@ if (gameState === "supernova") {
 }
 
 else if (gameState === "bossIntro") {
-  // Wyświetl grafikę z poprawionym tekstem
+  // Wyświetl grafikę
   image(bossIntroImage, 0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-  // Przejście do walki po 5 sekundach lub kliknięciu
+  // Dodaj tekst "Click to skip" i timer
+  fill(255, 215, 0, 200); // Złoty kolor
+  textSize(20);
+  textAlign(CENTER, CENTER);
+  let timeLeft = 30 - floor((millis() - stateStartTime) / 1000);
+  text(`Click to skip (${timeLeft}s)`, GAME_WIDTH / 2, GAME_HEIGHT - 50);
+
+  // Przejście do walki po 30 sekundach lub kliknięciu
   if (millis() - stateStartTime > 30000 || introClicked) {
     gameState = "bossFight";
     stateStartTime = millis();
@@ -3330,10 +3363,7 @@ function resumeGame() {
   }
 }
 
-// Zaktualizowana funkcja mousePressed() – krok 4 + poprawki
-let showLoginMessage = false;
-let loginMessageStartTime = 0;
-const loginMessageDuration = 3000;
+
 
 function mousePressed() {
   let adjustedMouseX = mouseX - (width - GAME_WIDTH) / 2;
@@ -3410,11 +3440,7 @@ function mousePressed() {
       adjustedMouseY >= 540 + verticalOffset &&
       adjustedMouseY <= 600 + verticalOffset
     ) {
-      if (!isConnected) {
-        console.log("Please log in first");
-        showLoginMessage = true;
-        loginMessageStartTime = millis();
-      } else if (savedGameState) {
+      if (savedGameState) {
         console.log("Resuming paused game...");
         resumeGame();
       } else {
@@ -3626,7 +3652,7 @@ function mousePressed() {
         adjustedMouseY <= claimButtonY + 50
       ) {
         console.log("Claim NFT clicked!");
-        alert("NFT claim functionality coming soon on Supersync Network!");
+        alert("NFT claim functionality coming soon on Superseed Network!");
       }
       let backButtonX = GAME_WIDTH / 2 - 100;
       let backButtonY = GAME_HEIGHT / 2 + 400;
@@ -3889,6 +3915,11 @@ function mousePressed() {
         if (soundInitialized) meteorSound.play();
       }
     }
+  } // Koniec bloku "playing" || "supernova" || "bossFight"
+  // NOWA OBSŁUGA DLA "bossIntro"
+  else if (gameState === "bossIntro") {
+    introClicked = true; // Ustaw introClicked na true po kliknięciu
+    console.log("Boss intro clicked – skipping to bossFight");
   }
 }
 
