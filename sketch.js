@@ -794,7 +794,7 @@ function preload() {
 }
 // Poprawiony setup() – bez async, wywołanie asynchroniczne w tle
 function setup() {
-  const canvas = createCanvas(windowWidth, windowHeight, { willReadFrequently: true });
+  createCanvas(windowWidth, windowHeight);
   GAME_WIDTH = windowWidth;
   GAME_HEIGHT = windowHeight;
   textAlign(CENTER, CENTER);
@@ -922,278 +922,233 @@ function draw() {
   translate(offsetX, offsetY);
 
   // Istniejący stan intro
-  // Istniejący stan intro
-if (gameState === "intro") {
-  for (let i = bgParticles.length - 1; i >= 0; i--) {
-    bgParticles[i].update();
-    bgParticles[i].show(0);
-  }
-
-  push();
-  translate((width - GAME_WIDTH) / 2, (height - GAME_HEIGHT) / 2);
-
-  // Zarządzanie dźwiękiem
-  if (soundInitialized) {
-    if (!introMusic.isPlaying()) {
-      introMusic.loop();
+  if (gameState === "intro") {
+    for (let i = bgParticles.length - 1; i >= 0; i--) {
+      bgParticles[i].update();
+      bgParticles[i].show(0);
     }
-  }
-
-  // Odtwarzaj muzykę intro, gdy dźwięk jest zainicjalizowany
-  if (!introMusic.isPlaying() && soundInitialized) {
-    introMusic.loop();
-  }
-
-  // Wykrywanie urządzenia na podstawie szerokości ekranu
-  let isMobile = GAME_WIDTH < 768; // Przywrócone, aby logo i tekst działały poprawnie
-
-  // Oryginalne proporcje grafik
-  let originalWidth = 1200; // Rzeczywista szerokość obrazów
-  let originalHeight = 1000; // Rzeczywista wysokość obrazów
-  let aspectRatio = originalWidth / originalHeight; // 1.2
-
-  // Oblicz wymiary, aby wypełnić ekran bez rozciągania
-  let bgWidth, bgHeight, bgX, bgY;
-  if (GAME_WIDTH / GAME_HEIGHT > aspectRatio) {
-    // Ekran szerszy niż grafika – dopasuj do szerokości, przytnij wysokość
-    bgWidth = GAME_WIDTH;
-    bgHeight = bgWidth / aspectRatio;
-    bgX = 0;
-    bgY = (GAME_HEIGHT - bgHeight) / 2; // Centruj pionowo
-  } else {
-    // Ekran węższy niż grafika – dopasuj do wysokości, przytnij szerokość
-    bgHeight = GAME_HEIGHT;
-    bgWidth = bgHeight * aspectRatio;
-    bgX = (GAME_WIDTH - bgWidth) / 2; // Centruj poziomo
-    bgY = 0;
-  }
-
-  // Scene 1: "The Fall"
-  if (introState === 0) {
-    drawingContext.save();
-    drawingContext.beginPath();
-    drawingContext.rect(0, 0, GAME_WIDTH, GAME_HEIGHT); // Obszar przycięcia
-    drawingContext.clip();
-    image(upadekBg, bgX, bgY, bgWidth, bgHeight);
-    drawingContext.restore();
-    let logoPulse = lerp(50, 100, sin(currentTime * 0.002));
-    tint(255, 200);
-    image(logo, GAME_WIDTH / 2, GAME_HEIGHT / 2, logoPulse, logoPulse);
-    fill(255, 200);
-    textSize(isMobile ? 18 : 24);
-    textStyle(BOLD);
-    textAlign(CENTER, CENTER);
-    text(
-      "In a galaxy bound by centralized chains,\nthe old networks fell silent.\nOne seed remained – a spark of hope.",
-      GAME_WIDTH / 2,
-      GAME_HEIGHT - (isMobile ? 100 : 150)
-    );
-  }
-  // Scene 2: "Call to Sync"
-  else if (introState === 1) {
-    drawingContext.save();
-    drawingContext.beginPath();
-    drawingContext.rect(0, 0, GAME_WIDTH, GAME_HEIGHT); // Obszar przycięcia
-    drawingContext.clip();
-    image(synchronizacjaBg, bgX, bgY, bgWidth, bgHeight);
-    drawingContext.restore();
-    let logoPulse = lerp(minSize, maxSize, sin(currentTime * 0.002));
-    tint(seedColor.r, seedColor.g, seedColor.b, 200);
-    image(logo, GAME_WIDTH / 2, GAME_HEIGHT / 2, logoPulse, logoPulse);
-    for (let i = 0; i < 4; i++) {
-      let angle = TWO_PI / 4 * i + currentTime * 0.001;
-      let orbitRadius = isMobile ? min(100, GAME_WIDTH * 0.15) : 150;
-      let px = GAME_WIDTH / 2 + cos(angle) * orbitRadius;
-      let py = GAME_HEIGHT / 2 + sin(angle) * orbitRadius;
-      let p = new PowerUp(px, py);
-      p.type = ["life", "gas", "pulse", "orbit"][i];
-      p.show();
+  
+    push();
+    translate((width - GAME_WIDTH) / 2, (height - GAME_HEIGHT) / 2);
+  
+    let aspectRatio = 2912 / 1632; // ≈ 1.78
+    let bgX, bgY, bgWidth, bgHeight;
+  
+    // Calculate dimensions to fill the screen while preserving aspect ratio
+    if (GAME_WIDTH / GAME_HEIGHT > aspectRatio) {
+      // Screen wider than image -> fit width, crop height
+      bgWidth = GAME_WIDTH;
+      bgHeight = bgWidth / aspectRatio;
+      bgX = 0;
+      bgY = (GAME_HEIGHT - bgHeight) / 2; // Center vertically
+    } else {
+      // Screen narrower than image -> fit height, crop width
+      bgHeight = GAME_HEIGHT;
+      bgWidth = bgHeight * aspectRatio;
+      bgX = (GAME_WIDTH - bgWidth) / 2; // Center horizontally
+      bgY = 0;
     }
-    stroke(14, 39, 59);
-    strokeWeight(2);
+  
+    // Scene 1: "The Fall"
+    if (introState === 0) {
+      image(upadekBg, bgX, bgY, bgWidth, bgHeight);
+      let logoPulse = lerp(50, 100, sin(currentTime * 0.002));
+      tint(255, 200);
+      imageMode(CENTER);
+      image(logo, GAME_WIDTH / 2, GAME_HEIGHT / 2, logoPulse, logoPulse);
+      fill(255, 200);
+      textSize(GAME_WIDTH < 768 ? 18 : 24);
+      textStyle(BOLD);
+      textAlign(CENTER, CENTER);
+      text(
+        "In a galaxy bound by centralized chains\nthe old networks fell silent.\nOne seed remained – a spark of hope.",
+        GAME_WIDTH / 2,
+        GAME_HEIGHT - (GAME_WIDTH < 768 ? 100 : 150)
+      );
+    }
+    // Scene 2: "Call to Sync"
+    else if (introState === 1) {
+      image(synchronizacjaBg, bgX, bgY, bgWidth, bgHeight);
+      let logoPulse = lerp(minSize, maxSize, sin(currentTime * 0.002));
+      tint(seedColor.r, seedColor.g, seedColor.b, 200);
+      imageMode(CENTER);
+      image(logo, GAME_WIDTH / 2, GAME_HEIGHT / 2, logoPulse, logoPulse);
+      for (let i = 0; i < 4; i++) {
+        let angle = TWO_PI / 4 * i + currentTime * 0.001;
+        let orbitRadius = GAME_WIDTH < 768 ? min(100, GAME_WIDTH * 0.15) : 150;
+        let px = GAME_WIDTH / 2 + cos(angle) * orbitRadius;
+        let py = GAME_HEIGHT / 2 + sin(angle) * orbitRadius;
+        let p = new PowerUp(px, py);
+        p.type = ["life", "gas", "pulse", "orbit"][i];
+        p.show();
+      }
+      stroke(14, 39, 59);
+      strokeWeight(2);
+      fill(93, 208, 207);
+      textSize(GAME_WIDTH < 768 ? 18 : 24);
+      textStyle(BOLD);
+      text(
+        "You’ve been chosen to awaken the Superseed Mainnet.\nSync cosmic nodes, harness power-ups,\nand forge a decentralized future – orbit by orbit.",
+        GAME_WIDTH / 2,
+        GAME_HEIGHT - (GAME_WIDTH < 768 ? 100 : 150)
+      );
+      noStroke();
+    }
+    // Scene 3: "The Reward Awaits"
+    else if (introState === 2) {
+      image(nagrodaBg, bgX, bgY, bgWidth, bgHeight);
+      if (random(1) < 0.2) {
+        particles.push(new Particle(GAME_WIDTH / 2, GAME_HEIGHT / 2, { r: seedColor.r, g: seedColor.g, b: seedColor.b }));
+      }
+      for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update();
+        particles[i].show();
+        if (particles[i].isDead()) particles.splice(i, 1);
+      }
+  
+      let logoWidth = GAME_WIDTH < 768 ? min(200, GAME_WIDTH * 0.4) : 300;
+      let logoHeight = logoWidth / 2;
+      image(whiteLogo, GAME_WIDTH / 2 - logoWidth / 2, GAME_WIDTH < 768 ? 30 : 50, logoWidth, logoHeight);
+  
+      // NFT Card – Superseed Cosmic Core
+      push();
+      translate(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50);
+      rotate(sin(currentTime * 0.001) * 0.1);
+      let pulseScale = 1 + sin(currentTime * 0.005) * 0.05;
+  
+      let cardWidth = 300 * pulseScale;
+      let cardHeight = 450 * pulseScale;
+  
+      let cardGradient = drawingContext.createLinearGradient(-cardWidth / 2, -cardHeight / 2, cardWidth / 2, cardHeight / 2);
+      cardGradient.addColorStop(0, `rgba(${seedColor.r}, ${seedColor.g}, ${seedColor.b}, 0.8)`);
+      cardGradient.addColorStop(1, "rgba(14, 39, 59, 0.9)");
+      drawingContext.fillStyle = cardGradient;
+      drawingContext.shadowBlur = 20;
+      drawingContext.shadowColor = `rgba(255, 215, 0, 0.5)`;
+      rect(-cardWidth / 2, -cardHeight / 2, cardWidth, cardHeight, 20);
+  
+      noFill();
+      stroke(255, 215, 0, 200);
+      strokeWeight(4);
+      rect(-cardWidth / 2 + 5, -cardHeight / 2 + 5, cardWidth - 10, cardHeight - 10, 15);
+      stroke(seedColor.r, seedColor.g, seedColor.b, 150);
+      strokeWeight(2);
+      rect(-cardWidth / 2 + 10, -cardHeight / 2 + 10, cardWidth - 20, cardHeight - 20, 10);
+  
+      push();
+      translate(0, -cardHeight / 4);
+      let mainLogoWidth = cardWidth * 0.9;
+      let mainLogoHeight = mainLogoWidth;
+      tint(255, 215, 0, 220);
+      drawingContext.shadowBlur = 15;
+      drawingContext.shadowColor = `rgba(255, 215, 0, 0.7)`;
+      imageMode(CENTER);
+      image(mainLogo, 0, 0, mainLogoWidth, mainLogoHeight);
+      drawingContext.shadowBlur = 0;
+      pop();
+  
+      push();
+      translate(0, cardHeight / 6);
+      rotate(currentTime * 0.001);
+      let smallLogoWidth = cardWidth * 0.4;
+      let smallLogoHeight = smallLogoWidth;
+      tint(255, 255, 255, 180);
+      drawingContext.shadowBlur = 10;
+      drawingContext.shadowColor = `rgba(147, 208, 207, 0.5)`;
+      imageMode(CENTER);
+      image(smallSuperseedIntro, 0, 0, smallLogoWidth, smallLogoHeight);
+      drawingContext.shadowBlur = 0;
+      pop();
+  
+      noFill();
+      stroke(93, 208, 207, 100);
+      strokeWeight(1);
+      for (let i = 0; i < 5; i++) {
+        let y = map(i, 0, 4, cardHeight / 2 - 80, cardHeight / 2 - 20);
+        line(-cardWidth / 2 + 20, y, cardWidth / 2 - 20, y);
+      }
+  
+      stroke(14, 39, 59, 200);
+      strokeWeight(1);
+      fill(147, 208, 207);
+      textSize(16);
+      textStyle(NORMAL);
+      text("Superseed Cosmic Network", 0, cardHeight / 2 - 90);
+  
+      stroke(14, 39, 59, 200);
+      strokeWeight(1);
+      fill(255, 215, 0);
+      textSize(24);
+      textStyle(BOLD);
+      text("Superseed Cosmic Core", 0, cardHeight / 2 - 60);
+  
+      stroke(14, 39, 59, 200);
+      strokeWeight(1);
+      fill(255, 255, 255, 150);
+      textSize(16);
+      text("NFT", 0, cardHeight / 2 - 30);
+  
+      drawingContext.shadowBlur = 0;
+      noStroke();
+      pop();
+  
+      stroke(14, 39, 59, 200);
+      strokeWeight(3);
+      fill(255, 245, 102);
+      textSize(GAME_WIDTH < 768 ? 18 : 24);
+      textStyle(BOLD);
+      textAlign(CENTER, CENTER);
+      text(
+        "Reach Orbit 10, sync the Mainnet,\nand claim your Superseed Cosmic Core NFT\non the Supersync Network!",
+        GAME_WIDTH / 2,
+        GAME_HEIGHT - (GAME_WIDTH < 768 ? 100 : 150)
+      );
+      noStroke();
+  
+      stroke(14, 39, 59, 200);
+      strokeWeight(1);
+      fill(147, 208, 207);
+      textSize(GAME_WIDTH < 768 ? 12 : 16);
+      text("#SuperseedGrok3", GAME_WIDTH / 2, GAME_HEIGHT - (GAME_WIDTH < 768 ? 30 : 50));
+      noStroke();
+    }
+  
+    // NEXT Button and remaining logic
+    let nextButtonX = GAME_WIDTH - 100;
+    let nextButtonY = GAME_HEIGHT - 50;
     fill(93, 208, 207);
-    textSize(isMobile ? 18 : 24);
-    textStyle(BOLD);
-    text(
-      "You’ve been chosen to awaken the Superseed Mainnet.\nSync cosmic nodes, harness power-ups,\nand forge a decentralized future – orbit by orbit.",
-      GAME_WIDTH / 2,
-      GAME_HEIGHT - (isMobile ? 100 : 150)
-    );
-    noStroke();
-  }
-  // Scene 3: "The Reward Awaits"
-  else if (introState === 2) {
-    drawingContext.save();
-    drawingContext.beginPath();
-    drawingContext.rect(0, 0, GAME_WIDTH, GAME_HEIGHT); // Obszar przycięcia
-    drawingContext.clip();
-    image(nagrodaBg, bgX, bgY, bgWidth, bgHeight);
-    drawingContext.restore();
-
-    if (random(1) < 0.2) {
-      particles.push(new Particle(GAME_WIDTH / 2, GAME_HEIGHT / 2, { r: seedColor.r, g: seedColor.g, b: seedColor.b }));
-    }
-    for (let i = particles.length - 1; i >= 0; i--) {
-      particles[i].update();
-      particles[i].show();
-      if (particles[i].isDead()) particles.splice(i, 1);
-    }
-
-    let logoWidth = isMobile ? min(200, GAME_WIDTH * 0.4) : 300;
-    let logoHeight = logoWidth / 2;
-    image(whiteLogo, GAME_WIDTH / 2 - logoWidth / 2, isMobile ? 30 : 50, logoWidth, logoHeight);
-
-    // Karta NFT – Superseed Cosmic Core (identyczna jak w endgame)
-    push();
-    translate(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50); // Przesunięcie w górę, aby zmieścić tekst poniżej
-    rotate(sin(currentTime * 0.001) * 0.1); // Lekka rotacja całej karty
-    let pulseScale = 1 + sin(currentTime * 0.005) * 0.05; // Subtelne pulsowanie
-
-    // Rozmiar karty (proporcje 2:3)
-    let cardWidth = 300 * pulseScale;
-    let cardHeight = 450 * pulseScale;
-
-    // Tło karty z gradientem
-    let cardGradient = drawingContext.createLinearGradient(-cardWidth / 2, -cardHeight / 2, cardWidth / 2, cardHeight / 2);
-    cardGradient.addColorStop(0, `rgba(${seedColor.r}, ${seedColor.g}, ${seedColor.b}, 0.8)`);
-    cardGradient.addColorStop(1, "rgba(14, 39, 59, 0.9)");
-    drawingContext.fillStyle = cardGradient;
-    drawingContext.shadowBlur = 20;
-    drawingContext.shadowColor = `rgba(255, 215, 0, 0.5)`;
-    rect(-cardWidth / 2, -cardHeight / 2, cardWidth, cardHeight, 20); // Zaokrąglone rogi
-
-    // Ramka karty
-    noFill();
-    stroke(255, 215, 0, 200); // Złoty kolor
-    strokeWeight(4);
-    rect(-cardWidth / 2 + 5, -cardHeight / 2 + 5, cardWidth - 10, cardHeight - 10, 15);
-    stroke(seedColor.r, seedColor.g, seedColor.b, 150);
-    strokeWeight(2);
-    rect(-cardWidth / 2 + 10, -cardHeight / 2 + 10, cardWidth - 20, cardHeight - 20, 10);
-
-    // Główne logo superseedcosmicnet-gamelogo.png
-    push();
-    translate(0, -cardHeight / 4); // Przesunięcie na ~112 pikseli w górę od środka
-    let mainLogoWidth = cardWidth * 0.9; // 90% szerokości karty (~270 pikseli)
-    let mainLogoHeight = mainLogoWidth; // Kwadratowe proporcje
-    tint(255, 215, 0, 220); // Lekko jaśniejszy złoty odcień
-    drawingContext.shadowBlur = 15;
-    drawingContext.shadowColor = `rgba(255, 215, 0, 0.7)`; // Subtelny złoty cień
-    imageMode(CENTER);
-    image(mainLogo, 0, 0, mainLogoWidth, mainLogoHeight); // Główne logo
-    drawingContext.shadowBlur = 0;
-    pop();
-
-    // Małe logo smallSuperseedIntro
-    push();
-    translate(0, cardHeight / 6); // Przesunięcie ~75 pikseli w dół od środka
-    rotate(currentTime * 0.001); // Subtelna rotacja dla efektu
-    let smallLogoWidth = cardWidth * 0.4; // 40% szerokości karty (~120 pikseli)
-    let smallLogoHeight = smallLogoWidth; // Kwadratowe proporcje
-    tint(255, 255, 255, 180); // Biały odcień z lekką przezroczystością dla kontrastu
-    drawingContext.shadowBlur = 10;
-    drawingContext.shadowColor = `rgba(147, 208, 207, 0.5)`; // Subtelny cień w kolorze seedColor
-    imageMode(CENTER);
-    image(smallSuperseedIntro, 0, 0, smallLogoWidth, smallLogoHeight); // Małe logo
-    drawingContext.shadowBlur = 0;
-    pop();
-
-    // Linie obwodów blockchain (dekoracja)
-    noFill();
-    stroke(93, 208, 207, 100);
-    strokeWeight(1);
-    for (let i = 0; i < 5; i++) {
-      let y = map(i, 0, 4, cardHeight / 2 - 80, cardHeight / 2 - 20); // Przesunięte w dół
-      line(-cardWidth / 2 + 20, y, cardWidth / 2 - 20, y);
-    }
-
-    // Nazwa gry nad tytułem NFT
-    stroke(14, 39, 59, 200);
-    strokeWeight(1);
-    fill(147, 208, 207);
+    rect(nextButtonX, nextButtonY, 80, 30, 5);
+    fill(255);
     textSize(16);
-    textStyle(NORMAL);
-    textAlign(CENTER, CENTER);
-    text("Superseed Cosmic Network", 0, cardHeight / 2 - 90);
-
-    // Nazwa NFT na dole karty
-    stroke(14, 39, 59, 200);
-    strokeWeight(1);
-    fill(255, 215, 0);
-    textSize(24);
-    textStyle(BOLD);
-    text("Superseed Cosmic Core", 0, cardHeight / 2 - 60);
-
-    // Subtelny napis "NFT"
-    stroke(14, 39, 59, 200);
-    strokeWeight(1);
-    fill(255, 255, 255, 150);
+    text("NEXT", nextButtonX + 40, nextButtonY + 15);
+  
+    let timeLeft = introDuration - (currentTime - introTimer);
+    fill(255, 200);
     textSize(16);
-    text("NFT", 0, cardHeight / 2 - 30);
-
-    drawingContext.shadowBlur = 0;
-    noStroke();
+    text(`${floor(timeLeft / 1000)}s`, GAME_WIDTH / 2, 50);
+  
     pop();
-
-    // Tekst poniżej karty – dostosowany do intro
-    stroke(14, 39, 59, 200);
-    strokeWeight(3);
-    fill(255, 245, 102);
-    textSize(isMobile ? 18 : 24);
-    textStyle(BOLD);
-    textAlign(CENTER, CENTER);
-    text(
-      "Reach Orbit 10, sync the Mainnet,\nand claim your Superseed Cosmic Core NFT\non the Supersync Network!",
-      GAME_WIDTH / 2,
-      GAME_HEIGHT - (isMobile ? 100 : 150)
-    );
-    noStroke();
-
-    stroke(14, 39, 59, 200);
-    strokeWeight(1);
-    fill(147, 208, 207);
-    textSize(isMobile ? 12 : 16);
-    text("#SuperseedGrok3", GAME_WIDTH / 2, GAME_HEIGHT - (isMobile ? 30 : 50));
-    noStroke();
-  }
-
-  // Add "NEXT" button
-  let nextButtonX = GAME_WIDTH - 100;
-  let nextButtonY = GAME_HEIGHT - 50;
-  fill(93, 208, 207);
-  rect(nextButtonX, nextButtonY, 80, 30, 5);
-  fill(255);
-  textSize(16);
-  text("NEXT", nextButtonX + 40, nextButtonY + 15);
-
-  // Display remaining time
-  let timeLeft = introDuration - (currentTime - introTimer);
-  fill(255, 200);
-  textSize(16);
-  text(`${floor(timeLeft / 1000)}s`, GAME_WIDTH / 2, 50);
-
-  pop();
-
-  // Automatyczne przejście
-  if (currentTime - introTimer > introDuration) {
-    introState++;
-    introTimer = currentTime;
-    if (introState > 2) {
-      gameState = "howToPlay";
-      introState = 0;
-      if (soundInitialized) {
-        introMusic.stop();
-        backgroundMusic.loop();
+  
+    // Automatic transition
+    if (currentTime - introTimer > introDuration) {
+      introState++;
+      introTimer = currentTime;
+      if (introState > 2) {
+        gameState = "howToPlay";
+        introState = 0;
+        if (soundInitialized) {
+          introMusic.stop();
+          backgroundMusic.loop();
+        }
+        if (!hasSeenIntro) {
+          localStorage.setItem('hasSeenIntro', 'true');
+          hasSeenIntro = true;
+        }
       }
-      if (!hasSeenIntro) {
-        localStorage.setItem('hasSeenIntro', 'true');
-        hasSeenIntro = true;
-      }
+      if (soundInitialized && introState <= 2) warpSound.play();
     }
-    if (soundInitialized && introState <= 2) warpSound.play();
+    return;
   }
-  return;
-}
 
   // Reszta kodu – ramka gry i particles
   stroke(93, 208, 207);
@@ -3995,7 +3950,6 @@ function keyPressed() {
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  let scaleFactor = min(windowWidth / 1200, windowHeight / 1000);
   GAME_WIDTH = windowWidth;
   GAME_HEIGHT = windowHeight;
   RESTART_BUTTON_WIDTH = 200 * scaleFactor;
