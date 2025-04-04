@@ -858,6 +858,9 @@ async function initWeb3() {
 
 
 function touchStarted() {
+  if (touches.length >= 2 && gameState === "howToPlay") {
+    return true; // Zoom tylko w menu
+  }
   if (!soundInitialized) {
     soundInitialized = true;
     backgroundMusic.loop();
@@ -888,6 +891,15 @@ function touchStarted() {
   mousePressed(); // Keep existing mouse logic
   return false; // Prevent default touch behavior
 }
+function touchMoved() {
+  if (touches.length >= 2 && gameState === "howToPlay") {
+    return true; // Zoom tylko w menu
+  }
+  // W przeciwnym razie nie rób nic (lub obsłuż ruch palcem, jeśli potrzebujesz)
+  return false;
+}
+
+
 
 function drawBackground(pulseProgress) {
   // Rysuj tło na całym oknie (windowWidth x windowHeight)
