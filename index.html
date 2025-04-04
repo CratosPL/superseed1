@@ -10,16 +10,18 @@
   <script src="assets/ethers.umd.min.js"></script>
   <script src="sketch.js"></script>
   <style>
-      body {
-        margin: 0;
-        padding: 0;
-        overflow: hidden; /* Blokuje scrollowanie */
-        background-color: #0E273B; /* Tangaroa – ciemne tło strony */
-      }
-      canvas {
-        position: fixed;
-        top: 0;
-        left: 0;
-      }
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0E273B;
+      touch-action: auto;
+      overflow: auto;
+    }
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      display: block;
+    }
   </style>
 </head>
