@@ -1172,254 +1172,281 @@ function draw() {
 
 
   if (gameState === "howToPlay") {
-    // Wczytanie tła z subtelnym rozmyciem
+    push();
+    translate((width - GAME_WIDTH) / 2, (height - GAME_HEIGHT) / 2);
+  
+    let aspectRatio = 1536 / 1024; // ≈ 1.5
+    let bgX, bgY, bgWidth, bgHeight;
+  
+    // Oblicz skalę, aby obraz wypełniał ekran
+    let scaleX = GAME_WIDTH / 1536; // Skala dla szerokości
+    let scaleY = GAME_HEIGHT / 1024; // Skala dla wysokości
+    let scale = Math.max(scaleX, scaleY); // Wybierz większą skalę, aby wypełnić ekran
+  
+    // Oblicz nowe wymiary obrazu
+    bgWidth = 1536 * scale;
+    bgHeight = 1024 * scale;
+  
+    // Centruj w poziomie
+    bgX = (GAME_WIDTH - bgWidth) / 2;
+  
+    // Przesuń w pionie, aby napisy na dole były widoczne
+    // Zakładamy, że napisy zajmują dolne ~100 pikseli obrazu (1024 - 100 = 924)
+    // Przesuwamy obraz tak, aby dolna krawędź była wyrównana z dołem ekranu
+    bgY = GAME_HEIGHT - bgHeight; // Wyrównaj dolną krawędź obrazu z dołem ekranu
+  
+    // Jeśli obraz jest za mały w pionie, przesuń go do góry, aby wypełnić ekran
+    if (bgHeight < GAME_HEIGHT) {
+      bgY = 0; // Wyrównaj do góry
+    }
+  
+    // Draw the background with blur
     drawingContext.filter = 'blur(5px)';
-  image(cosmicMenuBg, 0, 0, GAME_WIDTH, GAME_HEIGHT);
-  drawingContext.filter = 'none';
-
-  // Winietka i overlay gradientu – bez zmian
-  let vignette = drawingContext.createRadialGradient(
-    GAME_WIDTH / 2, 
-    GAME_HEIGHT / 2, 
-    0, 
-    GAME_WIDTH / 2, 
-    GAME_HEIGHT / 2, 
-    Math.max(GAME_WIDTH, GAME_HEIGHT) / 2
-  );
-  vignette.addColorStop(0, "rgba(14, 39, 59, 0)");
-  vignette.addColorStop(1, "rgba(14, 39, 59, 0.7)");
-  drawingContext.fillStyle = vignette;
-  rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
-
-  let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
-  gradient.addColorStop(0, "rgba(14, 39, 59, 0.6)");
-  gradient.addColorStop(1, "rgba(93, 208, 207, 0.4)");
-  drawingContext.fillStyle = gradient;
-  rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
-
-  // Większe pulsujące logo na górze – bez zmian
-  let logoScale = 1 + sin(millis() * 0.002) * 0.05;
-  let logoSize = 400 * logoScale;
-  image(mainLogo, GAME_WIDTH / 2 - logoSize / 2, 30, logoSize, logoSize);
-
-  // Przesunięcie wszystkich elementów w dół o 100 pikseli
-  let verticalOffset = 100;
-
-  // Choose Your Seed Color – bez zmian
-  fill(249, 249, 242);
-  textSize(24);
-  text("Choose Your Seed Color", GAME_WIDTH / 2, 320 + verticalOffset);
-  let colorBoxSize = 60;
-  let colorBoxSpacing = 30;
-  let startX = GAME_WIDTH / 2 - (colorBoxSize * 3 + colorBoxSpacing * 2) / 2;
-  let pulse = 1 + sin(millis() * 0.005) * 0.1;
-
-  fill(0, 255, 0);
-  rect(startX, 350 + verticalOffset, colorBoxSize, colorBoxSize, 15);
-  fill(0, 0, 255);
-  rect(startX + colorBoxSize + colorBoxSpacing, 350 + verticalOffset, colorBoxSize, colorBoxSize, 15);
-  fill(255, 215, 0);
-  rect(startX + (colorBoxSize + colorBoxSpacing) * 2, 350 + verticalOffset, colorBoxSize, colorBoxSize, 15);
-
-  stroke(147, 208, 207);
-  strokeWeight(3);
-  noFill();
-  if (seedColor.r === 0 && seedColor.g === 255 && seedColor.b === 0) {
-    rect(startX, 350 + verticalOffset, colorBoxSize * pulse, colorBoxSize * pulse, 15);
-  } else if (seedColor.r === 0 && seedColor.g === 0 && seedColor.b === 255) {
-    rect(startX + colorBoxSize + colorBoxSpacing, 350 + verticalOffset, colorBoxSize * pulse, colorBoxSize * pulse, 15);
-  } else if (seedColor.r === 255 && seedColor.g === 215 && seedColor.b === 0) {
-    rect(startX + (colorBoxSize + colorBoxSpacing) * 2, 350 + verticalOffset, colorBoxSize * pulse, colorBoxSize * pulse, 15);
-  }
-  noStroke();
-
-  // Enter Your Nick – bez zmian
-  fill(249, 249, 242);
-  textSize(24);
-  text("Enter Your Nick", GAME_WIDTH / 2, 450 + verticalOffset);
-  fill(128, 131, 134, 180);
-  stroke(147, 208, 207);
-  strokeWeight(3);
-  rect(GAME_WIDTH / 2 - 120, 470 + verticalOffset, 240, 50, 10);
-  fill(249, 249, 242);
-  textSize(20);
-  textAlign(CENTER, CENTER);
-  if (isTypingNick) {
-    let cursor = (floor(millis() / 500) % 2 === 0) ? "|" : "";
-    text(playerNick + cursor, GAME_WIDTH / 2, 495 + verticalOffset);
-  } else {
-    text(playerNick || "Click to type", GAME_WIDTH / 2, 495 + verticalOffset);
-  }
-  noStroke();
-
-  // Start Button – bez zmian
-  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 120, 540 + verticalOffset, GAME_WIDTH / 2 + 120, 540 + verticalOffset);
-  gradient.addColorStop(0, "#93D0CF");
-  gradient.addColorStop(1, "#FFD700");
-  drawingContext.fillStyle = gradient;
-  stroke(147, 208, 207);
-  strokeWeight(3);
-  rect(GAME_WIDTH / 2 - 120, 540 + verticalOffset, 240, 60, 15);
-  noStroke();
-  fill(14, 39, 59);
-  textSize(28);
-  let buttonText = savedGameState ? "RESUME" : "START";
-  text(buttonText, GAME_WIDTH / 2, 570 + verticalOffset);
-
-  // Login/Logout Button – ZAKTUALIZOWANE POZYCJE
-  if (!isConnected) {
-    gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 120, 620 + verticalOffset, GAME_WIDTH / 2 + 120, 620 + verticalOffset);
-    gradient.addColorStop(0, "#0E273B");
-    gradient.addColorStop(1, "#808386");
+    image(cosmicMenuBg, bgX, bgY, bgWidth, bgHeight);
+    drawingContext.filter = 'none';
+  
+    // Winietka i overlay gradientu
+    let vignette = drawingContext.createRadialGradient(
+      GAME_WIDTH / 2, 
+      GAME_HEIGHT / 2, 
+      0, 
+      GAME_WIDTH / 2, 
+      GAME_HEIGHT / 2, 
+      Math.max(GAME_WIDTH, GAME_HEIGHT) / 2
+    );
+    vignette.addColorStop(0, "rgba(14, 39, 59, 0)");
+    vignette.addColorStop(1, "rgba(14, 39, 59, 0.7)");
+    drawingContext.fillStyle = vignette;
+    rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
+  
+    let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    gradient.addColorStop(0, "rgba(14, 39, 59, 0.6)");
+    gradient.addColorStop(1, "rgba(93, 208, 207, 0.4)");
     drawingContext.fillStyle = gradient;
+    rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
+  
+    // Większe pulsujące logo na górze
+    let logoScale = 1 + sin(millis() * 0.002) * 0.05;
+    let logoSize = 400 * logoScale;
+    image(mainLogo, GAME_WIDTH / 2 - logoSize / 2, 30, logoSize, logoSize);
+  
+    // Przesunięcie wszystkich elementów w dół o 100 pikseli
+    let verticalOffset = 100;
+  
+    // Choose Your Seed Color
+    fill(249, 249, 242);
+    textSize(24);
+    text("Choose Your Seed Color", GAME_WIDTH / 2, 320 + verticalOffset);
+    let colorBoxSize = 60;
+    let colorBoxSpacing = 30;
+    let startX = GAME_WIDTH / 2 - (colorBoxSize * 3 + colorBoxSpacing * 2) / 2;
+    let pulse = 1 + sin(millis() * 0.005) * 0.1;
+  
+    fill(0, 255, 0);
+    rect(startX, 350 + verticalOffset, colorBoxSize, colorBoxSize, 15);
+    fill(0, 0, 255);
+    rect(startX + colorBoxSize + colorBoxSpacing, 350 + verticalOffset, colorBoxSize, colorBoxSize, 15);
+    fill(255, 215, 0);
+    rect(startX + (colorBoxSize + colorBoxSpacing) * 2, 350 + verticalOffset, colorBoxSize, colorBoxSize, 15);
+  
     stroke(147, 208, 207);
     strokeWeight(3);
-    rect(GAME_WIDTH / 2 - 120, 620 + verticalOffset, 240, 60, 15);
+    noFill();
+    if (seedColor.r === 0 && seedColor.g === 255 && seedColor.b === 0) {
+      rect(startX, 350 + verticalOffset, colorBoxSize * pulse, colorBoxSize * pulse, 15);
+    } else if (seedColor.r === 0 && seedColor.g === 0 && seedColor.b === 255) {
+      rect(startX + colorBoxSize + colorBoxSpacing, 350 + verticalOffset, colorBoxSize * pulse, colorBoxSize * pulse, 15);
+    } else if (seedColor.r === 255 && seedColor.g === 215 && seedColor.b === 0) {
+      rect(startX + (colorBoxSize + colorBoxSpacing) * 2, 350 + verticalOffset, colorBoxSize * pulse, colorBoxSize * pulse, 15);
+    }
     noStroke();
+  
+    // Enter Your Nick
     fill(249, 249, 242);
-    textSize(28);
-    text("LOGIN (Opt.)", GAME_WIDTH / 2, 650 + verticalOffset); // Dodano "(Opt.)" dla jasności
-  } else {
-    fill(93, 208, 207);
-    textSize(18);
-    text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 610 + verticalOffset);
-    gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 120, 640 + verticalOffset, GAME_WIDTH / 2 + 120, 640 + verticalOffset);
-    gradient.addColorStop(0, "#FF4500");
+    textSize(24);
+    text("Enter Your Nick", GAME_WIDTH / 2, 450 + verticalOffset);
+    fill(128, 131, 134, 180);
+    stroke(147, 208, 207);
+    strokeWeight(3);
+    rect(GAME_WIDTH / 2 - 120, 470 + verticalOffset, 240, 50, 10);
+    fill(249, 249, 242);
+    textSize(20);
+    textAlign(CENTER, CENTER);
+    if (isTypingNick) {
+      let cursor = (floor(millis() / 500) % 2 === 0) ? "|" : "";
+      text(playerNick + cursor, GAME_WIDTH / 2, 495 + verticalOffset);
+    } else {
+      text(playerNick || "Click to type", GAME_WIDTH / 2, 495 + verticalOffset);
+    }
+    noStroke();
+  
+    // Start Button
+    gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 120, 540 + verticalOffset, GAME_WIDTH / 2 + 120, 540 + verticalOffset);
+    gradient.addColorStop(0, "#93D0CF");
     gradient.addColorStop(1, "#FFD700");
     drawingContext.fillStyle = gradient;
     stroke(147, 208, 207);
     strokeWeight(3);
-    rect(GAME_WIDTH / 2 - 120, 640 + verticalOffset, 240, 60, 15);
+    rect(GAME_WIDTH / 2 - 120, 540 + verticalOffset, 240, 60, 15);
     noStroke();
-    fill(249, 249, 242);
+    fill(14, 39, 59);
     textSize(28);
-    text("LOGOUT", GAME_WIDTH / 2, 670 + verticalOffset);
-  }
+    let buttonText = savedGameState ? "RESUME" : "START";
+    text(buttonText, GAME_WIDTH / 2, 570 + verticalOffset);
   
-  // Dodany komunikat o opcjonalnym logowaniu po angielsku
-  fill(147, 208, 207, 200);
-textSize(16);
-textStyle(NORMAL);
-text("Login optional – save scores and claim NFT on Superseed Testnet", GAME_WIDTH / 2, 700 + verticalOffset);
-text("after completing 10 orbits and defeating the boss!", GAME_WIDTH / 2, 720 + verticalOffset);
+    // Login/Logout Button
+    if (!isConnected) {
+      gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 120, 620 + verticalOffset, GAME_WIDTH / 2 + 120, 620 + verticalOffset);
+      gradient.addColorStop(0, "#0E273B");
+      gradient.addColorStop(1, "#808386");
+      drawingContext.fillStyle = gradient;
+      stroke(147, 208, 207);
+      strokeWeight(3);
+      rect(GAME_WIDTH / 2 - 120, 620 + verticalOffset, 240, 60, 15);
+      noStroke();
+      fill(249, 249, 242);
+      textSize(28);
+      text("LOGIN (Opt.)", GAME_WIDTH / 2, 650 + verticalOffset);
+    } else {
+      fill(93, 208, 207);
+      textSize(18);
+      text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 610 + verticalOffset);
+      gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 120, 640 + verticalOffset, GAME_WIDTH / 2 + 120, 640 + verticalOffset);
+      gradient.addColorStop(0, "#FF4500");
+      gradient.addColorStop(1, "#FFD700");
+      drawingContext.fillStyle = gradient;
+      stroke(147, 208, 207);
+      strokeWeight(3);
+      rect(GAME_WIDTH / 2 - 120, 640 + verticalOffset, 240, 60, 15);
+      noStroke();
+      fill(249, 249, 242);
+      textSize(28);
+      text("LOGOUT", GAME_WIDTH / 2, 670 + verticalOffset);
+    }
   
-  // *** DODANY PRZYCISK "Claim Your NFT" ***
-  if (hasCompletedGame) {
-    fill(93, 208, 207);
-    rect(GAME_WIDTH / 2 - 120, 740 + verticalOffset, 240, 60, 10); // Przesunięto w dół o 20 pikseli
-    fill(255);
-    textSize(24);
-    text("Claim Your NFT", GAME_WIDTH / 2, 770 + verticalOffset); // Przesunięto w dół o 20 pikseli
-  }
-  
-  // Komunikat o wersji desktopowej
-  fill(255, 50, 50, 255);
-  textSize(32);
-  textStyle(BOLD);
-  drawingContext.shadowBlur = 0;
-  text("NOTICE: Desktop only for now", GAME_WIDTH / 2, 820 + verticalOffset);
-  fill(255, 215, 0, 200);
-  textSize(16);
-  text("Mobile version coming soon!", GAME_WIDTH / 2, 850 + verticalOffset);
-
-
-  
-
-  // Przyciski boczne (INFO, TUTORIAL, VIEW INTRO, ACHIEVEMENTS) – bez zmian
-  let sideButtonWidth = 120;
-  let sideButtonHeight = 50;
-  let sideButtonX = GAME_WIDTH - sideButtonWidth - 20;
-
-  gradient = drawingContext.createLinearGradient(sideButtonX, 200, sideButtonX + sideButtonWidth, 200);
-  gradient.addColorStop(0, "#93D0CF");
-  gradient.addColorStop(1, "#FFD700");
-  drawingContext.fillStyle = gradient;
-  stroke(147, 208, 207);
-  strokeWeight(2);
-  rect(sideButtonX, 200, sideButtonWidth, sideButtonHeight, 10);
-  noStroke();
-  fill(14, 39, 59);
-  textSize(16);
-  textAlign(CENTER, CENTER);
-  text("INFO", sideButtonX + sideButtonWidth / 2, 200 + sideButtonHeight / 2);
-
-  gradient = drawingContext.createLinearGradient(sideButtonX, 260, sideButtonX + sideButtonWidth, 260);
-  gradient.addColorStop(0, "#93D0CF");
-  gradient.addColorStop(1, "#FFD700");
-  drawingContext.fillStyle = gradient;
-  stroke(147, 208, 207);
-  strokeWeight(2);
-  rect(sideButtonX, 260, sideButtonWidth, sideButtonHeight, 10);
-  noStroke();
-  fill(14, 39, 59);
-  textSize(16);
-  textAlign(CENTER, CENTER);
-  text("TUTORIAL", sideButtonX + sideButtonWidth / 2, 260 + sideButtonHeight / 2);
-
-  gradient = drawingContext.createLinearGradient(sideButtonX, 320, sideButtonX + sideButtonWidth, 320);
-  gradient.addColorStop(0, "#93D0CF");
-  gradient.addColorStop(1, "#FFD700");
-  drawingContext.fillStyle = gradient;
-  stroke(147, 208, 207);
-  strokeWeight(2);
-  rect(sideButtonX, 320, sideButtonWidth, sideButtonHeight, 10);
-  noStroke();
-  fill(14, 39, 59);
-  textSize(16);
-  textAlign(CENTER, CENTER);
-  text("VIEW INTRO", sideButtonX + sideButtonWidth / 2, 320 + sideButtonHeight / 2);
-
-  gradient = drawingContext.createLinearGradient(sideButtonX, 380, sideButtonX + sideButtonWidth, 380);
-  gradient.addColorStop(0, "#93D0CF");
-  gradient.addColorStop(1, "#FFD700");
-  drawingContext.fillStyle = gradient;
-  stroke(147, 208, 207);
-  strokeWeight(2);
-  rect(sideButtonX, 380, sideButtonWidth, sideButtonHeight, 10);
-  noStroke();
-  fill(14, 39, 59);
-  textSize(16);
-  textAlign(CENTER, CENTER);
-  text("ACHIEVEMENTS", sideButtonX + sideButtonWidth / 2, 380 + sideButtonHeight / 2);
-
-  // WhiteLogo w lewym dolnym rogu z miganiem i napisem – bez zmian
-  let whiteLogoScale = 1 + sin(millis() * 0.003) * 0.05;
-  let whiteLogoWidth = 100 * whiteLogoScale;
-  let whiteLogoHeight = 50 * whiteLogoScale;
-  let whiteLogoX = 20;
-  let whiteLogoY = GAME_HEIGHT - 100;
-  image(whiteLogo, whiteLogoX, whiteLogoY, whiteLogoWidth, whiteLogoHeight);
-
-  fill(147, 208, 207, 200);
-  textSize(12);
-  textStyle(NORMAL);
-  textAlign(LEFT, TOP);
-  text("Powered by Superseed", whiteLogoX, whiteLogoY + whiteLogoHeight + 5);
-
-  textAlign(CENTER, BASELINE);
-
-  // Informacja o twórcy w prawym dolnym rogu z efektem hover – bez zmian
-  let adjustedMouseX = mouseX - (width - GAME_WIDTH) / 2;
-  let adjustedMouseY = mouseY - (height - GAME_HEIGHT) / 2;
-  let creatorTextX = GAME_WIDTH - 140;
-  let creatorTextY = GAME_HEIGHT - 30;
-  let creatorTextWidth = 120;
-  let creatorTextHeight = 20;
-  if (
-    adjustedMouseX >= creatorTextX &&
-    adjustedMouseX <= creatorTextX + creatorTextWidth &&
-    adjustedMouseY >= creatorTextY &&
-    adjustedMouseY <= creatorTextY + creatorTextHeight
-  ) {
-    fill(255, 215, 0, 200);
-  } else {
+    // Dodany komunikat o opcjonalnym logowaniu po angielsku
     fill(147, 208, 207, 200);
+    textSize(16);
+    textStyle(NORMAL);
+    text("Login optional – save scores and claim NFT on Superseed Testnet", GAME_WIDTH / 2, 700 + verticalOffset);
+    text("after completing 10 orbits and defeating the boss!", GAME_WIDTH / 2, 720 + verticalOffset);
+  
+    // Przycisk "Claim Your NFT"
+    if (hasCompletedGame) {
+      fill(93, 208, 207);
+      rect(GAME_WIDTH / 2 - 120, 740 + verticalOffset, 240, 60, 10);
+      fill(255);
+      textSize(24);
+      text("Claim Your NFT", GAME_WIDTH / 2, 770 + verticalOffset);
+    }
+  
+    // Komunikat o wersji desktopowej
+    fill(255, 50, 50, 255);
+    textSize(32);
+    textStyle(BOLD);
+    drawingContext.shadowBlur = 0;
+    text("NOTICE: Desktop only for now", GAME_WIDTH / 2, 820 + verticalOffset);
+    fill(255, 215, 0, 200);
+    textSize(16);
+    text("Mobile version coming soon!", GAME_WIDTH / 2, 850 + verticalOffset);
+  
+    // Przyciski boczne (INFO, TUTORIAL, VIEW INTRO, ACHIEVEMENTS)
+    let sideButtonWidth = 120;
+    let sideButtonHeight = 50;
+    let sideButtonX = GAME_WIDTH - sideButtonWidth - 20;
+  
+    gradient = drawingContext.createLinearGradient(sideButtonX, 200, sideButtonX + sideButtonWidth, 200);
+    gradient.addColorStop(0, "#93D0CF");
+    gradient.addColorStop(1, "#FFD700");
+    drawingContext.fillStyle = gradient;
+    stroke(147, 208, 207);
+    strokeWeight(2);
+    rect(sideButtonX, 200, sideButtonWidth, sideButtonHeight, 10);
+    noStroke();
+    fill(14, 39, 59);
+    textSize(16);
+    textAlign(CENTER, CENTER);
+    text("INFO", sideButtonX + sideButtonWidth / 2, 200 + sideButtonHeight / 2);
+  
+    gradient = drawingContext.createLinearGradient(sideButtonX, 260, sideButtonX + sideButtonWidth, 260);
+    gradient.addColorStop(0, "#93D0CF");
+    gradient.addColorStop(1, "#FFD700");
+    drawingContext.fillStyle = gradient;
+    stroke(147, 208, 207);
+    strokeWeight(2);
+    rect(sideButtonX, 260, sideButtonWidth, sideButtonHeight, 10);
+    noStroke();
+    fill(14, 39, 59);
+    textSize(16);
+    textAlign(CENTER, CENTER);
+    text("TUTORIAL", sideButtonX + sideButtonWidth / 2, 260 + sideButtonHeight / 2);
+  
+    gradient = drawingContext.createLinearGradient(sideButtonX, 320, sideButtonX + sideButtonWidth, 320);
+    gradient.addColorStop(0, "#93D0CF");
+    gradient.addColorStop(1, "#FFD700");
+    drawingContext.fillStyle = gradient;
+    stroke(147, 208, 207);
+    strokeWeight(2);
+    rect(sideButtonX, 320, sideButtonWidth, sideButtonHeight, 10);
+    noStroke();
+    fill(14, 39, 59);
+    textSize(16);
+    textAlign(CENTER, CENTER);
+    text("VIEW INTRO", sideButtonX + sideButtonWidth / 2, 320 + sideButtonHeight / 2);
+  
+    gradient = drawingContext.createLinearGradient(sideButtonX, 380, sideButtonX + sideButtonWidth, 380);
+    gradient.addColorStop(0, "#93D0CF");
+    gradient.addColorStop(1, "#FFD700");
+    drawingContext.fillStyle = gradient;
+    stroke(147, 208, 207);
+    strokeWeight(2);
+    rect(sideButtonX, 380, sideButtonWidth, sideButtonHeight, 10);
+    noStroke();
+    fill(14, 39, 59);
+    textSize(16);
+    textAlign(CENTER, CENTER);
+    text("ACHIEVEMENTS", sideButtonX + sideButtonWidth / 2, 380 + sideButtonHeight / 2);
+  
+    // WhiteLogo w lewym dole z miganiem i napisem
+    let whiteLogoScale = 1 + sin(millis() * 0.003) * 0.05;
+    let whiteLogoWidth = 100 * whiteLogoScale;
+    let whiteLogoHeight = 50 * whiteLogoScale;
+    let whiteLogoX = 20;
+    let whiteLogoY = GAME_HEIGHT - 100;
+    image(whiteLogo, whiteLogoX, whiteLogoY, whiteLogoWidth, whiteLogoHeight);
+  
+    fill(147, 208, 207, 200);
+    textSize(12);
+    textStyle(NORMAL);
+    textAlign(LEFT, TOP);
+    text("Powered by Superseed", whiteLogoX, whiteLogoY + whiteLogoHeight + 5);
+  
+    textAlign(CENTER, BASELINE);
+  
+    // Informacja o twórcy w prawym dolnym rogu z efektem hover
+    let adjustedMouseX = mouseX - (width - GAME_WIDTH) / 2;
+    let adjustedMouseY = mouseY - (height - GAME_HEIGHT) / 2;
+    let creatorTextX = GAME_WIDTH - 140;
+    let creatorTextY = GAME_HEIGHT - 30;
+    let creatorTextWidth = 120;
+    let creatorTextHeight = 20;
+    if (
+      adjustedMouseX >= creatorTextX &&
+      adjustedMouseX <= creatorTextX + creatorTextWidth &&
+      adjustedMouseY >= creatorTextY &&
+      adjustedMouseY <= creatorTextY + creatorTextHeight
+    ) {
+      fill(255, 215, 0, 200);
+    } else {
+      fill(147, 208, 207, 200);
+    }
+    textSize(12);
+    textStyle(NORMAL);
+    textAlign(RIGHT, BOTTOM);
+    text("Created by CratosPL", GAME_WIDTH - 20, GAME_HEIGHT - 10);
+  
+    pop();
   }
-  textSize(12);
-  textStyle(NORMAL);
-  textAlign(RIGHT, BOTTOM);
-  text("Created by CratosPL", GAME_WIDTH - 20, GAME_HEIGHT - 10);
-}
 
   else if (gameState === "achievements") {
     // Tło modala
