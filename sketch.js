@@ -1202,7 +1202,7 @@ function draw() {
     if (isMobile) {
       // Układ mobilny (pionowy)
       let yPos = 50 * scaleFactor;
-  
+    
       // Tło z Twoimi obliczeniami (dostosowane do mobile)
       let aspectRatio = 1536 / 1024; // ≈ 1.5
       let bgX, bgY, bgWidth, bgHeight;
@@ -1219,27 +1219,27 @@ function draw() {
       drawingContext.filter = 'blur(3px)'; // Mniejszy blur na mobile dla wydajności
       image(cosmicMenuBg, bgX, bgY, bgWidth, bgHeight);
       drawingContext.filter = 'none';
-  
+    
       // Winietka (uproszczona na mobile)
       let vignette = drawingContext.createRadialGradient(
-        GAME_WIDTH / 2,
-        GAME_HEIGHT / 2,
-        0,
-        GAME_WIDTH / 2,
-        GAME_HEIGHT / 2,
+        GAME_WIDTH / 2, 
+        GAME_HEIGHT / 2, 
+        0, 
+        GAME_WIDTH / 2, 
+        GAME_HEIGHT / 2, 
         Math.max(GAME_WIDTH, GAME_HEIGHT) / 2
       );
       vignette.addColorStop(0, "rgba(14, 39, 59, 0)");
       vignette.addColorStop(1, "rgba(14, 39, 59, 0.7)");
       drawingContext.fillStyle = vignette;
       rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 10 * scaleFactor);
-  
+    
       // Pulsujące logo na górze (mniejsze na mobile)
       let logoScale = 1 + sin(millis() * 0.002) * 0.05;
       let logoSize = 200 * scaleFactor * logoScale; // Zmniejszone logo
       image(mainLogo, GAME_WIDTH / 2 - logoSize / 2, yPos, logoSize, logoSize);
       yPos += logoSize + spacing;
-  
+    
       // Choose Your Seed Color
       fill(249, 249, 242);
       textSize(24 * scaleFactor);
@@ -1267,7 +1267,7 @@ function draw() {
       }
       noStroke();
       yPos += colorBoxSize + spacing;
-  
+    
       // Enter Your Nick
       fill(249, 249, 242);
       textSize(24 * scaleFactor);
@@ -1288,7 +1288,7 @@ function draw() {
       }
       noStroke();
       yPos += buttonHeight + spacing;
-  
+    
       // Start Button
       let gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - buttonWidth / 2, yPos, GAME_WIDTH / 2 + buttonWidth / 2, yPos);
       gradient.addColorStop(0, "#93D0CF");
@@ -1303,7 +1303,7 @@ function draw() {
       let buttonText = savedGameState ? "RESUME" : "START";
       text(buttonText, GAME_WIDTH / 2, yPos + buttonHeight / 2);
       yPos += buttonHeight + spacing;
-  
+    
       // Login/Logout Button
       if (!isConnected) {
         gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - buttonWidth / 2, yPos, GAME_WIDTH / 2 + buttonWidth / 2, yPos);
@@ -1336,7 +1336,7 @@ function draw() {
         text("LOGOUT", GAME_WIDTH / 2, yPos + buttonHeight / 2);
         yPos += buttonHeight + spacing;
       }
-  
+    
       // Przycisk "Claim Your NFT"
       if (hasCompletedGame) {
         fill(93, 208, 207);
@@ -1346,76 +1346,12 @@ function draw() {
         text("Claim Your NFT", GAME_WIDTH / 2, yPos + buttonHeight / 2);
         yPos += buttonHeight + spacing;
       }
-  
-      // Komunikat o wersji taki sam jak w desktopie
-      fill(255, 50, 50, 255);
-      textSize(32 * scaleFactor);
-      textStyle(BOLD);
-      drawingContext.shadowBlur = 0;
-      text("NOTICE: Desktop only for now", GAME_WIDTH / 2, yPos);
-      yPos += 30 * scaleFactor; // Odstęp między liniami
+    
+      // Uproszczony komunikat o wersji mobilnej
       fill(255, 215, 0, 200);
       textSize(16 * scaleFactor);
       textStyle(NORMAL);
-      text("Mobile version coming soon!", GAME_WIDTH / 2, yPos);
-  
-      // Boczne przyciski w układzie mobilnym (pionowo w prawym rogu)
-      let sideButtonWidth = 80 * scaleFactor; // Mniejsza szerokość na mobile
-      let sideButtonHeight = 40 * scaleFactor; // Mniejsza wysokość
-      let sideButtonX = GAME_WIDTH - sideButtonWidth - 10 * scaleFactor; // Blisko prawej krawędzi
-      let sideButtonY = 10 * scaleFactor; // Zaczynamy od góry
-  
-      gradient = drawingContext.createLinearGradient(sideButtonX, sideButtonY, sideButtonX + sideButtonWidth, sideButtonY);
-      gradient.addColorStop(0, "#93D0CF");
-      gradient.addColorStop(1, "#FFD700");
-      drawingContext.fillStyle = gradient;
-      stroke(147, 208, 207);
-      strokeWeight(2 * scaleFactor);
-      rect(sideButtonX, sideButtonY, sideButtonWidth, sideButtonHeight, 5 * scaleFactor);
-      noStroke();
-      fill(14, 39, 59);
-      textSize(12 * scaleFactor); // Mniejszy tekst
-      textAlign(CENTER, CENTER);
-      text("INFO", sideButtonX + sideButtonWidth / 2, sideButtonY + sideButtonHeight / 2);
-  
-      sideButtonY += sideButtonHeight + 5 * scaleFactor; // Mały odstęp między przyciskami
-      gradient = drawingContext.createLinearGradient(sideButtonX, sideButtonY, sideButtonX + sideButtonWidth, sideButtonY);
-      gradient.addColorStop(0, "#93D0CF");
-      gradient.addColorStop(1, "#FFD700");
-      drawingContext.fillStyle = gradient;
-      stroke(147, 208, 207);
-      strokeWeight(2 * scaleFactor);
-      rect(sideButtonX, sideButtonY, sideButtonWidth, sideButtonHeight, 5 * scaleFactor);
-      noStroke();
-      fill(14, 39, 59);
-      textSize(12 * scaleFactor);
-      text("TUTORIAL", sideButtonX + sideButtonWidth / 2, sideButtonY + sideButtonHeight / 2);
-  
-      sideButtonY += sideButtonHeight + 5 * scaleFactor;
-      gradient = drawingContext.createLinearGradient(sideButtonX, sideButtonY, sideButtonX + sideButtonWidth, sideButtonY);
-      gradient.addColorStop(0, "#93D0CF");
-      gradient.addColorStop(1, "#FFD700");
-      drawingContext.fillStyle = gradient;
-      stroke(147, 208, 207);
-      strokeWeight(2 * scaleFactor);
-      rect(sideButtonX, sideButtonY, sideButtonWidth, sideButtonHeight, 5 * scaleFactor);
-      noStroke();
-      fill(14, 39, 59);
-      textSize(12 * scaleFactor);
-      text("INTRO", sideButtonX + sideButtonWidth / 2, sideButtonY + sideButtonHeight / 2); // Skrócone dla miejsca
-  
-      sideButtonY += sideButtonHeight + 5 * scaleFactor;
-      gradient = drawingContext.createLinearGradient(sideButtonX, sideButtonY, sideButtonX + sideButtonWidth, sideButtonY);
-      gradient.addColorStop(0, "#93D0CF");
-      gradient.addColorStop(1, "#FFD700");
-      drawingContext.fillStyle = gradient;
-      stroke(147, 208, 207);
-      strokeWeight(2 * scaleFactor);
-      rect(sideButtonX, sideButtonY, sideButtonWidth, sideButtonHeight, 5 * scaleFactor);
-      noStroke();
-      fill(14, 39, 59);
-      textSize(12 * scaleFactor);
-      text("ACHIEV.", sideButtonX + sideButtonWidth / 2, sideButtonY + sideButtonHeight / 2); // Skrócone
+      text("Mobile version in progress!", GAME_WIDTH / 2, yPos);
     } else {
       // Układ desktopowy z Twojego kodu, dostosowany do scaleFactor
       let verticalOffset = 100 * scaleFactor;
@@ -3613,7 +3549,7 @@ function mousePressed() {
       let yPos = 50 * scaleFactor;
       let spacing = 20 * scaleFactor;
   
-      // Logo
+      // Logo (pominięte, bo nie klikalne)
       let logoScale = 1 + sin(millis() * 0.002) * 0.05;
       let logoSize = 200 * scaleFactor * logoScale;
       yPos += logoSize + spacing;
@@ -3624,17 +3560,17 @@ function mousePressed() {
       let startX = GAME_WIDTH / 2 - (colorBoxSize * 3 + colorBoxSpacing * 2) / 2;
       if (adjustedMouseY >= yPos && adjustedMouseY <= yPos + colorBoxSize) {
         if (adjustedMouseX >= startX && adjustedMouseX <= startX + colorBoxSize) {
-          seedColor = { r: 0, g: 255, b: 0 };
+          seedColor = { r: 0, g: 255, b: 0 }; // Zielony
         } else if (
           adjustedMouseX >= startX + colorBoxSize + colorBoxSpacing &&
           adjustedMouseX <= startX + colorBoxSize * 2 + colorBoxSpacing
         ) {
-          seedColor = { r: 0, g: 0, b: 255 };
+          seedColor = { r: 0, g: 0, b: 255 }; // Niebieski
         } else if (
           adjustedMouseX >= startX + (colorBoxSize + colorBoxSpacing) * 2 &&
           adjustedMouseX <= startX + (colorBoxSize + colorBoxSpacing) * 2 + colorBoxSize
         ) {
-          seedColor = { r: 255, g: 215, b: 0 };
+          seedColor = { r: 255, g: 215, b: 0 }; // Złoty
         }
       }
       yPos += 30 * scaleFactor + colorBoxSize + spacing;
@@ -3696,7 +3632,7 @@ function mousePressed() {
         isConnected &&
         adjustedMouseX >= GAME_WIDTH / 2 - buttonWidth / 2 &&
         adjustedMouseX <= GAME_WIDTH / 2 + buttonWidth / 2 &&
-        adjustedMouseY >= yPos + 30 * scaleFactor &&
+        adjustedMouseY >= yPos + 30 * scaleFactor && // Dodatkowe przesunięcie dla "Connected"
         adjustedMouseY <= yPos + 30 * scaleFactor + buttonHeight
       ) {
         console.log("Logout clicked - disconnecting wallet");
@@ -3724,38 +3660,175 @@ function mousePressed() {
         gameState = "endgame";
         console.log("Returning to claim NFT!");
       }
+    } else {
+      // Układ desktopowy
+      let verticalOffset = 100 * scaleFactor;
   
-      // Boczne przyciski w układzie mobilnym
-      let sideButtonWidth = 80 * scaleFactor;
-      let sideButtonHeight = 40 * scaleFactor;
-      let sideButtonX = GAME_WIDTH - sideButtonWidth - 10 * scaleFactor;
-      let sideButtonY = 10 * scaleFactor;
+      // Kliknięcie na whiteLogo w lewym dolnym rogu
+      let whiteLogoX = 20 * scaleFactor;
+      let whiteLogoY = GAME_HEIGHT - 100 * scaleFactor;
+      let whiteLogoWidth = 100 * scaleFactor;
+      let whiteLogoHeight = 50 * scaleFactor;
+      if (
+        adjustedMouseX >= whiteLogoX &&
+        adjustedMouseX <= whiteLogoX + whiteLogoWidth &&
+        adjustedMouseY >= whiteLogoY &&
+        adjustedMouseY <= whiteLogoY + whiteLogoHeight
+      ) {
+        window.open("https://www.superseed.xyz/", "_blank");
+      }
   
+      // Kliknięcie na "Created by CratosPL" w prawym dolnym rogu
+      let creatorTextX = GAME_WIDTH - 140 * scaleFactor;
+      let creatorTextY = GAME_HEIGHT - 30 * scaleFactor;
+      let creatorTextWidth = 120 * scaleFactor;
+      let creatorTextHeight = 20 * scaleFactor;
+      if (
+        adjustedMouseX >= creatorTextX &&
+        adjustedMouseX <= creatorTextX + creatorTextWidth &&
+        adjustedMouseY >= creatorTextY &&
+        adjustedMouseY <= creatorTextY + creatorTextHeight
+      ) {
+        window.open("https://x.com/sebbtgk", "_blank");
+      }
+  
+      // Choose Your Seed Color
+      let colorBoxSize = 60 * scaleFactor;
+      let colorBoxSpacing = 30 * scaleFactor;
+      let startX = GAME_WIDTH / 2 - (colorBoxSize * 3 + colorBoxSpacing * 2) / 2;
+      if (
+        adjustedMouseY >= 350 * scaleFactor + verticalOffset &&
+        adjustedMouseY <= 350 * scaleFactor + verticalOffset + colorBoxSize
+      ) {
+        if (adjustedMouseX >= startX && adjustedMouseX <= startX + colorBoxSize) {
+          seedColor = { r: 0, g: 255, b: 0 }; // Zielony
+        } else if (
+          adjustedMouseX >= startX + colorBoxSize + colorBoxSpacing &&
+          adjustedMouseX <= startX + colorBoxSize * 2 + colorBoxSpacing
+        ) {
+          seedColor = { r: 0, g: 0, b: 255 }; // Niebieski
+        } else if (
+          adjustedMouseX >= startX + (colorBoxSize + colorBoxSpacing) * 2 &&
+          adjustedMouseX <= startX + (colorBoxSize + colorBoxSpacing) * 2 + colorBoxSize
+        ) {
+          seedColor = { r: 255, g: 215, b: 0 }; // Złoty
+        }
+      }
+  
+      // Enter Your Nick
+      if (
+        adjustedMouseY >= 470 * scaleFactor + verticalOffset &&
+        adjustedMouseY <= 470 * scaleFactor + verticalOffset + buttonHeight &&
+        adjustedMouseX >= GAME_WIDTH / 2 - buttonWidth / 2 &&
+        adjustedMouseX <= GAME_WIDTH / 2 + buttonWidth / 2
+      ) {
+        isTypingNick = true;
+      } else {
+        isTypingNick = false;
+      }
+  
+      // Start/Resume Button
+      if (
+        adjustedMouseX >= GAME_WIDTH / 2 - buttonWidth / 2 &&
+        adjustedMouseX <= GAME_WIDTH / 2 + buttonWidth / 2 &&
+        adjustedMouseY >= 540 * scaleFactor + verticalOffset &&
+        adjustedMouseY <= 540 * scaleFactor + verticalOffset + buttonHeight
+      ) {
+        if (savedGameState) {
+          console.log("Resuming paused game...");
+          resumeGame();
+        } else {
+          console.log("Starting new game from howToPlay...");
+          startGame();
+        }
+      }
+  
+      // Login/Logout Button
+      if (
+        !isConnected &&
+        adjustedMouseX >= GAME_WIDTH / 2 - buttonWidth / 2 &&
+        adjustedMouseX <= GAME_WIDTH / 2 + buttonWidth / 2 &&
+        adjustedMouseY >= 620 * scaleFactor + verticalOffset &&
+        adjustedMouseY <= 620 * scaleFactor + verticalOffset + buttonHeight
+      ) {
+        console.log("Login clicked - initiating wallet connection");
+        connectWallet(true)
+          .then(() => {
+            if (isConnected) {
+              console.log("Wallet connected successfully");
+              if (savedGameState) resumeGame();
+              else startGame();
+            } else {
+              console.log("Wallet connection failed");
+            }
+          })
+          .catch((error) => {
+            console.error("Wallet connection error:", error);
+            connectionError = "Connection failed: " + error.message;
+          });
+      } else if (
+        isConnected &&
+        adjustedMouseX >= GAME_WIDTH / 2 - buttonWidth / 2 &&
+        adjustedMouseX <= GAME_WIDTH / 2 + buttonWidth / 2 &&
+        adjustedMouseY >= 640 * scaleFactor + verticalOffset &&
+        adjustedMouseY <= 640 * scaleFactor + verticalOffset + buttonHeight
+      ) {
+        console.log("Logout clicked - disconnecting wallet");
+        if (web3Modal) {
+          web3Modal.clearCachedProvider();
+          localStorage.removeItem("WEB3_CONNECT_CACHED_PROVIDER");
+          localStorage.removeItem("walletconnect");
+        }
+        isConnected = false;
+        userAddress = null;
+        provider = null;
+        signer = null;
+        connectionError = null;
+      }
+  
+      // Claim Your NFT
+      if (
+        hasCompletedGame &&
+        adjustedMouseX >= GAME_WIDTH / 2 - buttonWidth / 2 &&
+        adjustedMouseX <= GAME_WIDTH / 2 + buttonWidth / 2 &&
+        adjustedMouseY >= 740 * scaleFactor + verticalOffset &&
+        adjustedMouseY <= 740 * scaleFactor + verticalOffset + buttonHeight
+      ) {
+        gameState = "endgame";
+        console.log("Returning to claim NFT!");
+      }
+  
+      // Boczne przyciski
+      let sideButtonWidth = 120 * scaleFactor;
+      let sideButtonHeight = 50 * scaleFactor;
+      let sideButtonX = GAME_WIDTH - sideButtonWidth - 20 * scaleFactor;
+  
+      // INFO Button
       if (
         adjustedMouseX >= sideButtonX &&
         adjustedMouseX <= sideButtonX + sideButtonWidth &&
-        adjustedMouseY >= sideButtonY &&
-        adjustedMouseY <= sideButtonY + sideButtonHeight
+        adjustedMouseY >= 200 * scaleFactor &&
+        adjustedMouseY <= 200 * scaleFactor + sideButtonHeight
       ) {
         gameState = "info";
       }
   
-      sideButtonY += sideButtonHeight + 5 * scaleFactor;
+      // Tutorial Button
       if (
         adjustedMouseX >= sideButtonX &&
         adjustedMouseX <= sideButtonX + sideButtonWidth &&
-        adjustedMouseY >= sideButtonY &&
-        adjustedMouseY <= sideButtonY + sideButtonHeight
+        adjustedMouseY >= 260 * scaleFactor &&
+        adjustedMouseY <= 260 * scaleFactor + sideButtonHeight
       ) {
         gameState = "tutorial";
       }
   
-      sideButtonY += sideButtonHeight + 5 * scaleFactor;
+      // View Intro Button
       if (
         adjustedMouseX >= sideButtonX &&
         adjustedMouseX <= sideButtonX + sideButtonWidth &&
-        adjustedMouseY >= sideButtonY &&
-        adjustedMouseY <= sideButtonY + sideButtonHeight
+        adjustedMouseY >= 320 * scaleFactor &&
+        adjustedMouseY <= 320 * scaleFactor + sideButtonHeight
       ) {
         gameState = "intro";
         introState = 0;
@@ -3766,12 +3839,12 @@ function mousePressed() {
         }
       }
   
-      sideButtonY += sideButtonHeight + 5 * scaleFactor;
+      // Achievements Button
       if (
         adjustedMouseX >= sideButtonX &&
         adjustedMouseX <= sideButtonX + sideButtonWidth &&
-        adjustedMouseY >= sideButtonY &&
-        adjustedMouseY <= sideButtonY + sideButtonHeight
+        adjustedMouseY >= 380 * scaleFactor &&
+        adjustedMouseY <= 380 * scaleFactor + sideButtonHeight
       ) {
         gameState = "achievements";
       }
