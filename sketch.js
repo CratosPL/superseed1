@@ -126,6 +126,7 @@ let yellowRingActive = false; // Do usunięcia w nowej mechanice, jeśli niepotr
 let syncTimer = 0; // Timer dla pasywnego SYNC (do usunięcia w nowej mechanice, jeśli niepotrzebne)
 let bossDefeatTimer = 0;
 let zoomLevel = 1;
+let bossDefeatedSuccessfully = false; 
 
 const ethersLib = window.ethers;
 
@@ -2001,28 +2002,39 @@ text(savedGameState ? "RESUME SYNC" : "START SYNC", GAME_WIDTH / 2, buttonY + TU
         backgroundMusic.stop();
         backgroundMusic2.stop();
         backgroundMusic3.loop();
-        musicSwitched = "level10"; // Nowa wartość dla poziomu 10
-      } else if (level >= 5 && level <= 9 && musicSwitched !== "level5-9") {
-        console.log("Switching to backgroundMusic2 at level 5-9");
+        musicSwitched = "level10";
+      } else if (level === 9 && musicSwitched !== "level9") {
+        console.log("Switching to backgroundMusic3 at level 9");
+        backgroundMusic.stop();
+        backgroundMusic2.stop();
+        backgroundMusic3.loop();
+        musicSwitched = "level9";
+      } else if (level >= 5 && level <= 8 && musicSwitched !== "level5-8") {
+        console.log("Switching to backgroundMusic2 at level 5-8");
         backgroundMusic.stop();
         backgroundMusic3.stop();
         backgroundMusic2.loop();
-        musicSwitched = "level5-9"; // Wartość dla poziomów 5-9
+        musicSwitched = "level5-8";
       } else if (level < 5 && musicSwitched !== "level1-4") {
         console.log("Switching to backgroundMusic at level 1-4");
         backgroundMusic2.stop();
         backgroundMusic3.stop();
         backgroundMusic.loop();
-        musicSwitched = "level1-4"; // Wartość dla poziomów 1-4
+        musicSwitched = "level1-4";
       }
-  
+    
       // Upewnij się, że odpowiednia muzyka gra
       if (level === 10 && !backgroundMusic3.isPlaying()) {
         console.log("Restarting backgroundMusic3 as it stopped unexpectedly");
         backgroundMusic.stop();
         backgroundMusic2.stop();
         backgroundMusic3.loop();
-      } else if (level >= 5 && level <= 9 && !backgroundMusic2.isPlaying()) {
+      } else if (level === 9 && !backgroundMusic3.isPlaying()) {
+        console.log("Restarting backgroundMusic3 as it stopped unexpectedly");
+        backgroundMusic.stop();
+        backgroundMusic2.stop();
+        backgroundMusic3.loop();
+      } else if (level >= 5 && level <= 8 && !backgroundMusic2.isPlaying()) {
         console.log("Restarting backgroundMusic2 as it stopped unexpectedly");
         backgroundMusic.stop();
         backgroundMusic3.stop();
@@ -2601,11 +2613,11 @@ if (gameState === "supernova") {
   } // Zamknięcie bloku if (gameState === "playing" || gameState === "supernova") – poprawne miejsce
 
   else if (gameState === "gameOver") {
-    // Zatrzymanie muzyki bossa i powrót do tła
     if (bossMusic.isPlaying()) {
-      bossMusic.stop();
-      backgroundMusic.loop(); // Wróć do muzyki tła
+        bossMusic.stop();
+        backgroundMusic.loop(); // Wróć do muzyki tła
     }
+    bossDefeatedSuccessfully = false; // Reset znacznika przy przegranej
   
     // Gradient background (Twój istniejący kod)
     let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -2719,15 +2731,25 @@ if (gameState === "supernova") {
   }
 } else if (gameState === "endgame") {
   if (!hasCompletedGame) {
-    localStorage.setItem('hasCompletedGame', 'true');
-    hasCompletedGame = true;
+      localStorage.setItem('hasCompletedGame', 'true');
+      hasCompletedGame = true;
   }
-  // Zatrzymanie muzyki bossa i powrót do tła
-  if (bossMusic.isPlaying()) {
-    bossMusic.stop();
-    backgroundMusic.loop(); // Wróć do muzyki tła
+
+  // Warunkowa obsługa muzyki
+  if (!bossDefeatedSuccessfully) {
+      // Jeśli nie pokonano bossa, zatrzymaj bossMusic i uruchom backgroundMusic
+      if (bossMusic.isPlaying()) {
+          bossMusic.stop();
+          backgroundMusic.loop();
+      }
+  } else {
+      // Jeśli pokonano bossa, pozwól bossMusic grać dalej
+      if (soundInitialized && !bossMusic.isPlaying()) {
+          bossMusic.loop();
+      }
   }
-  // Tło z gradientem – bez zmian
+
+  // Tło z gradientem
   let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
   gradient.addColorStop(0, "#0E273B");
   gradient.addColorStop(1, "#93D0CF");
@@ -3065,51 +3087,74 @@ else if (gameState === "bossFight") {
   // Zwycięstwo
   if (bossHealth <= 0) {
     gameState = "bossDefeated";
-    bossDefeatTimer = 7500;
+    bossDefeatTimer = 30000;
     zoomLevel = 1;
     playerBullets = [];
     bossBullets = [];
+    bossDefeatedSuccessfully = true; // Ustaw znacznik na true
     if (soundInitialized) {
-      bossMusic.stop();
-      levelSound.play();
+        levelSound.play();
     }
-  }
+}
   if (lifeBar <= 0) {
     gameState = "gameOver";
     shakeTimer = 500;
   }
 } else if (gameState === "bossDefeated") {
-  introClicked = true; // Skip to endgame on click
-  // Background
   let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
   gradient.addColorStop(0, "#0E273B");
   gradient.addColorStop(1, "#93D0CF");
   drawingContext.fillStyle = gradient;
   rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
+  if (soundInitialized && !bossMusic.isPlaying()) {
+      bossMusic.loop(); // Upewnij się, że bossMusic gra
+  }
+
   // Animation
   bossDefeatTimer -= deltaTime;
-  if (bossDefeatTimer > 3000) { // First 4.5 seconds: stage 9 + zoom
+  
+  // Pierwsze 10 sekund: Zoom na bossa w fazie 9 (przed zniszczeniem)
+  if (bossDefeatTimer > 20000) { // 30s - 20s = 10s na zoom
     zoomLevel = lerp(zoomLevel, 2, 0.05);
     push();
     translate(GAME_WIDTH / 2, GAME_HEIGHT / 2);
     scale(zoomLevel);
     image(bossImage, -bossSize / 2, -bossSize / 2, bossSize, bossSize, 9 * bossFrameWidth, 0, bossFrameWidth, bossFrameWidth);
     pop();
-  } else { // Last 3 seconds: stage 10 + new text
+    fill(255, 215, 0, 200); // Złoty kolor
+    textSize(20);
+    textAlign(CENTER, CENTER);
+    text("Click to skip to message", GAME_WIDTH / 2, GAME_HEIGHT - 50); // Zaktualizowana wskazówka
+  } 
+  // Ostatnie 20 sekund: Zniszczony boss (faza 10) z komunikatem
+  else if (bossDefeatTimer > 0) {
     push();
     translate(GAME_WIDTH / 2, GAME_HEIGHT / 2);
     scale(zoomLevel);
     image(bossImage, -bossSize / 2, -bossSize / 2, bossSize, bossSize, 10 * bossFrameWidth, 0, bossFrameWidth, bossFrameWidth);
     pop();
-    fill(255, 215, 0, 200);
-    textSize(32);
+    fill(255, 215, 0, 200); // Złoty kolor dla wyróżnienia
+    let pulseScale = 1 + sin(millis() * 0.005) * 0.1; // Subtelne pulsowanie tekstu
+    textSize(32 * pulseScale);
     textStyle(BOLD);
     textAlign(CENTER, CENTER);
-    text("Centralized Overseer defeated.\nSuperseed Testnet lives...\nThe true network (MAINNET) awakens...", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 100);
+    text(
+      "The Centralized Overseer lies shattered!\n" +
+      "Superseed Testnet blazes as the cosmic spark ignites,\n" +
+      "a triumph over control, a beacon of freedom.\n" +
+      "Yet the true war for Superseed Mainnet looms ahead—\n" +
+      "new missions await to forge an unshackled future.\n" +
+      "Claim your reward and rise for the battles to come!",
+      GAME_WIDTH / 2, 
+      GAME_HEIGHT / 2
+    );
+    // Wskazówka o pominięciu na dole
+    textSize(20);
+    text("Click to claim your NFT now", GAME_WIDTH / 2, GAME_HEIGHT - 50);
   }
 
-  // Decay particles
+  // Decay particles dla efektu
   if (random(1) < 0.2) {
     particles.push(new Particle(GAME_WIDTH / 2, GAME_HEIGHT / 2, { r: 255, g: 215, b: 0 }));
   }
@@ -3119,13 +3164,13 @@ else if (gameState === "bossFight") {
     if (particles[i].isDead()) particles.splice(i, 1);
   }
 
-  // Transition to endgame
-  if (bossDefeatTimer <= -27000 || introClicked) { // -27000 = 3000 - 30000 (30s after initial 3s)
+  // Przejście do endgame po zakończeniu animacji lub kliknięciu w fazie tekstu
+  if (bossDefeatTimer <= 0 || introClicked) {
     gameState = "endgame";
     mainnetBadgeEarned = true;
     bossActive = false;
-    if (soundInitialized) backgroundMusic.loop();
-  }
+    // Nie zmieniaj muzyki tutaj – bossMusic gra dalej
+}
 }
 pop(); // Zamknięcie push() z początku draw()
 } // Zamknięcie funkcji draw()
@@ -3643,48 +3688,48 @@ function mousePressed() {
     }
   } else if (gameState === "start" || gameState === "win" || gameState === "endgame") {
     if (gameState === "endgame") {
-      let claimButtonX = GAME_WIDTH / 2 - 100;
-      let claimButtonY = GAME_HEIGHT / 2 + 320;
-      if (
-        adjustedMouseX >= claimButtonX &&
-        adjustedMouseX <= claimButtonX + 200 &&
-        adjustedMouseY >= claimButtonY &&
-        adjustedMouseY <= claimButtonY + 50
-      ) {
-        console.log("Claim NFT clicked!");
-        alert("NFT claim functionality coming soon on Superseed Network!");
-      }
-      let backButtonX = GAME_WIDTH / 2 - 100;
-      let backButtonY = GAME_HEIGHT / 2 + 400;
-      if (
-        adjustedMouseX >= backButtonX &&
-        adjustedMouseX <= backButtonX + 200 &&
-        adjustedMouseY >= backButtonY &&
-        adjustedMouseY <= backButtonY + 50
-      ) {
-        gameState = "howToPlay";
-        console.log("Back to menu clicked from endgame!");
-        if (soundInitialized) {
-          backgroundMusic.stop();
-          backgroundMusic2.stop();
-          backgroundMusic3.stop();
-          if (!introMusic.isPlaying()) {
-            introMusic.loop();
-          }
+        let claimButtonX = GAME_WIDTH / 2 - 100;
+        let claimButtonY = GAME_HEIGHT / 2 + 320;
+        if (
+            adjustedMouseX >= claimButtonX &&
+            adjustedMouseX <= claimButtonX + 200 &&
+            adjustedMouseY >= claimButtonY &&
+            adjustedMouseY <= claimButtonY + 50
+        ) {
+            console.log("Claim NFT clicked!");
+            alert("NFT claim functionality coming soon on Superseed Network!");
         }
-      }
+        let backButtonX = GAME_WIDTH / 2 - 100;
+        let backButtonY = GAME_HEIGHT / 2 + 400;
+        if (
+            adjustedMouseX >= backButtonX &&
+            adjustedMouseX <= backButtonX + 200 &&
+            adjustedMouseY >= backButtonY &&
+            adjustedMouseY <= backButtonY + 50
+        ) {
+            gameState = "howToPlay";
+            console.log("Back to menu clicked from endgame!");
+            if (soundInitialized) {
+                backgroundMusic.stop();
+                backgroundMusic2.stop();
+                backgroundMusic3.stop();
+                bossMusic.stop(); // Dodaj zatrzymanie bossMusic
+                introMusic.stop(); // Zatrzymaj introMusic, aby uniknąć nakładania
+                introMusic.loop(); // Uruchom introMusic od nowa
+            }
+        }
     } else if (gameState === "start") {
-      startGame();
+        startGame();
     } else if (gameState === "win") {
-      gameState = "playing";
-      score = 0;
-      combo = 0;
-      comboBar = 0;
-      warpTimer = 0;
-      lastPulse = millis();
-      console.log(`Continuing to Orbit ${level}`);
+        gameState = "playing";
+        score = 0;
+        combo = 0;
+        comboBar = 0;
+        warpTimer = 0;
+        lastPulse = millis();
+        console.log(`Continuing to Orbit ${level}`);
     }
-  } else if (gameState === "gameOver") {
+} else if (gameState === "gameOver") {
     let buttonX = GAME_WIDTH / 2 - RESTART_BUTTON_WIDTH / 2;
     let relaunchButtonY = GAME_HEIGHT / 2 + 180;
     let shareScoreButtonY = GAME_HEIGHT / 2 + 260;
@@ -3916,12 +3961,25 @@ function mousePressed() {
       }
     }
   } // Koniec bloku "playing" || "supernova" || "bossFight"
-  // NOWA OBSŁUGA DLA "bossIntro"
-  else if (gameState === "bossIntro") {
-    introClicked = true; // Ustaw introClicked na true po kliknięciu
+   // NOWA OBSŁUGA DLA "bossIntro"
+   else if (gameState === "bossIntro") {
+    introClicked = true;
     console.log("Boss intro clicked – skipping to bossFight");
   }
+
+  // NOWA OBSŁUGA DLA "bossDefeated"
+  else if (gameState === "bossDefeated") {
+    if (bossDefeatTimer > 20000) {
+      bossDefeatTimer = 20000; // Pomija zoom i przechodzi do fazy tekstu
+      console.log("Zoom phase skipped – showing defeat message");
+    } else {
+      introClicked = true; // Przechodzi do endgame z fazy tekstu
+      console.log("Defeat message skipped – moving to endgame");
+    }
+  }
 }
+
+
 
 // Pozostałe funkcje bez zmian
 function keyPressed() {
