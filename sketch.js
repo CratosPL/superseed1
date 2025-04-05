@@ -1693,9 +1693,9 @@ function draw() {
   else if (gameState === "tutorial") {
     // Gradient Background (cały ekran)
     let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    gradient.addColorStop(0, "#0E273B"); // Tangaroa
-    gradient.addColorStop(0.5, "#93D0CF"); // Morning Glory
-    gradient.addColorStop(1, "#808386"); // Aluminium
+    gradient.addColorStop(0, "#0E273B");
+    gradient.addColorStop(0.5, "#93D0CF");
+    gradient.addColorStop(1, "#808386");
     drawingContext.fillStyle = gradient;
     rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
   
@@ -1704,7 +1704,7 @@ function draw() {
     let modalHeight = GAME_HEIGHT * 0.8;
     let modalX = (GAME_WIDTH - modalWidth) / 2;
     let modalY = (GAME_HEIGHT - modalHeight) / 2;
-    fill(14, 39, 59, 230); // Tangaroa z przezroczystością
+    fill(14, 39, 59, 230);
     rect(modalX, modalY, modalWidth, modalHeight, 20);
   
     // Pulsująca ramka wokół modala
@@ -1715,18 +1715,21 @@ function draw() {
     rect(modalX, modalY, modalWidth, modalHeight, 20);
     noStroke();
   
-    // Obszar przewijania (clipping)
+    // Obszar przewijania z poprawnym clippingiem
     push();
-    translate(0, -scrollOffset); // Przesunięcie treści w pionie
+    // Najpierw ustawiamy clipping w oryginalnych współrzędnych modala
+    drawingContext.save(); // Zapisz obecny stan kontekstu
     drawingContext.beginPath();
     drawingContext.rect(modalX, modalY, modalWidth, modalHeight);
     drawingContext.clip();
+    // Teraz przesuwamy treść
+    translate(0, -scrollOffset);
   
     let contentY = modalY + 20; // Start treści w modalu
     textAlign(CENTER, BASELINE);
   
     // Tytuł z logo
-    fill(249, 249, 242); // White (#F9F9F2)
+    fill(249, 249, 242);
     textSize(32);
     textStyle(BOLD);
     text("Superseed Cosmic Network", modalX + modalWidth / 2, contentY);
@@ -1736,7 +1739,7 @@ function draw() {
     contentY += 100;
   
     // Objective Section
-    fill(93, 208, 207); // Morning Glory
+    fill(93, 208, 207);
     textSize(22);
     textStyle(BOLD);
     text("Objective", modalX + modalWidth / 2, contentY);
@@ -1873,9 +1876,10 @@ function draw() {
     // Oblicz maxScrollOffset
     maxScrollOffset = max(0, contentY - modalHeight - modalY);
   
+    drawingContext.restore(); // Przywróć stan kontekstu (usuń clipping)
     pop();
   
-    // Pasek przewijania
+    // Pasek przewijania (poza clippingiem)
     let scrollBarHeight = modalHeight * (modalHeight / (contentY - modalY));
     let scrollBarY = map(scrollOffset, 0, maxScrollOffset, modalY, modalY + modalHeight - scrollBarHeight);
     fill(93, 208, 207, 150);
@@ -1908,8 +1912,6 @@ function draw() {
     textSize(10);
     textAlign(CENTER, BASELINE);
     text("#SuperseedGrok3 – Powered by xAI", GAME_WIDTH / 2, GAME_HEIGHT - 15);
-
-    
   }
 
   
