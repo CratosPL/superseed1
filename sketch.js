@@ -2739,88 +2739,89 @@ if (gameState === "supernova") {
 
   else if (gameState === "gameOver") {
     if (bossMusic.isPlaying()) {
-        bossMusic.stop();
-        backgroundMusic.loop(); // Wróć do muzyki tła
+      bossMusic.stop();
+      backgroundMusic.loop(); // Wróć do muzyki tła
     }
     bossDefeatedSuccessfully = false; // Reset znacznika przy przegranej
   
-    // Gradient background (Twój istniejący kod)
+    // Gradient background
     let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
     gradient.addColorStop(0, "rgb(14, 39, 59)");
     gradient.addColorStop(1, "rgb(93, 208, 207)");
     drawingContext.fillStyle = gradient;
     rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
   
-    // Main game logo (superseedcosmicnet-gamelogo.png) at the top
-    let mainLogoWidth = 400;
-    let mainLogoHeight = 400;
-    image(mainLogo, GAME_WIDTH / 2 - mainLogoWidth / 2, 50, mainLogoWidth, mainLogoHeight);
+    // Main game logo (zmniejszone i dostosowane do ekranu)
+    let mainLogoWidth = min(300 * scaleFactor, 400); // Maksymalnie 400, skalowane na mniejszych ekranach
+    let mainLogoHeight = mainLogoWidth; // Kwadratowe proporcje
+    let logoY = 20 * scaleFactor; // Góra ekranu z małym marginesem
+    image(mainLogo, GAME_WIDTH / 2 - mainLogoWidth / 2, logoY, mainLogoWidth, mainLogoHeight);
   
-    // Game Over message and score
+    // Game Over message and score (przesunięte w górę)
     fill(255, 200);
-    textSize(40);
+    textSize(40 * scaleFactor);
     textStyle(BOLD);
-    text(`Network Down!\nScore: ${score.toFixed(1)}`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 100);
+    let messageY = logoY + mainLogoHeight + 20 * scaleFactor; // Pod logo z marginesem
+    text(`Network Down!\nScore: ${score.toFixed(1)}`, GAME_WIDTH / 2, messageY);
   
-    // Leaderboard title
-    textSize(24);
-    text("Top Synced Networks", GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20);
+    // Leaderboard title (przesunięty w górę)
+    textSize(24 * scaleFactor);
+    let leaderboardTitleY = messageY + 60 * scaleFactor; // Margines od wiadomości
+    text("Top Synced Networks", GAME_WIDTH / 2, leaderboardTitleY);
   
-    // Leaderboard entries
-    textSize(18);
+    // Leaderboard entries (kompaktowy układ)
+    textSize(18 * scaleFactor);
+    let leaderboardStartY = leaderboardTitleY + 20 * scaleFactor;
     for (let i = 0; i < leaderboard.length; i++) {
-      text(`${i + 1}. ${leaderboard[i].nick}: ${leaderboard[i].score}`, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 20 + i * 30);
+      text(`${i + 1}. ${leaderboard[i].nick}: ${leaderboard[i].score}`, GAME_WIDTH / 2, leaderboardStartY + i * 25 * scaleFactor);
     }
   
-    // Mainnet Badge (if earned)
+    // Mainnet Badge (if earned) – przesunięte niżej
+    let badgeY = leaderboardStartY + leaderboard.length * 25 * scaleFactor + 20 * scaleFactor;
     if (mainnetBadgeEarned) {
-      drawMainnetBadge(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 150, 60); // Środek, pod komunikatami
+      drawMainnetBadge(GAME_WIDTH / 2, badgeY, 60 * scaleFactor); // Skalowana odznaka
       fill(255, 215, 0, 200);
-      textSize(16);
-      text("Mainnet Badge", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 200); // Tekst pod odznaką
-      let buttonX = GAME_WIDTH / 2 - RESTART_BUTTON_WIDTH / 2;
-      let buttonY = GAME_HEIGHT / 2 + 270;
-      let gradient = drawingContext.createLinearGradient(buttonX, buttonY, buttonX + RESTART_BUTTON_WIDTH, buttonY);
-      gradient.addColorStop(0, "rgb(93, 208, 207)");
-      gradient.addColorStop(1, "rgb(255, 215, 0)");
-      drawingContext.fillStyle = gradient;
-      rect(buttonX, buttonY, RESTART_BUTTON_WIDTH, RESTART_BUTTON_HEIGHT, 10);
-      fill(255, 215, 0);
-      textSize(20);
-      text("SHARE BADGE", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 295);
+      textSize(16 * scaleFactor);
+      text("Mainnet Badge", GAME_WIDTH / 2, badgeY + 30 * scaleFactor);
     }
   
-    // Buttons: Relaunch, Share Score, and Menu
+    // Buttons: Relaunch, Share Score, Menu (kompaktowy układ pionowy)
     let buttonX = GAME_WIDTH / 2 - RESTART_BUTTON_WIDTH / 2;
-    
+    let buttonSpacing = isMobile ? 10 * scaleFactor : 20 * scaleFactor; // Mniejszy odstęp na mobile
+    let firstButtonY = badgeY + (mainnetBadgeEarned ? 60 * scaleFactor : 40 * scaleFactor); // Margines od badge lub leaderboardu
+  
     // Relaunch Button
     fill(93, 208, 207);
-    rect(buttonX, GAME_HEIGHT / 2 + 180, RESTART_BUTTON_WIDTH, RESTART_BUTTON_HEIGHT, 10);
+    rect(buttonX, firstButtonY, RESTART_BUTTON_WIDTH, RESTART_BUTTON_HEIGHT, 10 * scaleFactor);
     fill(255);
-    textSize(30);
+    textSize(20 * scaleFactor);
     textAlign(CENTER, CENTER);
-    text("RELAUNCH", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 180 + RESTART_BUTTON_HEIGHT / 2);
+    text("RELAUNCH", GAME_WIDTH / 2, firstButtonY + RESTART_BUTTON_HEIGHT / 2);
   
     // Share Score Button
+    let shareButtonY = firstButtonY + RESTART_BUTTON_HEIGHT + buttonSpacing;
     fill(93, 208, 207);
-    rect(buttonX, GAME_HEIGHT / 2 + 260, RESTART_BUTTON_WIDTH, RESTART_BUTTON_HEIGHT, 10);
+    rect(buttonX, shareButtonY, RESTART_BUTTON_WIDTH, RESTART_BUTTON_HEIGHT, 10 * scaleFactor);
     fill(255);
-    textSize(20);
-    textAlign(CENTER, CENTER);
-    text("SHARE SCORE", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 260 + RESTART_BUTTON_HEIGHT / 2);
+    textSize(20 * scaleFactor);
+    text("SHARE SCORE", GAME_WIDTH / 2, shareButtonY + RESTART_BUTTON_HEIGHT / 2);
   
-    // Menu Button (NEW)
-    fill(147, 208, 207); // Lekko jaśniejszy odcień dla wyróżnienia
-    rect(buttonX, GAME_HEIGHT / 2 + 340, RESTART_BUTTON_WIDTH, RESTART_BUTTON_HEIGHT, 10);
+    // Menu Button
+    let menuButtonY = shareButtonY + RESTART_BUTTON_HEIGHT + buttonSpacing;
+    fill(147, 208, 207);
+    rect(buttonX, menuButtonY, RESTART_BUTTON_WIDTH, RESTART_BUTTON_HEIGHT, 10 * scaleFactor);
     fill(255);
-    textSize(20);
-    textAlign(CENTER, CENTER);
-    text("MENU", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 340 + RESTART_BUTTON_HEIGHT / 2);
+    textSize(20 * scaleFactor);
+    text("MENU", GAME_WIDTH / 2, menuButtonY + RESTART_BUTTON_HEIGHT / 2);
   
-    // Small White logo at the bottom
-    let whiteLogoWidth = 100;
-    let whiteLogoHeight = 50;
-    image(whiteLogo, GAME_WIDTH / 2 - whiteLogoWidth / 2, GAME_HEIGHT - whiteLogoHeight - 20, whiteLogoWidth, whiteLogoHeight);
+    // Small White logo at the bottom (przesunięte w dół)
+    let whiteLogoWidth = 100 * scaleFactor;
+    let whiteLogoHeight = 50 * scaleFactor;
+    let whiteLogoY = GAME_HEIGHT - whiteLogoHeight - 10 * scaleFactor; // Dolny margines
+    if (menuButtonY + RESTART_BUTTON_HEIGHT + 20 * scaleFactor > whiteLogoY) {
+      whiteLogoY = menuButtonY + RESTART_BUTTON_HEIGHT + 20 * scaleFactor; // Zapobiega nakładaniu
+    }
+    image(whiteLogo, GAME_WIDTH / 2 - whiteLogoWidth / 2, whiteLogoY, whiteLogoWidth, whiteLogoHeight);
   }
    else if (gameState === "win") {
   // Tło z gradientem dla spójności
