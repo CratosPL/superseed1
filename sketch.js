@@ -3425,7 +3425,7 @@ function resumeGame() {
 }
 
 function mouseWheel(event) {
-  if (gameState === "tutorial") {
+  if (gameState === "tutorial" || gameState === "info") {
     scrollOffset += event.delta;
     scrollOffset = constrain(scrollOffset, 0, maxScrollOffset);
   }
