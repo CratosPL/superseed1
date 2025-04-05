@@ -2579,88 +2579,89 @@ if (gameState === "supernova") {
 
   else if (gameState === "gameOver") {
     if (bossMusic.isPlaying()) {
-        bossMusic.stop();
-        backgroundMusic.loop(); // Wróć do muzyki tła
+      bossMusic.stop();
+      backgroundMusic.loop(); // Wróć do muzyki tła
     }
     bossDefeatedSuccessfully = false; // Reset znacznika przy przegranej
   
-    // Gradient background (Twój istniejący kod)
+    // Gradient background
     let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
     gradient.addColorStop(0, "rgb(14, 39, 59)");
     gradient.addColorStop(1, "rgb(93, 208, 207)");
     drawingContext.fillStyle = gradient;
     rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
   
-    // Main game logo (superseedcosmicnet-gamelogo.png) at the top
-    let mainLogoWidth = 400;
-    let mainLogoHeight = 400;
-    image(mainLogo, GAME_WIDTH / 2 - mainLogoWidth / 2, 50, mainLogoWidth, mainLogoHeight);
+    // Main game logo – zmniejszone z 400x400 na 280x280
+    let mainLogoWidth = 280; // Zmniejszone z 400
+    let mainLogoHeight = 280; // Zmniejszone z 400
+    image(mainLogo, GAME_WIDTH / 2 - mainLogoWidth / 2, 20, mainLogoWidth, mainLogoHeight); // Przesunięte z 50 na 20
   
-    // Game Over message and score
+    // Game Over message and score – mniejszy tekst i przesunięte w górę
     fill(255, 200);
-    textSize(40);
+    textSize(32); // Zmniejszone z 40
     textStyle(BOLD);
-    text(`Network Down!\nScore: ${score.toFixed(1)}`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 100);
+    text(`Network Down!\nScore: ${score.toFixed(1)}`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 120); // Przesunięte z -100 na -120
   
-    // Leaderboard title
-    textSize(24);
-    text("Top Synced Networks", GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20);
+    // Leaderboard title – mniejszy tekst
+    textSize(20); // Zmniejszone z 24
+    text("Top Synced Networks", GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50); // Przesunięte z -20 na -50
   
-    // Leaderboard entries
-    textSize(18);
+    // Leaderboard entries – mniejszy tekst i mniejsze odstępy
+    textSize(16); // Zmniejszone z 18
     for (let i = 0; i < leaderboard.length; i++) {
-      text(`${i + 1}. ${leaderboard[i].nick}: ${leaderboard[i].score}`, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 20 + i * 30);
+      text(`${i + 1}. ${leaderboard[i].nick}: ${leaderboard[i].score}`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 30 + i * 25); // Odstęp z 30 na 25, przesunięte z 20 na -30
     }
   
-    // Mainnet Badge (if earned)
+    // Mainnet Badge (jeśli zdobyta) – przesunięte w dół i zmniejszone
     if (mainnetBadgeEarned) {
-      drawMainnetBadge(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 150, 60); // Środek, pod komunikatami
+      drawMainnetBadge(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 90, 50); // Zmniejszone z 60 na 50, przesunięte z 150 na 90
       fill(255, 215, 0, 200);
-      textSize(16);
-      text("Mainnet Badge", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 200); // Tekst pod odznaką
-      let buttonX = GAME_WIDTH / 2 - RESTART_BUTTON_WIDTH / 2;
-      let buttonY = GAME_HEIGHT / 2 + 270;
-      let gradient = drawingContext.createLinearGradient(buttonX, buttonY, buttonX + RESTART_BUTTON_WIDTH, buttonY);
+      textSize(14); // Zmniejszone z 16
+      text("Mainnet Badge", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 130); // Przesunięte z 200 na 130
+  
+      // "SHARE BADGE" Button – mniejszy rozmiar
+      let buttonX = GAME_WIDTH / 2 - 90; // Zmniejszone z 100 na 90
+      let buttonY = GAME_HEIGHT / 2 + 150; // Przesunięte z 270 na 150
+      let gradient = drawingContext.createLinearGradient(buttonX, buttonY, buttonX + 180, buttonY); // Szerokość z 200 na 180
       gradient.addColorStop(0, "rgb(93, 208, 207)");
       gradient.addColorStop(1, "rgb(255, 215, 0)");
       drawingContext.fillStyle = gradient;
-      rect(buttonX, buttonY, RESTART_BUTTON_WIDTH, RESTART_BUTTON_HEIGHT, 10);
+      rect(buttonX, buttonY, 180, 40, 10); // Szerokość z 200 na 180, wysokość z 50 na 40
       fill(255, 215, 0);
-      textSize(20);
-      text("SHARE BADGE", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 295);
+      textSize(18); // Zmniejszone z 20
+      text("SHARE BADGE", GAME_WIDTH / 2, buttonY + 20); // Wyśrodkowanie w pionie
     }
   
-    // Buttons: Relaunch, Share Score, and Menu
-    let buttonX = GAME_WIDTH / 2 - RESTART_BUTTON_WIDTH / 2;
-    
+    // Buttons: Relaunch, Share Score, and Menu – mniejsze rozmiary i mniejsze odstępy
+    let buttonX = GAME_WIDTH / 2 - 90; // Zmniejszone z 100 na 90
+    let baseButtonY = mainnetBadgeEarned ? GAME_HEIGHT / 2 + 200 : GAME_HEIGHT / 2 + 100; // Dynamiczna pozycja w zależności od odznaki
+  
     // Relaunch Button
     fill(93, 208, 207);
-    rect(buttonX, GAME_HEIGHT / 2 + 180, RESTART_BUTTON_WIDTH, RESTART_BUTTON_HEIGHT, 10);
+    rect(buttonX, baseButtonY, 180, 40, 10); // Szerokość z 200 na 180, wysokość z 50 na 40
     fill(255);
-    textSize(30);
+    textSize(22); // Zmniejszone z 30
     textAlign(CENTER, CENTER);
-    text("RELAUNCH", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 180 + RESTART_BUTTON_HEIGHT / 2);
+    text("RELAUNCH", GAME_WIDTH / 2, baseButtonY + 20); // Wyśrodkowanie w pionie
   
     // Share Score Button
     fill(93, 208, 207);
-    rect(buttonX, GAME_HEIGHT / 2 + 260, RESTART_BUTTON_WIDTH, RESTART_BUTTON_HEIGHT, 10);
+    rect(buttonX, baseButtonY + 50, 180, 40, 10); // Przesunięte z 260 na +50 od baseButtonY
     fill(255);
-    textSize(20);
-    textAlign(CENTER, CENTER);
-    text("SHARE SCORE", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 260 + RESTART_BUTTON_HEIGHT / 2);
+    textSize(18); // Zmniejszone z 20
+    text("SHARE SCORE", GAME_WIDTH / 2, baseButtonY + 70); // Wyśrodkowanie w pionie
   
-    // Menu Button (NEW)
-    fill(147, 208, 207); // Lekko jaśniejszy odcień dla wyróżnienia
-    rect(buttonX, GAME_HEIGHT / 2 + 340, RESTART_BUTTON_WIDTH, RESTART_BUTTON_HEIGHT, 10);
+    // Menu Button
+    fill(147, 208, 207);
+    rect(buttonX, baseButtonY + 100, 180, 40, 10); // Przesunięte z 340 na +100 od baseButtonY
     fill(255);
-    textSize(20);
-    textAlign(CENTER, CENTER);
-    text("MENU", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 340 + RESTART_BUTTON_HEIGHT / 2);
+    textSize(18); // Zmniejszone z 20
+    text("MENU", GAME_WIDTH / 2, baseButtonY + 120); // Wyśrodkowanie w pionie
   
-    // Small White logo at the bottom
+    // Small White logo at the bottom – bez zmian, ale przesunięte w górę
     let whiteLogoWidth = 100;
     let whiteLogoHeight = 50;
-    image(whiteLogo, GAME_WIDTH / 2 - whiteLogoWidth / 2, GAME_HEIGHT - whiteLogoHeight - 20, whiteLogoWidth, whiteLogoHeight);
+    image(whiteLogo, GAME_WIDTH / 2 - whiteLogoWidth / 2, GAME_HEIGHT - whiteLogoHeight - 10, whiteLogoWidth, whiteLogoHeight); // Przesunięte z -20 na -10
   }
    else if (gameState === "win") {
   // Tło z gradientem dla spójności
@@ -3686,71 +3687,72 @@ function mousePressed() {
         console.log(`Continuing to Orbit ${level}`);
     }
 } else if (gameState === "gameOver") {
-    let buttonX = GAME_WIDTH / 2 - RESTART_BUTTON_WIDTH / 2;
-    let relaunchButtonY = GAME_HEIGHT / 2 + 180;
-    let shareScoreButtonY = GAME_HEIGHT / 2 + 260;
-    let menuButtonY = GAME_HEIGHT / 2 + 340;
+  let buttonX = GAME_WIDTH / 2 - 90; // Zaktualizowane z 100 na 90
+  let baseButtonY = mainnetBadgeEarned ? GAME_HEIGHT / 2 + 200 : GAME_HEIGHT / 2 + 100; // Dynamiczna pozycja
+  let relaunchButtonY = baseButtonY;
+  let shareScoreButtonY = baseButtonY + 50;
+  let menuButtonY = baseButtonY + 100;
 
-    // "RELAUNCH" Button
-    if (
-      adjustedMouseX >= buttonX &&
-      adjustedMouseX <= buttonX + RESTART_BUTTON_WIDTH &&
-      adjustedMouseY >= relaunchButtonY &&
-      adjustedMouseY <= relaunchButtonY + RESTART_BUTTON_HEIGHT
-    ) {
-      console.log("Relaunch clicked!");
-      startGame();
-    }
+  // "RELAUNCH" Button
+  if (
+    adjustedMouseX >= buttonX &&
+    adjustedMouseX <= buttonX + 180 && // Zaktualizowane z 200 na 180
+    adjustedMouseY >= relaunchButtonY &&
+    adjustedMouseY <= relaunchButtonY + 40 // Zaktualizowane z 50 na 40
+  ) {
+    console.log("Relaunch clicked!");
+    startGame();
+  }
 
-    // "SHARE SCORE" Button
-    if (
-      adjustedMouseX >= buttonX &&
-      adjustedMouseX <= buttonX + RESTART_BUTTON_WIDTH &&
-      adjustedMouseY >= shareScoreButtonY &&
-      adjustedMouseY <= shareScoreButtonY + RESTART_BUTTON_HEIGHT
-    ) {
-      console.log("Share Score clicked!");
-      let shareText = `I synced ${score.toFixed(1)} points in Superseed Cosmic Network! #SuperseedGrok3`;
-      navigator.clipboard.writeText(shareText);
-      alert("Score copied to clipboard: " + shareText);
-    }
+  // "SHARE SCORE" Button
+  if (
+    adjustedMouseX >= buttonX &&
+    adjustedMouseX <= buttonX + 180 && // Zaktualizowane z 200 na 180
+    adjustedMouseY >= shareScoreButtonY &&
+    adjustedMouseY <= shareScoreButtonY + 40 // Zaktualizowane z 50 na 40
+  ) {
+    console.log("Share Score clicked!");
+    let shareText = `I synced ${score.toFixed(1)} points in Superseed Cosmic Network! #SuperseedGrok3`;
+    navigator.clipboard.writeText(shareText);
+    alert("Score copied to clipboard: " + shareText);
+  }
 
-    // "MENU" Button
-    if (
-      adjustedMouseX >= buttonX &&
-      adjustedMouseX <= buttonX + RESTART_BUTTON_WIDTH &&
-      adjustedMouseY >= menuButtonY &&
-      adjustedMouseY <= menuButtonY + RESTART_BUTTON_HEIGHT
-    ) {
-      console.log("Menu clicked!");
-      gameState = "howToPlay";
-      savedGameState = null; // Czyść zapisany stan
-      if (soundInitialized) {
-        backgroundMusic.stop();
-        backgroundMusic2.stop();
-        backgroundMusic3.stop();
-        bossMusic.stop();
-        introMusic.stop();
-        introMusic.loop();
-      }
-    }
-
-    // "SHARE BADGE" Button (jeśli zdobyto odznakę)
-    if (mainnetBadgeEarned) {
-      let badgeButtonY = GAME_HEIGHT / 2 + 270; // Dostosuj pozycję, jeśli różni się od "SHARE SCORE"
-      if (
-        adjustedMouseX >= buttonX &&
-        adjustedMouseX <= buttonX + RESTART_BUTTON_WIDTH &&
-        adjustedMouseY >= badgeButtonY &&
-        adjustedMouseY <= badgeButtonY + RESTART_BUTTON_HEIGHT
-      ) {
-        console.log("Share Badge clicked!");
-        let shareText = `I just unlocked the Superseed Mainnet in the Grok3 Game Contest! Join the challenge and win a Tesla! (virtual:) #SuperseedGrok3 [game link]`;
-        navigator.clipboard.writeText(shareText);
-        alert("Badge share text copied to clipboard: " + shareText);
-      }
+  // "MENU" Button
+  if (
+    adjustedMouseX >= buttonX &&
+    adjustedMouseX <= buttonX + 180 && // Zaktualizowane z 200 na 180
+    adjustedMouseY >= menuButtonY &&
+    adjustedMouseY <= menuButtonY + 40 // Zaktualizowane z 50 na 40
+  ) {
+    console.log("Menu clicked!");
+    gameState = "howToPlay";
+    savedGameState = null; // Czyść zapisany stan
+    if (soundInitialized) {
+      backgroundMusic.stop();
+      backgroundMusic2.stop();
+      backgroundMusic3.stop();
+      bossMusic.stop();
+      introMusic.stop();
+      introMusic.loop();
     }
   }
+
+  // "SHARE BADGE" Button (jeśli zdobyta odznaka)
+  if (mainnetBadgeEarned) {
+    let badgeButtonY = GAME_HEIGHT / 2 + 150; // Zaktualizowane z 270 na 150
+    if (
+      adjustedMouseX >= buttonX &&
+      adjustedMouseX <= buttonX + 180 && // Zaktualizowane z 200 na 180
+      adjustedMouseY >= badgeButtonY &&
+      adjustedMouseY <= badgeButtonY + 40 // Zaktualizowane z 50 na 40
+    ) {
+      console.log("Share Badge clicked!");
+      let shareText = `I just unlocked the Superseed Mainnet in the Grok3 Game Contest! Join the challenge and win a Tesla! (virtual:) #SuperseedGrok3 [game link]`;
+      navigator.clipboard.writeText(shareText);
+      alert("Badge share text copied to clipboard: " + shareText);
+    }
+  }
+}
  else if (gameState === "playing" || gameState === "supernova" || gameState === "bossFight") {
     lastClickTime = millis();
     if (inactivityWarning) inactivityWarning = false;
