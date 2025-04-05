@@ -128,6 +128,9 @@ let bossDefeatTimer = 0;
 let zoomLevel = 1;
 let bossDefeatedSuccessfully = false; 
 
+let scrollOffset = 0; // Przesunięcie w pionie
+let maxScrollOffset = 0; // Maksymalne przesunięcie (obliczone na podstawie treści)
+
 const ethersLib = window.ethers;
 
 const SYNC_INTERVAL = 2000; // Do usunięcia w nowej mechanice, jeśli niepotrzebne
@@ -1688,7 +1691,7 @@ function draw() {
   }
 
   else if (gameState === "tutorial") {
-    // Gradient Background z efektem pulsującym
+    // Gradient Background (cały ekran)
     let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
     gradient.addColorStop(0, "#0E273B"); // Tangaroa
     gradient.addColorStop(0.5, "#93D0CF"); // Morning Glory
@@ -1696,34 +1699,49 @@ function draw() {
     drawingContext.fillStyle = gradient;
     rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
   
-    // Pulsująca ramka
+    // Modal
+    let modalWidth = GAME_WIDTH * 0.8;
+    let modalHeight = GAME_HEIGHT * 0.8;
+    let modalX = (GAME_WIDTH - modalWidth) / 2;
+    let modalY = (GAME_HEIGHT - modalHeight) / 2;
+    fill(14, 39, 59, 230); // Tangaroa z przezroczystością
+    rect(modalX, modalY, modalWidth, modalHeight, 20);
+  
+    // Pulsująca ramka wokół modala
     let pulseProgress = sin(millis() * 0.002) * 0.5 + 0.5;
     stroke(93, 208, 207, map(pulseProgress, 0, 1, 100, 255));
     strokeWeight(5 + pulseProgress * 2);
     noFill();
-    rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
+    rect(modalX, modalY, modalWidth, modalHeight, 20);
     noStroke();
   
-    // Wyrównanie tekstu
+    // Obszar przewijania (clipping)
+    push();
+    translate(0, -scrollOffset); // Przesunięcie treści w pionie
+    drawingContext.beginPath();
+    drawingContext.rect(modalX, modalY, modalWidth, modalHeight);
+    drawingContext.clip();
+  
+    let contentY = modalY + 20; // Start treści w modalu
     textAlign(CENTER, BASELINE);
   
-    // Tytuł z logo – mniejszy tekst i przesunięty w górę
+    // Tytuł z logo
     fill(249, 249, 242); // White (#F9F9F2)
-    textSize(32); // Zmniejszone z 36
+    textSize(32);
     textStyle(BOLD);
-    text("Superseed Cosmic Network", GAME_WIDTH / 2, 50); // Przesunięte z 60 na 50
+    text("Superseed Cosmic Network", modalX + modalWidth / 2, contentY);
+    contentY += 40;
     let logoScale = 1 + sin(millis() * 0.003) * 0.1;
-    image(whiteLogo, GAME_WIDTH / 2 - 90, 60, 180 * logoScale, 90 * logoScale); // Zmniejszone z 200x100 na 180x90, przesunięte z 70 na 60
+    image(whiteLogo, modalX + modalWidth / 2 - 90, contentY, 180 * logoScale, 90 * logoScale);
+    contentY += 100;
   
-    let sectionY = 140; // Zmniejszone z 160
-  
-    // Objective Section – mniejszy tekst i odstępy
+    // Objective Section
     fill(93, 208, 207); // Morning Glory
-    textSize(22); // Zmniejszone z 24
+    textSize(22);
     textStyle(BOLD);
-    text("Objective", GAME_WIDTH / 2, sectionY);
+    text("Objective", modalX + modalWidth / 2, contentY);
     fill(249, 249, 242);
-    textSize(14); // Zmniejszone z 16
+    textSize(14);
     textStyle(NORMAL);
     let objectiveLines = [
       "Sync your way through 10 Orbits to fully activate the Superseed Mainnet.",
@@ -1731,18 +1749,17 @@ function draw() {
       "Test your reflexes and strategy in this decentralized challenge."
     ];
     for (let i = 0; i < objectiveLines.length; i++) {
-      text(objectiveLines[i], GAME_WIDTH / 2, sectionY + 20 + i * 18); // Odstęp z 20 na 18
+      text(objectiveLines[i], modalX + modalWidth / 2, contentY + 20 + i * 18);
     }
+    contentY += 90;
   
-    sectionY += 90; // Zmniejszone z 100
-  
-    // Gameplay Section – mniejszy tekst i odstępy
+    // Gameplay Section
     fill(93, 208, 207);
-    textSize(22); // Zmniejszone z 24
+    textSize(22);
     textStyle(BOLD);
-    text("Gameplay Mechanics", GAME_WIDTH / 2, sectionY);
+    text("Gameplay Mechanics", modalX + modalWidth / 2, contentY);
     fill(249, 249, 242);
-    textSize(12); // Zmniejszone z 14
+    textSize(12);
     textStyle(NORMAL);
     let gameplayLines = [
       "Click the pulsing Superseed logo when it glows green to score points.",
@@ -1751,18 +1768,17 @@ function draw() {
       "Adapt to shifting orbits and escalating speeds as you progress."
     ];
     for (let i = 0; i < gameplayLines.length; i++) {
-      text(gameplayLines[i], GAME_WIDTH / 2, sectionY + 18 + i * 18); // Odstęp z 20 na 18
+      text(gameplayLines[i], modalX + modalWidth / 2, contentY + 18 + i * 18);
     }
+    contentY += 110;
   
-    sectionY += 110; // Zmniejszone z 120
-  
-    // Power-Ups Section – mniejszy tekst i odstępy
+    // Power-Ups Section
     fill(93, 208, 207);
-    textSize(22); // Zmniejszone z 24
+    textSize(22);
     textStyle(BOLD);
-    text("Power-Ups & Boosts", GAME_WIDTH / 2, sectionY);
+    text("Power-Ups & Boosts", modalX + modalWidth / 2, contentY);
     fill(249, 249, 242);
-    textSize(12); // Zmniejszone z 14
+    textSize(12);
     textStyle(NORMAL);
     let powerUpLines = [
       "Life (+1 life) – Restore vitality to keep syncing.",
@@ -1775,28 +1791,26 @@ function draw() {
       "Mainnet Wave (clears traps) – Reset the field for a fresh start [Lv7+]."
     ];
     for (let i = 0; i < powerUpLines.length; i++) {
-      text(powerUpLines[i], GAME_WIDTH / 2, sectionY + 18 + i * 18); // Odstęp z 20 na 18
+      text(powerUpLines[i], modalX + modalWidth / 2, contentY + 18 + i * 18);
     }
-    // Ikona Life – mniejsza
-    let iconX = GAME_WIDTH / 2 - 230; // Przesunięte z -250 dla lepszego wyrównania
+    let iconX = modalX + modalWidth / 2 - 230;
     push();
-    translate(iconX, sectionY + 35); // Przesunięte z 40 na 35
-    let lifeGradient = drawingContext.createRadialGradient(0, 0, 0, 0, 0, 15); // Zmniejszone z 20 na 15
+    translate(iconX, contentY + 35);
+    let lifeGradient = drawingContext.createRadialGradient(0, 0, 0, 0, 0, 15);
     lifeGradient.addColorStop(0, "rgb(255, 255, 255)");
     lifeGradient.addColorStop(1, "rgb(0, 255, 0)");
     drawingContext.fillStyle = lifeGradient;
-    star(0, 0, 8, 15 + sin(millis() * 0.005) * 3, 8); // Zmniejszone z 10/20/5 na 8/15/3
+    star(0, 0, 8, 15 + sin(millis() * 0.005) * 3, 8);
     pop();
+    contentY += 180;
   
-    sectionY += 180; // Zmniejszone z 200
-  
-    // Progression Section – mniejszy tekst i odstępy
+    // Progression Section
     fill(93, 208, 207);
-    textSize(22); // Zmniejszone z 24
+    textSize(22);
     textStyle(BOLD);
-    text("Orbit Progression", GAME_WIDTH / 2, sectionY);
+    text("Orbit Progression", modalX + modalWidth / 2, contentY);
     fill(249, 249, 242);
-    textSize(12); // Zmniejszone z 14
+    textSize(12);
     textStyle(NORMAL);
     let progressionLines = [
       "Begin at Orbit 1 – earn 50 points to advance.",
@@ -1805,18 +1819,17 @@ function draw() {
       "Track your progress with the orbit bar at the top."
     ];
     for (let i = 0; i < progressionLines.length; i++) {
-      text(progressionLines[i], GAME_WIDTH / 2, sectionY + 18 + i * 18); // Odstęp z 20 na 18
+      text(progressionLines[i], modalX + modalWidth / 2, contentY + 18 + i * 18);
     }
+    contentY += 110;
   
-    sectionY += 110; // Zmniejszone z 120
-  
-    // Challenges Section – mniejszy tekst i odstępy
+    // Challenges Section
     fill(93, 208, 207);
-    textSize(22); // Zmniejszone z 24
+    textSize(22);
     textStyle(BOLD);
-    text("Special Challenges", GAME_WIDTH / 2, sectionY);
+    text("Special Challenges", modalX + modalWidth / 2, contentY);
     fill(249, 249, 242);
-    textSize(12); // Zmniejszone z 14
+    textSize(12);
     textStyle(NORMAL);
     let challengeLines = [
       "Supernova Rush (Lv5+) – 30s of intensified gameplay with doubled rewards.",
@@ -1825,18 +1838,17 @@ function draw() {
       "Quick Click Challenges – Hit 5 syncs in 3s for bonus points."
     ];
     for (let i = 0; i < challengeLines.length; i++) {
-      text(challengeLines[i], GAME_WIDTH / 2, sectionY + 18 + i * 18); // Odstęp z 20 na 18
+      text(challengeLines[i], modalX + modalWidth / 2, contentY + 18 + i * 18);
     }
+    contentY += 110;
   
-    sectionY += 110; // Zmniejszone z 120
-  
-    // Why Play Section – mniejszy tekst i odstępy
+    // Why Play Section
     fill(93, 208, 207);
-    textSize(22); // Zmniejszone z 24
+    textSize(22);
     textStyle(BOLD);
-    text("Why Join the Network?", GAME_WIDTH / 2, sectionY);
+    text("Why Join the Network?", modalX + modalWidth / 2, contentY);
     fill(249, 249, 242);
-    textSize(12); // Zmniejszone z 14
+    textSize(12);
     textStyle(NORMAL);
     let whyPlayLines = [
       "Experience Superseed’s vision of a decentralized future.",
@@ -1845,50 +1857,64 @@ function draw() {
       "Built with xAI’s Grok 3 – a cosmic collaboration."
     ];
     for (let i = 0; i < whyPlayLines.length; i++) {
-      text(whyPlayLines[i], GAME_WIDTH / 2, sectionY + 18 + i * 18); // Odstęp z 20 na 18
+      text(whyPlayLines[i], modalX + modalWidth / 2, contentY + 18 + i * 18);
     }
+    contentY += 80;
   
-    // Pozycja ostatniego tekstu "a cosmic collaboration"
-    let lastTextY = sectionY + 18 + (whyPlayLines.length - 1) * 18; // Y ostatniej linii
-  
-    // Migające logo superseed-logo.png – mniejsze i przesunięte
+    // Migające logo superseed-logo.png
     push();
-    let logoY = lastTextY + 25; // Zmniejszone z 30 na 25
-    let demoPulse = lerp(70, 100, sin(millis() * 0.002)); // Zmniejszone z 80/120 na 70/100
+    let logoY = contentY + 25;
+    let demoPulse = lerp(70, 100, sin(millis() * 0.002));
     tint(seedColor.r, seedColor.g, seedColor.b, 200);
-    image(logo, GAME_WIDTH / 2, logoY, demoPulse, demoPulse);
+    image(logo, modalX + modalWidth / 2, logoY, demoPulse, demoPulse);
+    pop();
+    contentY += 60;
+  
+    // Oblicz maxScrollOffset
+    maxScrollOffset = max(0, contentY - modalHeight - modalY);
+  
     pop();
   
-    // Start Game Button – mniejszy rozmiar i przesunięty w górę
-    let buttonX = GAME_WIDTH / 2 - 180 / 2; // Zmniejszone z 200 na 180
-    let buttonY = GAME_HEIGHT - 170; // Przesunięte z -190 na -170
-    let isHovering = mouseX > buttonX && mouseX < buttonX + 180 && 
-                     mouseY > buttonY && mouseY < buttonY + 40; // Wysokość z 50 na 40
-    fill(93, 208, 207, isHovering ? 255 : 200);
-    rect(buttonX, buttonY, 180, 40, 15); // Szerokość z 200 na 180, wysokość z 50 na 40
-    fill(249, 249, 242);
-    textSize(22); // Zmniejszone z 26
-    textStyle(BOLD);
-    textAlign(CENTER, CENTER);
-    text(savedGameState ? "RESUME SYNC" : "START SYNC", GAME_WIDTH / 2, buttonY + 20); // Wyśrodkowanie w pionie
+    // Pasek przewijania
+    let scrollBarHeight = modalHeight * (modalHeight / (contentY - modalY));
+    let scrollBarY = map(scrollOffset, 0, maxScrollOffset, modalY, modalY + modalHeight - scrollBarHeight);
+    fill(93, 208, 207, 150);
+    rect(modalX + modalWidth - 20, scrollBarY, 10, scrollBarHeight, 5);
   
-    // Back Button – mniejszy rozmiar
-    let backX = 20;
-    let backY = 20;
-    let isBackHovering = mouseX > backX && mouseX < backX + 100 && 
-                         mouseY > backY && mouseY < backY + 40; // Zmniejszone z 120/50 na 100/40
+    // Back Button
+    let backX = modalX + 20;
+    let backY = modalY + modalHeight - 60;
+    let isBackHovering = mouseX > backX && mouseX < backX + 100 && mouseY > backY && mouseY < backY + 40;
     fill(93, 208, 207, isBackHovering ? 255 : 200);
-    rect(backX, backY, 100, 40, 10); // Zmniejszone z 120/50 na 100/40
+    rect(backX, backY, 100, 40, 10);
     fill(249, 249, 242);
-    textSize(16); // Zmniejszone z 20
+    textSize(16);
     textAlign(CENTER, CENTER);
-    text("BACK", backX + 50, backY + 20); // Wyśrodkowanie w pionie
+    text("BACK", backX + 50, backY + 20);
   
-    // Footer Branding – mniejszy tekst
+    // Start/Resume Button
+    let buttonX = modalX + modalWidth - 200;
+    let buttonY = modalY + modalHeight - 60;
+    let isHovering = mouseX > buttonX && mouseX < buttonX + 180 && mouseY > buttonY && mouseY < buttonY + 40;
+    fill(93, 208, 207, isHovering ? 255 : 200);
+    rect(buttonX, buttonY, 180, 40, 15);
+    fill(249, 249, 242);
+    textSize(22);
+    textStyle(BOLD);
+    text(savedGameState ? "RESUME SYNC" : "START SYNC", buttonX + 90, buttonY + 20);
+  
+    // Footer Branding (poza modalem)
     fill(128, 131, 134, 150);
-    textSize(10); // Zmniejszone z 12
-    text("#SuperseedGrok3 – Powered by xAI", GAME_WIDTH / 2, GAME_HEIGHT - 15); // Przesunięte z -20 na -15
-  } else if (gameState === "start") {
+    textSize(10);
+    textAlign(CENTER, BASELINE);
+    text("#SuperseedGrok3 – Powered by xAI", GAME_WIDTH / 2, GAME_HEIGHT - 15);
+
+    
+  }
+
+  
+  
+  else if (gameState === "start") {
     fill(255);
     textSize(40);
     textStyle(BOLD);
@@ -2458,6 +2484,8 @@ if (isConnected && userAddress) {
   textSize(16);
   text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 160);
 }
+
+
 
 // "Supernova Rush" – przeniesiony na środek, poniżej innych napisów
 if (gameState === "supernova") {
@@ -3372,7 +3400,12 @@ function resumeGame() {
   }
 }
 
-
+function mouseWheel(event) {
+  if (gameState === "tutorial") {
+    scrollOffset += event.delta;
+    scrollOffset = constrain(scrollOffset, 0, maxScrollOffset);
+  }
+}
 
 function mousePressed() {
   let adjustedMouseX = mouseX - (width - GAME_WIDTH) / 2;
@@ -3590,53 +3623,34 @@ function mousePressed() {
       if (soundInitialized && introState <= 2) warpSound.play();
     }
   } else if (gameState === "tutorial") {
-    // Wybór koloru – bez zmian
-    let colorBoxSize = 50;
-    let colorBoxSpacing = 40;
-    let totalWidth = (colorBoxSize * 3) + (colorBoxSpacing * 2);
-    let startX = (GAME_WIDTH - totalWidth) / 2;
-    if (adjustedMouseY >= 120 && adjustedMouseY <= 170) {
-      if (adjustedMouseX >= startX && adjustedMouseX <= startX + colorBoxSize) {
-        seedColor = { r: 0, g: 255, b: 0 };
-      } else if (adjustedMouseX >= startX + colorBoxSize + colorBoxSpacing &&
-                 adjustedMouseX <= startX + colorBoxSize * 2 + colorBoxSpacing) {
-        seedColor = { r: 0, g: 0, b: 255 };
-      } else if (adjustedMouseX >= startX + (colorBoxSize + colorBoxSpacing) * 2 &&
-                 adjustedMouseX <= startX + (colorBoxSize + colorBoxSpacing) * 2 + colorBoxSize) {
-        seedColor = { r: 255, g: 215, b: 0 };
-      }
+    let modalWidth = GAME_WIDTH * 0.8;
+    let modalHeight = GAME_HEIGHT * 0.8;
+    let modalX = (GAME_WIDTH - modalWidth) / 2;
+    let modalY = (GAME_HEIGHT - modalHeight) / 2;
+  
+    // Back Button
+    let backX = modalX + 20;
+    let backY = modalY + modalHeight - 60;
+    if (adjustedMouseX > backX && adjustedMouseX < backX + 100 &&
+        adjustedMouseY > backY && adjustedMouseY < backY + 40) {
+      gameState = "howToPlay";
+      console.log("Back clicked from tutorial modal!");
     }
-
-    // Wpisywanie nicku – bez zmian
-    if (adjustedMouseY >= 180 && adjustedMouseY <= 230 &&
-        adjustedMouseX >= GAME_WIDTH / 2 - 100 && adjustedMouseX <= GAME_WIDTH / 2 + 100) {
-      playerNick = "";
-      isTypingNick = true;
-    } else {
-      isTypingNick = false;
-    }
-
-    // Przycisk "Start Sync" – bez zmian
-    let buttonX = GAME_WIDTH / 2 - TUTORIAL_BUTTON_WIDTH / 2;
-    let buttonY = GAME_HEIGHT - 190;
-    if (adjustedMouseX >= buttonX && adjustedMouseX <= buttonX + TUTORIAL_BUTTON_WIDTH &&
-        adjustedMouseY >= buttonY && adjustedMouseY <= buttonY + TUTORIAL_BUTTON_HEIGHT) {
-      console.log("Start Sync clicked!");
+  
+    // Start/Resume Button
+    let buttonX = modalX + modalWidth - 200;
+    let buttonY = modalY + modalHeight - 60;
+    if (adjustedMouseX > buttonX && adjustedMouseX < buttonX + 180 &&
+        adjustedMouseY > buttonY && adjustedMouseY < buttonY + 40) {
       if (savedGameState) {
         resumeGame();
+        console.log("Resume Sync clicked from tutorial modal!");
       } else {
         startGame();
+        console.log("Start Sync clicked from tutorial modal!");
       }
     }
-
-    // Przycisk "Back" – bez zmian
-    let backX = 20;
-    let backY = 20;
-    if (adjustedMouseX >= backX && adjustedMouseX <= backX + 120 &&
-        adjustedMouseY >= backY && adjustedMouseY <= backY + 50) {
-      console.log("Back clicked!");
-      gameState = "howToPlay";
-    }
+  
 
     if (adjustedMouseX >= 10 && adjustedMouseX <= 110 && adjustedMouseY >= 10 && adjustedMouseY <= 50) {
       gameState = "howToPlay";
