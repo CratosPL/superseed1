@@ -1726,31 +1726,31 @@ function draw() {
     let contentY = modalY + 20; // Start treści w modalu
     textAlign(CENTER, BASELINE);
   
-    // Tytuł z logo
+    // Tytuł z logo – przesunięty niżej o 10 pikseli
     fill(249, 249, 242);
     textSize(32);
     textStyle(BOLD);
-    text("Superseed Cosmic Network", modalX + modalWidth / 2, contentY);
-    contentY += 40;
+    text("Superseed Cosmic Network", modalX + modalWidth / 2, contentY + 10); // +10 pikseli w dół
+    contentY += 50; // Zwiększone z 40 na 50, aby uwzględnić przesunięcie tytułu
     let logoScale = 1 + sin(millis() * 0.003) * 0.1;
     image(whiteLogo, modalX + modalWidth / 2 - 90, contentY, 180 * logoScale, 90 * logoScale);
     contentY += 100;
   
-    // Objective Section
+    // Objective Section – zaktualizowana nagroda na NFT
     fill(93, 208, 207);
     textSize(22);
     textStyle(BOLD);
     text("Objective", modalX + modalWidth / 2, contentY);
     fill(249, 249, 242);
-    textSize(14);
+    textSize(15); // Zwiększone z 14 na 15
     textStyle(NORMAL);
     let objectiveLines = [
       "Sync your way through 10 Orbits to fully activate the Superseed Mainnet.",
-      "Achieve the ultimate sync to join the cosmic leaderboard and enter to win a Tesla! (virtual :)",
+      "Defeat the Cosmic Core Guardian to claim your Superseed Cosmic Core NFT!",
       "Test your reflexes and strategy in this decentralized challenge."
     ];
     for (let i = 0; i < objectiveLines.length; i++) {
-      text(objectiveLines[i], modalX + modalWidth / 2, contentY + 20 + i * 18);
+      text(objectiveLines[i], modalX + modalWidth / 2, contentY + 20 + i * 20); // Zwiększono odstęp z 18 na 20
     }
     contentY += 90;
   
@@ -1760,7 +1760,7 @@ function draw() {
     textStyle(BOLD);
     text("Gameplay Mechanics", modalX + modalWidth / 2, contentY);
     fill(249, 249, 242);
-    textSize(12);
+    textSize(13); // Zwiększone z 12 na 13
     textStyle(NORMAL);
     let gameplayLines = [
       "Click the pulsing Superseed logo when it glows green to score points.",
@@ -1769,30 +1769,30 @@ function draw() {
       "Adapt to shifting orbits and escalating speeds as you progress."
     ];
     for (let i = 0; i < gameplayLines.length; i++) {
-      text(gameplayLines[i], modalX + modalWidth / 2, contentY + 18 + i * 18);
+      text(gameplayLines[i], modalX + modalWidth / 2, contentY + 18 + i * 20); // Zwiększono odstęp z 18 na 20
     }
     contentY += 110;
   
-    // Power-Ups Section
+    // Power-Ups Section – zaktualizowane czasy trwania zgodnie z kodem
     fill(93, 208, 207);
     textSize(22);
     textStyle(BOLD);
     text("Power-Ups & Boosts", modalX + modalWidth / 2, contentY);
     fill(249, 249, 242);
-    textSize(12);
+    textSize(13); // Zwiększone z 12 na 13
     textStyle(NORMAL);
     let powerUpLines = [
       "Life (+1 life) – Restore vitality to keep syncing.",
-      "Gas Nebula (x2 points, 3s) – Double your score in a cosmic cloud.",
-      "Pulse Wave (faster pulse, 3s) – Speed up sync opportunities.",
-      "Orbit Shield (blocks damage, 3s) – Protection from meteor strikes [Lv3+].",
-      "Freeze Nova (freezes pulse, 3s) – Lock the rhythm for precision [Lv3+].",
-      "Meteor Strike (more traps, x2 points, 3s) – High risk, high reward [Lv5+].",
-      "Star Seed (bigger logo, 3s) – Easier clicks, bigger wins [Lv5+].",
+      "Gas Nebula (x2 points, 5s+) – Double your score in a cosmic cloud.",
+      "Pulse Wave (faster pulse, 4s+) – Speed up sync opportunities.",
+      "Orbit Shield (blocks damage, 6s+) – Protection from meteor strikes [Lv3+].",
+      "Freeze Nova (freezes pulse, 10s+) – Lock the rhythm for precision [Lv3+].",
+      "Meteor Strike (more traps, x2 points, 6s+) – High risk, high reward [Lv5+].",
+      "Star Seed (bigger logo, 6s+) – Easier clicks, bigger wins [Lv5+].",
       "Mainnet Wave (clears traps) – Reset the field for a fresh start [Lv7+]."
     ];
     for (let i = 0; i < powerUpLines.length; i++) {
-      text(powerUpLines[i], modalX + modalWidth / 2, contentY + 18 + i * 18);
+      text(powerUpLines[i], modalX + modalWidth / 2, contentY + 18 + i * 20); // Zwiększono odstęp z 18 na 20
     }
     let iconX = modalX + modalWidth / 2 - 230;
     push();
@@ -1811,35 +1811,35 @@ function draw() {
     textStyle(BOLD);
     text("Orbit Progression", modalX + modalWidth / 2, contentY);
     fill(249, 249, 242);
-    textSize(12);
+    textSize(13); // Zwiększone z 12 na 13
     textStyle(NORMAL);
     let progressionLines = [
       "Begin at Orbit 1 – earn 50 points to advance.",
       "Each orbit increases difficulty: faster pulses, more traps.",
-      "Reach Orbit 10 to sync the Mainnet and unlock endgame rewards!",
+      "Reach Orbit 10 and defeat the boss to unlock your NFT reward!",
       "Track your progress with the orbit bar at the top."
     ];
     for (let i = 0; i < progressionLines.length; i++) {
-      text(progressionLines[i], modalX + modalWidth / 2, contentY + 18 + i * 18);
+      text(progressionLines[i], modalX + modalWidth / 2, contentY + 18 + i * 20); // Zwiększono odstęp z 18 na 20
     }
     contentY += 110;
   
-    // Challenges Section
+    // Challenges Section – zaktualizowane wartości
     fill(93, 208, 207);
     textSize(22);
     textStyle(BOLD);
     text("Special Challenges", modalX + modalWidth / 2, contentY);
     fill(249, 249, 242);
-    textSize(12);
+    textSize(13); // Zwiększone z 12 na 13
     textStyle(NORMAL);
     let challengeLines = [
       "Supernova Rush (Lv5+) – 30s of intensified gameplay with doubled rewards.",
-      "Mainnet Challenge (Lv5+, 2min+) – Sync 500 points in 60s for a badge.",
+      "Mainnet Challenge (Lv5+, 2min+) – Sync 400 points in 60s for a badge.",
       "Overload Events (Lv7+) – Random boosts or penalties for 5s.",
-      "Quick Click Challenges – Hit 5 syncs in 3s for bonus points."
+      "Quick Click Challenges – Hit 5 syncs in 12s for bonus points."
     ];
     for (let i = 0; i < challengeLines.length; i++) {
-      text(challengeLines[i], modalX + modalWidth / 2, contentY + 18 + i * 18);
+      text(challengeLines[i], modalX + modalWidth / 2, contentY + 18 + i * 20); // Zwiększono odstęp z 18 na 20
     }
     contentY += 110;
   
@@ -1849,16 +1849,16 @@ function draw() {
     textStyle(BOLD);
     text("Why Join the Network?", modalX + modalWidth / 2, contentY);
     fill(249, 249, 242);
-    textSize(12);
+    textSize(13); // Zwiększone z 12 na 13
     textStyle(NORMAL);
     let whyPlayLines = [
       "Experience Superseed’s vision of a decentralized future.",
       "Master escalating challenges with strategic power-ups.",
-      "Compete for leaderboard glory and real-world rewards!",
+      "Compete for leaderboard glory and an exclusive NFT reward!",
       "Built with xAI’s Grok 3 – a cosmic collaboration."
     ];
     for (let i = 0; i < whyPlayLines.length; i++) {
-      text(whyPlayLines[i], modalX + modalWidth / 2, contentY + 18 + i * 18);
+      text(whyPlayLines[i], modalX + modalWidth / 2, contentY + 18 + i * 20); // Zwiększono odstęp z 18 na 20
     }
     contentY += 80;
   
@@ -1869,10 +1869,10 @@ function draw() {
     tint(seedColor.r, seedColor.g, seedColor.b, 200);
     image(logo, modalX + modalWidth / 2, logoY, demoPulse, demoPulse);
     pop();
-    contentY += 100; // Zwiększono z 60 na 100, aby uwzględnić pełną wysokość logo (max 100 pikseli)
+    contentY += 100; // Bez zmian – pełna wysokość logo
   
     // Oblicz maxScrollOffset z marginesem dla logo
-    let logoMaxHeight = 100; // Maksymalna wysokość pulsującego logo
+    let logoMaxHeight = 100;
     maxScrollOffset = max(0, contentY - modalHeight - modalY + logoMaxHeight);
   
     drawingContext.restore();
