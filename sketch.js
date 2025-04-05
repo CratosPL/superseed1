@@ -1502,187 +1502,187 @@ function draw() {
       bgParticles[i].show(pulseProgress);
     }
   
-    // Nagłówek
-    gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 200, 50, GAME_WIDTH / 2 + 200, 50);
+    // Nagłówek – mniejszy tekst i przesunięty w górę
+    gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 200, 40, GAME_WIDTH / 2 + 200, 40);
     gradient.addColorStop(0, "#93D0CF"); // Morning Glory
     gradient.addColorStop(1, "#FFD700"); // Gold
     drawingContext.fillStyle = gradient;
-    textSize(48);
+    textSize(36); // Zmniejszone z 48
     textStyle(BOLD);
     textAlign(CENTER, CENTER);
-    text("Game Info", GAME_WIDTH / 2, 80);
+    text("Game Info", GAME_WIDTH / 2, 60); // Przesunięte z 80 na 60
   
-    // Sekcje z informacjami
-    let sectionY = 180;
+    // Sekcje z informacjami – mniejsze odstępy i tekst
+    let sectionY = 110; // Zmniejszone z 180
   
     // Scoring
     fill(93, 208, 207); // Morning Glory
-    textSize(32);
+    textSize(24); // Zmniejszone z 32
     textStyle(BOLD);
     text("Scoring", GAME_WIDTH / 2, sectionY);
     fill(249, 249, 242); // White (#F9F9F2)
-    textSize(18);
+    textSize(14); // Zmniejszone z 18
     textStyle(NORMAL);
-    text("Sync the Cosmic Seed when it pulses green!\nStart is easy – sync nodes slowly on Orbit 1 & 2!", GAME_WIDTH / 2, sectionY + 50);
-    sectionY += 120;
+    text("Sync the Cosmic Seed when it pulses green!\nStart is easy – sync nodes slowly on Orbit 1 & 2!", GAME_WIDTH / 2, sectionY + 35); // Odstęp z 50 na 35
+    sectionY += 80; // Zmniejszone z 120
   
     // Combos
     fill(93, 208, 207);
-    textSize(32);
+    textSize(24); // Zmniejszone z 32
     textStyle(BOLD);
     text("Combos", GAME_WIDTH / 2, sectionY);
     fill(249, 249, 242);
-    textSize(18);
+    textSize(14); // Zmniejszone z 18
     textStyle(NORMAL);
-    text("Chain syncs for multipliers (x1, x2, ...).\n15+ syncs grants +1 life.", GAME_WIDTH / 2, sectionY + 50);
-    sectionY += 120;
+    text("Chain syncs for multipliers (x1, x2, ...).\n15+ syncs grants +1 life.", GAME_WIDTH / 2, sectionY + 35); // Odstęp z 50 na 35
+    sectionY += 80; // Zmniejszone z 120
   
     // Power-Ups & Boosts
-fill(93, 208, 207);
-textSize(32);
-textStyle(BOLD);
-text("Power-Ups & Boosts", GAME_WIDTH / 2, sectionY);
-fill(249, 249, 242);
-textSize(18);
-textStyle(NORMAL);
-let powerUpY = sectionY + 40;
-let iconX = GAME_WIDTH / 2 - 300;
-
-// 1. Life
-push();
-translate(iconX, powerUpY);
-let lifeGradient = drawingContext.createRadialGradient(0, 0, 0, 0, 0, 20);
-lifeGradient.addColorStop(0, "rgb(255, 255, 255)");
-lifeGradient.addColorStop(1, "rgb(0, 255, 0)");
-drawingContext.fillStyle = lifeGradient;
-star(0, 0, 10, 20 + sin(millis() * 0.005) * 5, 8);
-pop();
-text("Life: +1 Life", GAME_WIDTH / 2, powerUpY);
-powerUpY += 50;
-
-// 2. Gas Nebula
-noFill();
-stroke(0, 191, 255, 200);
-strokeWeight(2);
-for (let i = 0; i < 3; i++) {
-  arc(iconX, powerUpY, 20 * (i + 1) / 3, 20 * (i + 1) / 3, 0, PI + i * HALF_PI + millis() * 0.001);
-}
-noStroke();
-fill(249, 249, 242);
-text("Gas Nebula: x2 Points (5s+)", GAME_WIDTH / 2, powerUpY);
-powerUpY += 50;
-
-// 3. Pulse Wave
-noFill();
-let pulse = (millis() % 1000) / 1000;
-stroke(147, 208, 207, 200);
-strokeWeight(2);
-ellipse(iconX, powerUpY, 35 * pulse);
-noStroke();
-fill(249, 249, 242);
-text("Pulse Wave: Boost Pulse (4s+)", GAME_WIDTH / 2, powerUpY);
-powerUpY += 50;
-
-// 4. Orbit Shield
-fill(255, 215, 0, 150);
-ellipse(iconX, powerUpY, 35 + sin(millis() * 0.005) * 5);
-stroke(255, 255, 255, 200);
-strokeWeight(1);
-for (let i = -1; i <= 1; i++) {
-  line(iconX + i * 11, powerUpY - 15, iconX + i * 11, powerUpY + 15);
-}
-noStroke();
-fill(249, 249, 242);
-text("Orbit Shield: Blocks Damage (6s+) [Lv3+]", GAME_WIDTH / 2, powerUpY);
-powerUpY += 50;
-
-// 5. Freeze Nova
-fill(0, 255, 255, 200 + sin(millis() * 0.01) * 55);
-star(iconX, powerUpY, 15, 20, 6);
-fill(249, 249, 242);
-text("Freeze Nova: Freezes Pulse (10s+) [Lv3+]", GAME_WIDTH / 2, powerUpY);
-powerUpY += 50;
-
-// 6. Meteor Strike
-fill(255, 100, 0, 200);
-ellipse(iconX, powerUpY, 35);
-fill(255, 0, 0, 150);
-let tailLength = 15 + sin(millis() * 0.01) * 5;
-triangle(iconX, powerUpY - 15, iconX - tailLength, powerUpY - 25, iconX + tailLength, powerUpY - 25);
-fill(249, 249, 242);
-text("Meteor Strike: More Traps, x2 Points (6s+) [Lv5+]", GAME_WIDTH / 2, powerUpY);
-powerUpY += 50;
-
-// 7. Star Seed
-fill(147, 208, 207, 200);
-ellipse(iconX, powerUpY, 35, 20 + sin(millis() * 0.005) * 5);
-fill(249, 249, 242);
-text("Star Seed: Bigger Seed (6s+) [Lv5+]", GAME_WIDTH / 2, powerUpY);
-powerUpY += 50;
-
-// 8. Mainnet Wave
-gradient = drawingContext.createLinearGradient(iconX - 15, powerUpY, iconX + 15, powerUpY);
-gradient.addColorStop(0, "#93D0CF");
-gradient.addColorStop(1, "#FFD700");
-drawingContext.fillStyle = gradient;
-beginShape();
-for (let i = 0; i < 6; i++) {
-  let a = TWO_PI / 6 * i;
-  vertex(iconX + cos(a) * (15 + sin(millis() * 0.005) * 3), powerUpY + sin(a) * 15);
-}
-endShape(CLOSE);
-fill(249, 249, 242);
-text("Mainnet Wave: Clears Traps [Lv7+]", GAME_WIDTH / 2, powerUpY);
-sectionY += 440;
+    fill(93, 208, 207);
+    textSize(24); // Zmniejszone z 32
+    textStyle(BOLD);
+    text("Power-Ups & Boosts", GAME_WIDTH / 2, sectionY);
+    fill(249, 249, 242);
+    textSize(12); // Zmniejszone z 18
+    textStyle(NORMAL);
+    let powerUpY = sectionY + 30; // Zmniejszone z 40
+    let iconX = GAME_WIDTH / 2 - 250;
+  
+    // 1. Life – mniejsza ikona
+    push();
+    translate(iconX, powerUpY);
+    let lifeGradient = drawingContext.createRadialGradient(0, 0, 0, 0, 0, 15); // Zmniejszone z 20
+    lifeGradient.addColorStop(0, "rgb(255, 255, 255)");
+    lifeGradient.addColorStop(1, "rgb(0, 255, 0)");
+    drawingContext.fillStyle = lifeGradient;
+    star(0, 0, 8, 15 + sin(millis() * 0.005) * 3, 8); // Zmniejszone z 10/20/5 na 8/15/3
+    pop();
+    text("Life: +1 Life", GAME_WIDTH / 2, powerUpY);
+    powerUpY += 40; // Zmniejszone z 50
+  
+    // 2. Gas Nebula
+    noFill();
+    stroke(0, 191, 255, 200);
+    strokeWeight(2);
+    for (let i = 0; i < 3; i++) {
+      arc(iconX, powerUpY, 15 * (i + 1) / 3, 15 * (i + 1) / 3, 0, PI + i * HALF_PI); // Zmniejszone z 20 na 15
+    }
+    noStroke();
+    fill(249, 249, 242);
+    text("Gas Nebula: x2 Points (5s+)", GAME_WIDTH / 2, powerUpY);
+    powerUpY += 40; // Zmniejszone z 50
+  
+    // 3. Pulse Wave
+    noFill();
+    let pulse = (millis() % 1000) / 1000;
+    stroke(147, 208, 207, 200);
+    strokeWeight(2);
+    ellipse(iconX, powerUpY, 25 * pulse); // Zmniejszone z 35 na 25
+    noStroke();
+    fill(249, 249, 242);
+    text("Pulse Wave: Boost Pulse (4s+)", GAME_WIDTH / 2, powerUpY);
+    powerUpY += 40; // Zmniejszone z 50
+  
+    // 4. Orbit Shield
+    fill(255, 215, 0, 150);
+    ellipse(iconX, powerUpY, 25 + sin(millis() * 0.005) * 3); // Zmniejszone z 35/5 na 25/3
+    stroke(255, 255, 255, 200);
+    strokeWeight(1);
+    for (let i = -1; i <= 1; i++) {
+      line(iconX + i * 8, powerUpY - 10, iconX + i * 8, powerUpY + 10); // Zmniejszone z 11/15 na 8/10
+    }
+    noStroke();
+    fill(249, 249, 242);
+    text("Orbit Shield: Blocks Damage (6s+) [Lv3+]", GAME_WIDTH / 2, powerUpY);
+    powerUpY += 40; // Zmniejszone z 50
+  
+    // 5. Freeze Nova
+    fill(0, 255, 255, 200 + sin(millis() * 0.01) * 55);
+    star(iconX, powerUpY, 10, 15, 6); // Zmniejszone z 15/20 na 10/15
+    fill(249, 249, 242);
+    text("Freeze Nova: Freezes Pulse (10s+) [Lv3+]", GAME_WIDTH / 2, powerUpY);
+    powerUpY += 40; // Zmniejszone z 50
+  
+    // 6. Meteor Strike
+    fill(255, 100, 0, 200);
+    ellipse(iconX, powerUpY, 25); // Zmniejszone z 35 na 25
+    fill(255, 0, 0, 150);
+    let tailLength = 10 + sin(millis() * 0.01) * 3; // Zmniejszone z 15/5 na 10/3
+    triangle(iconX, powerUpY - 10, iconX - tailLength, powerUpY - 20, iconX + tailLength, powerUpY - 20); // Dostosowane z 15/25 na 10/20
+    fill(249, 249, 242);
+    text("Meteor Strike: More Traps, x2 Points (6s+) [Lv5+]", GAME_WIDTH / 2, powerUpY);
+    powerUpY += 40; // Zmniejszone z 50
+  
+    // 7. Star Seed
+    fill(147, 208, 207, 200);
+    ellipse(iconX, powerUpY, 25, 15 + sin(millis() * 0.005) * 3); // Zmniejszone z 35/20/5 na 25/15/3
+    fill(249, 249, 242);
+    text("Star Seed: Bigger Seed (6s+) [Lv5+]", GAME_WIDTH / 2, powerUpY);
+    powerUpY += 40; // Zmniejszone z 50
+  
+    // 8. Mainnet Wave
+    gradient = drawingContext.createLinearGradient(iconX - 10, powerUpY, iconX + 10, powerUpY); // Zmniejszone z 15 na 10
+    gradient.addColorStop(0, "#93D0CF");
+    gradient.addColorStop(1, "#FFD700");
+    drawingContext.fillStyle = gradient;
+    beginShape();
+    for (let i = 0; i < 6; i++) {
+      let a = TWO_PI / 6 * i;
+      vertex(iconX + cos(a) * (10 + sin(millis() * 0.005) * 2), powerUpY + sin(a) * 10); // Zmniejszone z 15/3 na 10/2
+    }
+    endShape(CLOSE);
+    fill(249, 249, 242);
+    text("Mainnet Wave: Clears Traps [Lv7+]", GAME_WIDTH / 2, powerUpY);
+    sectionY += 350; // Zmniejszone z 440, dostosowane do 8 power-upów po 40 + nagłówek
   
     // Traps
     fill(93, 208, 207);
-    textSize(32);
+    textSize(24); // Zmniejszone z 32
     textStyle(BOLD);
     text("Traps", GAME_WIDTH / 2, sectionY);
     fill(249, 249, 242);
-    textSize(18);
+    textSize(12); // Zmniejszone z 18
     textStyle(NORMAL);
-    let trapY = sectionY + 40;
+    let trapY = sectionY + 30; // Zmniejszone z 40
   
     // 1. Avoid Meteor Strikes
     fill(255, 0, 0, 200);
-    ellipse(iconX, trapY, 35 + sin(millis() * 0.005) * 5); // Zmniejszono z 40/6 na 35/5
+    ellipse(iconX, trapY, 25 + sin(millis() * 0.005) * 3); // Zmniejszone z 35/5 na 25/3
     stroke(255, 100);
-    strokeWeight(2); // Zmniejszono z 3 na 2
-    line(iconX - 15, trapY - 15, iconX + 15, trapY + 15); // Zmniejszono z 18 na 15
+    strokeWeight(1); // Zmniejszone z 2
+    line(iconX - 10, trapY - 10, iconX + 10, trapY + 10); // Zmniejszone z 15 na 10
     noStroke();
     fill(249, 249, 242);
     text("Avoid Meteor Strikes: 5 misses = -1 life", GAME_WIDTH / 2, trapY);
-    trapY += 50;
+    trapY += 40; // Zmniejszone z 50
   
     // 2. Meteor Strike
     fill(255, 100, 0, 200);
-    ellipse(iconX, trapY, 35); // Zmniejszono z 40 na 35
+    ellipse(iconX, trapY, 25); // Zmniejszone z 35
     fill(255, 0, 0, 150);
-    tailLength = 15 + sin(millis() * 0.01) * 5; // Zmniejszono z 18/6 na 15/5
-    triangle(iconX, trapY - 15, iconX - tailLength, trapY - 25, iconX + tailLength, trapY - 25); // Dostosowano z 18/30 na 15/25
+    tailLength = 10 + sin(millis() * 0.01) * 3; // Zmniejszone z 15/5 na 10/3
+    triangle(iconX, trapY - 10, iconX - tailLength, trapY - 20, iconX + tailLength, trapY - 20); // Dostosowane z 15/25 na 10/20
     fill(249, 249, 242);
     text("Meteor Strike: Spawns Traps, x2 Points (3s) [Lv5+]", GAME_WIDTH / 2, trapY);
-    sectionY += 140;
+    sectionY += 110; // Zmniejszone z 140
   
-    // Przycisk BACK
+    // Przycisk BACK – mniejszy rozmiar
     let backX = 20;
-let backY = 20;
-let mx = mouseX - (width - GAME_WIDTH) / 2;
-let my = mouseY - (height - GAME_HEIGHT) / 2;
-let isBackHovering = mx > backX && mx < backX + 120 && my > backY && my < backY + 50;
-fill(93, 208, 207, isBackHovering ? 255 : 200);
-rect(backX, backY, 120, 50, 10);
-fill(249, 249, 242);
-textSize(20);
-textAlign(CENTER, CENTER);
-text("BACK", backX + 60, backY + 25);
+    let backY = 20;
+    let mx = mouseX - (width - GAME_WIDTH) / 2;
+    let my = mouseY - (height - GAME_HEIGHT) / 2;
+    let isBackHovering = mx > backX && mx < backX + 100 && my > backY && my < backY + 40; // Zmniejszone z 120/50 na 100/40
+    fill(93, 208, 207, isBackHovering ? 255 : 200);
+    rect(backX, backY, 100, 40, 10); // Zmniejszone z 120/50 na 100/40
+    fill(249, 249, 242);
+    textSize(16); // Zmniejszone z 20
+    textAlign(CENTER, CENTER);
+    text("BACK", backX + 50, backY + 20); // Wyśrodkowanie w pionie
   
-    // Stopka
+    // Stopka – przesunięta w górę
     fill(128, 131, 134, 150); // Aluminium z przezroczystością
-    textSize(16);
-    text("#SuperseedGrok3 – Powered by xAI", GAME_WIDTH / 2, GAME_HEIGHT - 30);
+    textSize(12); // Zmniejszone z 16
+    text("#SuperseedGrok3 – Powered by xAI", GAME_WIDTH / 2, GAME_HEIGHT - 20); // Bez zmian, ale pasuje do mniejszej przestrzeni
   
     textAlign(CENTER, BASELINE); // Reset wyrównania
   }
