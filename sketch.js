@@ -1340,15 +1340,26 @@ function draw() {
       text("Claim Your NFT", GAME_WIDTH / 2, 602 + verticalOffset); // Przesunięte z 725
     }
   
-    // Komunikat o wersji desktopowej – mniejszy tekst
-    fill(255, 50, 50, 255);
-    textSize(24); // Zmniejszone z 28
-    textStyle(BOLD);
-    drawingContext.shadowBlur = 0;
-    text("NOTICE: Desktop only for now", GAME_WIDTH / 2, 640 + verticalOffset); // Przesunięte z 780
-    fill(255, 215, 0, 200);
-    textSize(12); // Zmniejszone z 14
-    text("Mobile version coming soon!", GAME_WIDTH / 2, 660 + verticalOffset); // Przesunięte z 805
+    // Komunikat o wersji desktopowej – wzmocniony napis
+let noticeX = GAME_WIDTH / 2;
+let noticeY = 640 + verticalOffset; // Przesunięte z 780
+let mobileY = 660 + verticalOffset; // Przesunięte z 805
+let pulseScale = 1 + sin(millis() * 0.005) * 0.1; // Subtelne pulsowanie
+
+// Tekst NOTICE – czerwony z cieniem i pulsowaniem
+drawingContext.shadowBlur = 5;
+drawingContext.shadowColor = "rgba(255, 50, 50, 0.8)";
+fill(255, 50, 50, 255);
+textStyle(BOLD);
+text("NOTICE: Desktop only for now", noticeX, noticeY);
+
+// Tekst Mobile version – żółty z cieniem
+drawingContext.shadowBlur = 3;
+drawingContext.shadowColor = "rgba(255, 215, 0, 0.6)";
+fill(255, 215, 0, 200);
+textSize(12); // Zachowana wielkość
+text("Mobile version coming soon!", noticeX, mobileY);
+drawingContext.shadowBlur = 0; // Reset cienia po użyciu
   
     // Przyciski boczne (INFO, TUTORIAL, VIEW INTRO, ACHIEVEMENTS) – bez zmian
     let sideButtonWidth = 120;
