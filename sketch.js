@@ -104,6 +104,7 @@ const SLOWDOWN_COOLDOWN = 30000;
 const SLOWDOWN_FACTOR = 1.5;
 
 let animationTime = 0;
+let isDraggingScrollbar = false; // Czy użytkownik przeciąga pasek przewijania
 
 let introClicked = false;
 let hasSeenIntro = localStorage.getItem('hasSeenIntro') === 'true';
@@ -1645,6 +1646,17 @@ function draw() {
     let deltaTime = 1000 / frameRate(); // For smooth scrolling
     let contentHeight = 0; // Total height of scrollable content
     let maxScroll = 0; // Maximum scroll distance
+
+    // Sprawdzenie kliknięcia na pasek przewijania
+  if (maxScroll > 0) {
+    let scrollbarHeight = (GAME_HEIGHT / contentHeight) * GAME_HEIGHT;
+    let scrollbarY = map(scrollOffset, 0, -maxScroll, 0, GAME_HEIGHT - scrollbarHeight);
+    if (mx >= GAME_WIDTH - 20 && mx <= GAME_WIDTH - 10 &&
+        my >= scrollbarY && my <= scrollbarY + scrollbarHeight) {
+      isDraggingScrollbar = true;
+      console.log("Scrollbar clicked!");
+    }
+  }
   
     // Gradient Background z trzema kolorami
     let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -2323,6 +2335,8 @@ text(savedGameState ? "RESUME SYNC" : "START SYNC", GAME_WIDTH / 2, buttonY + TU
   }
 }
 // === KONIEC CZARNEJ DZIURY ===
+
+// Tutaj są Twoje funkcje zdarzeń – POPRAWNE MIEJSCE
 function mouseDragged() {
   if (gameState === "info") {
     let mx = mouseX - (width - GAME_WIDTH) / 2;
@@ -2330,21 +2344,39 @@ function mouseDragged() {
     let backX = 20;
     let backY = 20;
     let isBackHovering = mx > backX && mx < backX + 120 && my > backY && my < backY + 50;
-    if (!isBackHovering && mx > 0 && mx < GAME_WIDTH && my > 0 && my < GAME_HEIGHT) {
+
+    // Przeciąganie zawartości
+    if (!isBackHovering && !isDraggingScrollbar && mx > 0 && mx < GAME_WIDTH && my > 0 && my < GAME_HEIGHT) {
       scrollOffset += pmouseY - mouseY;
       scrollOffset = constrain(scrollOffset, -maxScroll, 0);
+    }
+
+    // Przeciąganie paska przewijania
+    if (isDraggingScrollbar && maxScroll > 0) {
+      let scrollbarHeight = (GAME_HEIGHT / contentHeight) * GAME_HEIGHT;
+      let newScrollY = my - scrollbarHeight / 2; // Środek paska przewijania
+      scrollOffset = map(newScrollY, 0, GAME_HEIGHT - scrollbarHeight, 0, -maxScroll);
+      scrollOffset = constrain(scrollOffset, -maxScroll, 0);
+      console.log("Dragging scrollbar, scrollOffset:", scrollOffset);
     }
   }
 }
 
 function mouseWheel(event) {
   if (gameState === "info") {
-    scrollOffset += event.delta * 0.5; // Adjust sensitivity as needed
+    scrollOffset += event.delta * 0.5;
     scrollOffset = constrain(scrollOffset, -maxScroll, 0);
-    return false; // Prevent default page scrolling
+    return false;
   }
 }
 
+// Tutaj dodaj mouseReleased() – NOWA FUNKCJA
+function mouseReleased() {
+  if (gameState === "info" && isDraggingScrollbar) {
+    isDraggingScrollbar = false;
+    console.log("Scrollbar released!");
+  }
+}
     if (level >= 5 && random(1) < 0.01 && gameState === "playing" && !activeEvent) {
       gameState = "supernova";
       supernovaTimer = 30000;
