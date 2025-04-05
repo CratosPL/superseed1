@@ -905,7 +905,13 @@ function touchMoved() {
   if (touches.length >= 2 && gameState === "howToPlay") {
     return true; // Zoom tylko w menu
   }
-  // W przeciwnym razie nie rób nic (lub obsłuż ruch palcem, jeśli potrzebujesz)
+  if (gameState === "info") {
+    let adjustedTouchY = mouseY - (height - GAME_HEIGHT) / 2; // mouseY updates with touch
+    let prevTouchY = pmouseY - (height - GAME_HEIGHT) / 2;
+    scrollOffset += prevTouchY - adjustedTouchY; // Odwrócona logika dla naturalnego przewijania
+    scrollOffset = constrain(scrollOffset, -maxScroll, 0);
+    return false; // Zapobiega domyślnemu zachowaniu
+  }
   return false;
 }
 
@@ -1873,10 +1879,11 @@ function draw() {
   
     // Scrollbar (opcjonalny)
     if (maxScroll > 0) {
+      let scrollbarWidth = isMobile ? 20 : 10; // Szerszy na mobile
       let scrollbarHeight = (GAME_HEIGHT / contentHeight) * GAME_HEIGHT;
       let scrollbarY = map(scrollOffset, 0, -maxScroll, 0, GAME_HEIGHT - scrollbarHeight);
       fill(93, 208, 207, 150);
-      rect(GAME_WIDTH - 20, scrollbarY, 10, scrollbarHeight, 5);
+      rect(GAME_WIDTH - scrollbarWidth, scrollbarY, scrollbarWidth, scrollbarHeight, 5);
     }
   
     // Logika przewijania strzałkami (płynna)
@@ -2345,26 +2352,24 @@ function mouseDragged() {
     let backY = 20;
     let isBackHovering = mx > backX && mx < backX + 120 && my > backY && my < backY + 50;
 
-    // Przeciąganie zawartości
     if (!isBackHovering && !isDraggingScrollbar && mx > 0 && mx < GAME_WIDTH && my > 0 && my < GAME_HEIGHT) {
       scrollOffset += pmouseY - mouseY;
       scrollOffset = constrain(scrollOffset, -maxScroll, 0);
     }
 
-    // Przeciąganie paska przewijania
     if (isDraggingScrollbar && maxScroll > 0) {
+      let scrollbarWidth = isMobile ? 20 : 10;
       let scrollbarHeight = (GAME_HEIGHT / contentHeight) * GAME_HEIGHT;
-      let newScrollY = my - scrollbarHeight / 2; // Środek paska przewijania
+      let newScrollY = my - scrollbarHeight / 2;
       scrollOffset = map(newScrollY, 0, GAME_HEIGHT - scrollbarHeight, 0, -maxScroll);
       scrollOffset = constrain(scrollOffset, -maxScroll, 0);
       console.log("Dragging scrollbar, scrollOffset:", scrollOffset);
     }
   }
 }
-
 function mouseWheel(event) {
   if (gameState === "info") {
-    scrollOffset += event.delta * 0.5;
+    scrollOffset += event.delta * 0.5 * (isMobile ? 2 : 1); // Zwiększ czułość na mobile
     scrollOffset = constrain(scrollOffset, -maxScroll, 0);
     return false;
   }
@@ -3947,9 +3952,29 @@ function mousePressed() {
     let adjustedMouseX = mouseX - offsetX;
     let adjustedMouseY = mouseY - offsetY;
 
-    // BACK Button – bez zmian
-    if (adjustedMouseX >= 20 && adjustedMouseX <= 120 &&
-        adjustedMouseY >= 20 && adjustedMouseY <= 60) {
+    // Scrollbar dragging detection
+    if (maxScroll > 0) {
+      let scrollbarWidth = isMobile ? 20 : 10;
+      let scrollbarHeight = (GAME_HEIGHT / contentHeight) * GAME_HEIGHT;
+      let scrollbarY = map(scrollOffset, 0, -maxScroll, 0, GAME_HEIGHT - scrollbarHeight);
+      if (
+        adjustedMouseX >= GAME_WIDTH - scrollbarWidth &&
+        adjustedMouseX <= GAME_WIDTH &&
+        adjustedMouseY >= scrollbarY &&
+        adjustedMouseY <= scrollbarY + scrollbarHeight
+      ) {
+        isDraggingScrollbar = true;
+        console.log("Scrollbar clicked!");
+      }
+    }
+
+    // BACK Button
+    if (
+      adjustedMouseX >= 20 &&
+      adjustedMouseX <= 140 &&
+      adjustedMouseY >= 20 &&
+      adjustedMouseY <= 70
+    ) {
       gameState = "howToPlay";
     }
   } else if (gameState === "intro") {
