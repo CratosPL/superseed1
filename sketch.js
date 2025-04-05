@@ -1640,6 +1640,11 @@ function draw() {
   }
 
   else if (gameState === "info") {
+    // Zmienna do śledzenia przewijania
+    let scrollOffset = 0; // Początkowa pozycja przewijania (globalna zmienna, zdefiniuj poza draw())
+    let maxScroll = 0; // Maksymalna wartość przewijania
+    let contentHeight = 0; // Całkowita wysokość zawartości
+  
     // Gradient Background z trzema kolorami
     let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
     gradient.addColorStop(0, "#0E273B"); // Tangaroa
@@ -1661,6 +1666,10 @@ function draw() {
       bgParticles[i].update();
       bgParticles[i].show(pulseProgress);
     }
+  
+    // Rozpoczynamy rysowanie zawartości z przesunięciem
+    push();
+    translate(0, scrollOffset); // Przesunięcie zawartości w pionie
   
     // Nagłówek
     gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 200, 50, GAME_WIDTH / 2 + 200, 50);
@@ -1698,102 +1707,102 @@ function draw() {
     sectionY += 120;
   
     // Power-Ups & Boosts
-fill(93, 208, 207);
-textSize(32);
-textStyle(BOLD);
-text("Power-Ups & Boosts", GAME_WIDTH / 2, sectionY);
-fill(249, 249, 242);
-textSize(18);
-textStyle(NORMAL);
-let powerUpY = sectionY + 40;
-let iconX = GAME_WIDTH / 2 - 300;
-
-// 1. Life
-push();
-translate(iconX, powerUpY);
-let lifeGradient = drawingContext.createRadialGradient(0, 0, 0, 0, 0, 20);
-lifeGradient.addColorStop(0, "rgb(255, 255, 255)");
-lifeGradient.addColorStop(1, "rgb(0, 255, 0)");
-drawingContext.fillStyle = lifeGradient;
-star(0, 0, 10, 20 + sin(millis() * 0.005) * 5, 8);
-pop();
-text("Life: +1 Life", GAME_WIDTH / 2, powerUpY);
-powerUpY += 50;
-
-// 2. Gas Nebula
-noFill();
-stroke(0, 191, 255, 200);
-strokeWeight(2);
-for (let i = 0; i < 3; i++) {
-  arc(iconX, powerUpY, 20 * (i + 1) / 3, 20 * (i + 1) / 3, 0, PI + i * HALF_PI + millis() * 0.001);
-}
-noStroke();
-fill(249, 249, 242);
-text("Gas Nebula: x2 Points (5s+)", GAME_WIDTH / 2, powerUpY);
-powerUpY += 50;
-
-// 3. Pulse Wave
-noFill();
-let pulse = (millis() % 1000) / 1000;
-stroke(147, 208, 207, 200);
-strokeWeight(2);
-ellipse(iconX, powerUpY, 35 * pulse);
-noStroke();
-fill(249, 249, 242);
-text("Pulse Wave: Boost Pulse (4s+)", GAME_WIDTH / 2, powerUpY);
-powerUpY += 50;
-
-// 4. Orbit Shield
-fill(255, 215, 0, 150);
-ellipse(iconX, powerUpY, 35 + sin(millis() * 0.005) * 5);
-stroke(255, 255, 255, 200);
-strokeWeight(1);
-for (let i = -1; i <= 1; i++) {
-  line(iconX + i * 11, powerUpY - 15, iconX + i * 11, powerUpY + 15);
-}
-noStroke();
-fill(249, 249, 242);
-text("Orbit Shield: Blocks Damage (6s+) [Lv3+]", GAME_WIDTH / 2, powerUpY);
-powerUpY += 50;
-
-// 5. Freeze Nova
-fill(0, 255, 255, 200 + sin(millis() * 0.01) * 55);
-star(iconX, powerUpY, 15, 20, 6);
-fill(249, 249, 242);
-text("Freeze Nova: Freezes Pulse (10s+) [Lv3+]", GAME_WIDTH / 2, powerUpY);
-powerUpY += 50;
-
-// 6. Meteor Strike
-fill(255, 100, 0, 200);
-ellipse(iconX, powerUpY, 35);
-fill(255, 0, 0, 150);
-let tailLength = 15 + sin(millis() * 0.01) * 5;
-triangle(iconX, powerUpY - 15, iconX - tailLength, powerUpY - 25, iconX + tailLength, powerUpY - 25);
-fill(249, 249, 242);
-text("Meteor Strike: More Traps, x2 Points (6s+) [Lv5+]", GAME_WIDTH / 2, powerUpY);
-powerUpY += 50;
-
-// 7. Star Seed
-fill(147, 208, 207, 200);
-ellipse(iconX, powerUpY, 35, 20 + sin(millis() * 0.005) * 5);
-fill(249, 249, 242);
-text("Star Seed: Bigger Seed (6s+) [Lv5+]", GAME_WIDTH / 2, powerUpY);
-powerUpY += 50;
-
-// 8. Mainnet Wave
-gradient = drawingContext.createLinearGradient(iconX - 15, powerUpY, iconX + 15, powerUpY);
-gradient.addColorStop(0, "#93D0CF");
-gradient.addColorStop(1, "#FFD700");
-drawingContext.fillStyle = gradient;
-beginShape();
-for (let i = 0; i < 6; i++) {
-  let a = TWO_PI / 6 * i;
-  vertex(iconX + cos(a) * (15 + sin(millis() * 0.005) * 3), powerUpY + sin(a) * 15);
-}
-endShape(CLOSE);
-fill(249, 249, 242);
-text("Mainnet Wave: Clears Traps [Lv7+]", GAME_WIDTH / 2, powerUpY);
-sectionY += 440;
+    fill(93, 208, 207);
+    textSize(32);
+    textStyle(BOLD);
+    text("Power-Ups & Boosts", GAME_WIDTH / 2, sectionY);
+    fill(249, 249, 242);
+    textSize(18);
+    textStyle(NORMAL);
+    let powerUpY = sectionY + 40;
+    let iconX = GAME_WIDTH / 2 - 300;
+  
+    // 1. Life
+    push();
+    translate(iconX, powerUpY);
+    let lifeGradient = drawingContext.createRadialGradient(0, 0, 0, 0, 0, 20);
+    lifeGradient.addColorStop(0, "rgb(255, 255, 255)");
+    lifeGradient.addColorStop(1, "rgb(0, 255, 0)");
+    drawingContext.fillStyle = lifeGradient;
+    star(0, 0, 10, 20 + sin(millis() * 0.005) * 5, 8);
+    pop();
+    text("Life: +1 Life", GAME_WIDTH / 2, powerUpY);
+    powerUpY += 50;
+  
+    // 2. Gas Nebula
+    noFill();
+    stroke(0, 191, 255, 200);
+    strokeWeight(2);
+    for (let i = 0; i < 3; i++) {
+      arc(iconX, powerUpY, 20 * (i + 1) / 3, 20 * (i + 1) / 3, 0, PI + i * HALF_PI + millis() * 0.001);
+    }
+    noStroke();
+    fill(249, 249, 242);
+    text("Gas Nebula: x2 Points (5s+)", GAME_WIDTH / 2, powerUpY);
+    powerUpY += 50;
+  
+    // 3. Pulse Wave
+    noFill();
+    let pulse = (millis() % 1000) / 1000;
+    stroke(147, 208, 207, 200);
+    strokeWeight(2);
+    ellipse(iconX, powerUpY, 35 * pulse);
+    noStroke();
+    fill(249, 249, 242);
+    text("Pulse Wave: Boost Pulse (4s+)", GAME_WIDTH / 2, powerUpY);
+    powerUpY += 50;
+  
+    // 4. Orbit Shield
+    fill(255, 215, 0, 150);
+    ellipse(iconX, powerUpY, 35 + sin(millis() * 0.005) * 5);
+    stroke(255, 255, 255, 200);
+    strokeWeight(1);
+    for (let i = -1; i <= 1; i++) {
+      line(iconX + i * 11, powerUpY - 15, iconX + i * 11, powerUpY + 15);
+    }
+    noStroke();
+    fill(249, 249, 242);
+    text("Orbit Shield: Blocks Damage (6s+) [Lv3+]", GAME_WIDTH / 2, powerUpY);
+    powerUpY += 50;
+  
+    // 5. Freeze Nova
+    fill(0, 255, 255, 200 + sin(millis() * 0.01) * 55);
+    star(iconX, powerUpY, 15, 20, 6);
+    fill(249, 249, 242);
+    text("Freeze Nova: Freezes Pulse (10s+) [Lv3+]", GAME_WIDTH / 2, powerUpY);
+    powerUpY += 50;
+  
+    // 6. Meteor Strike
+    fill(255, 100, 0, 200);
+    ellipse(iconX, powerUpY, 35);
+    fill(255, 0, 0, 150);
+    let tailLength = 15 + sin(millis() * 0.01) * 5;
+    triangle(iconX, powerUpY - 15, iconX - tailLength, powerUpY - 25, iconX + tailLength, powerUpY - 25);
+    fill(249, 249, 242);
+    text("Meteor Strike: More Traps, x2 Points (6s+) [Lv5+]", GAME_WIDTH / 2, powerUpY);
+    powerUpY += 50;
+  
+    // 7. Star Seed
+    fill(147, 208, 207, 200);
+    ellipse(iconX, powerUpY, 35, 20 + sin(millis() * 0.005) * 5);
+    fill(249, 249, 242);
+    text("Star Seed: Bigger Seed (6s+) [Lv5+]", GAME_WIDTH / 2, powerUpY);
+    powerUpY += 50;
+  
+    // 8. Mainnet Wave
+    gradient = drawingContext.createLinearGradient(iconX - 15, powerUpY, iconX + 15, powerUpY);
+    gradient.addColorStop(0, "#93D0CF");
+    gradient.addColorStop(1, "#FFD700");
+    drawingContext.fillStyle = gradient;
+    beginShape();
+    for (let i = 0; i < 6; i++) {
+      let a = TWO_PI / 6 * i;
+      vertex(iconX + cos(a) * (15 + sin(millis() * 0.005) * 3), powerUpY + sin(a) * 15);
+    }
+    endShape(CLOSE);
+    fill(249, 249, 242);
+    text("Mainnet Wave: Clears Traps [Lv7+]", GAME_WIDTH / 2, powerUpY);
+    sectionY += 440;
   
     // Traps
     fill(93, 208, 207);
@@ -1807,10 +1816,10 @@ sectionY += 440;
   
     // 1. Avoid Meteor Strikes
     fill(255, 0, 0, 200);
-    ellipse(iconX, trapY, 35 + sin(millis() * 0.005) * 5); // Zmniejszono z 40/6 na 35/5
+    ellipse(iconX, trapY, 35 + sin(millis() * 0.005) * 5);
     stroke(255, 100);
-    strokeWeight(2); // Zmniejszono z 3 na 2
-    line(iconX - 15, trapY - 15, iconX + 15, trapY + 15); // Zmniejszono z 18 na 15
+    strokeWeight(2);
+    line(iconX - 15, trapY - 15, iconX + 15, trapY + 15);
     noStroke();
     fill(249, 249, 242);
     text("Avoid Meteor Strikes: 5 misses = -1 life", GAME_WIDTH / 2, trapY);
@@ -1818,31 +1827,46 @@ sectionY += 440;
   
     // 2. Meteor Strike
     fill(255, 100, 0, 200);
-    ellipse(iconX, trapY, 35); // Zmniejszono z 40 na 35
+    ellipse(iconX, trapY, 35);
     fill(255, 0, 0, 150);
-    tailLength = 15 + sin(millis() * 0.01) * 5; // Zmniejszono z 18/6 na 15/5
-    triangle(iconX, trapY - 15, iconX - tailLength, trapY - 25, iconX + tailLength, trapY - 25); // Dostosowano z 18/30 na 15/25
+    tailLength = 15 + sin(millis() * 0.01) * 5;
+    triangle(iconX, trapY - 15, iconX - tailLength, trapY - 25, iconX + tailLength, trapY - 25);
     fill(249, 249, 242);
     text("Meteor Strike: Spawns Traps, x2 Points (3s) [Lv5+]", GAME_WIDTH / 2, trapY);
-    sectionY += 140;
   
-    // Przycisk BACK
+    // Oblicz wysokość zawartości
+    contentHeight = trapY + 50; // Dodajemy margines na dole
+    maxScroll = max(0, contentHeight - GAME_HEIGHT); // Maksymalne przewinięcie
+  
+    pop(); // Koniec przesunięcia zawartości
+  
+    // Przycisk BACK (stały na ekranie)
     let backX = 20;
-let backY = 20;
-let mx = mouseX - (width - GAME_WIDTH) / 2;
-let my = mouseY - (height - GAME_HEIGHT) / 2;
-let isBackHovering = mx > backX && mx < backX + 120 && my > backY && my < backY + 50;
-fill(93, 208, 207, isBackHovering ? 255 : 200);
-rect(backX, backY, 120, 50, 10);
-fill(249, 249, 242);
-textSize(20);
-textAlign(CENTER, CENTER);
-text("BACK", backX + 60, backY + 25);
+    let backY = 20;
+    let mx = mouseX - (width - GAME_WIDTH) / 2;
+    let my = mouseY - (height - GAME_HEIGHT) / 2;
+    let isBackHovering = mx > backX && mx < backX + 120 && my > backY && my < backY + 50;
+    fill(93, 208, 207, isBackHovering ? 255 : 200);
+    rect(backX, backY, 120, 50, 10);
+    fill(249, 249, 242);
+    textSize(20);
+    textAlign(CENTER, CENTER);
+    text("BACK", backX + 60, backY + 25);
   
-    // Stopka
-    fill(128, 131, 134, 150); // Aluminium z przezroczystością
+    // Stopka (stała na dole ekranu)
+    fill(128, 131, 134, 150);
     textSize(16);
     text("#SuperseedGrok3 – Powered by xAI", GAME_WIDTH / 2, GAME_HEIGHT - 30);
+  
+    // Logika przewijania
+    if (mouseIsPressed && mx > 0 && mx < GAME_WIDTH && my > 0 && my < GAME_HEIGHT && !isBackHovering) {
+      scrollOffset += pmouseY - mouseY; // Odwrócona logika, bo przewijamy zawartość w górę/dół
+    }
+    if (keyIsDown(UP_ARROW)) scrollOffset += 5;
+    if (keyIsDown(DOWN_ARROW)) scrollOffset -= 5;
+  
+    // Ograniczenie przewijania
+    scrollOffset = constrain(scrollOffset, -maxScroll, 0);
   
     textAlign(CENTER, BASELINE); // Reset wyrównania
   }
