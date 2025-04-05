@@ -1717,12 +1717,10 @@ function draw() {
   
     // Obszar przewijania z poprawnym clippingiem
     push();
-    // Najpierw ustawiamy clipping w oryginalnych współrzędnych modala
-    drawingContext.save(); // Zapisz obecny stan kontekstu
+    drawingContext.save();
     drawingContext.beginPath();
     drawingContext.rect(modalX, modalY, modalWidth, modalHeight);
     drawingContext.clip();
-    // Teraz przesuwamy treść
     translate(0, -scrollOffset);
   
     let contentY = modalY + 20; // Start treści w modalu
@@ -1871,12 +1869,13 @@ function draw() {
     tint(seedColor.r, seedColor.g, seedColor.b, 200);
     image(logo, modalX + modalWidth / 2, logoY, demoPulse, demoPulse);
     pop();
-    contentY += 60;
+    contentY += 100; // Zwiększono z 60 na 100, aby uwzględnić pełną wysokość logo (max 100 pikseli)
   
-    // Oblicz maxScrollOffset
-    maxScrollOffset = max(0, contentY - modalHeight - modalY);
+    // Oblicz maxScrollOffset z marginesem dla logo
+    let logoMaxHeight = 100; // Maksymalna wysokość pulsującego logo
+    maxScrollOffset = max(0, contentY - modalHeight - modalY + logoMaxHeight);
   
-    drawingContext.restore(); // Przywróć stan kontekstu (usuń clipping)
+    drawingContext.restore();
     pop();
   
     // Pasek przewijania (poza clippingiem)
@@ -1913,7 +1912,6 @@ function draw() {
     textAlign(CENTER, BASELINE);
     text("#SuperseedGrok3 – Powered by xAI", GAME_WIDTH / 2, GAME_HEIGHT - 15);
   }
-
   
   
   else if (gameState === "start") {
