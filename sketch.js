@@ -1222,130 +1222,130 @@ function draw() {
     drawingContext.fillStyle = gradient;
     rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
   
-    // Zmniejszone logo na górze (z 400 na 320)
+    // Zmniejszone logo na górze (z 320 na 280)
     let logoScale = 1 + sin(millis() * 0.002) * 0.05;
-    let logoSize = 320 * logoScale;
-    image(mainLogo, GAME_WIDTH / 2 - logoSize / 2, 30, logoSize, logoSize);
+    let logoSize = 280 * logoScale; // Zmniejszone z 320
+    image(mainLogo, GAME_WIDTH / 2 - logoSize / 2, 20, logoSize, logoSize); // Przesunięte z 30 na 20
   
-    // Zmniejszony verticalOffset z 100 na 80
-    let verticalOffset = 80;
+    // Zmniejszony verticalOffset z 80 na 60
+    let verticalOffset = 60;
   
     // Choose Your Seed Color – mniejszy tekst i odstępy
     fill(249, 249, 242);
-    textSize(20);
-    text("Choose Your Seed Color", GAME_WIDTH / 2, 300 + verticalOffset);
-    let colorBoxSize = 50;
-    let colorBoxSpacing = 25;
+    textSize(18); // Zmniejszone z 20
+    text("Choose Your Seed Color", GAME_WIDTH / 2, 260 + verticalOffset); // Przesunięte z 300
+    let colorBoxSize = 45; // Zmniejszone z 50
+    let colorBoxSpacing = 20; // Zmniejszone z 25
     let startX = GAME_WIDTH / 2 - (colorBoxSize * 3 + colorBoxSpacing * 2) / 2;
     let pulse = 1 + sin(millis() * 0.005) * 0.1;
   
     fill(0, 255, 0);
-    rect(startX, 330 + verticalOffset, colorBoxSize, colorBoxSize, 15);
+    rect(startX, 280 + verticalOffset, colorBoxSize, colorBoxSize, 15); // Przesunięte z 330
     fill(0, 0, 255);
-    rect(startX + colorBoxSize + colorBoxSpacing, 330 + verticalOffset, colorBoxSize, colorBoxSize, 15);
+    rect(startX + colorBoxSize + colorBoxSpacing, 280 + verticalOffset, colorBoxSize, colorBoxSize, 15);
     fill(255, 215, 0);
-    rect(startX + (colorBoxSize + colorBoxSpacing) * 2, 330 + verticalOffset, colorBoxSize, colorBoxSize, 15);
+    rect(startX + (colorBoxSize + colorBoxSpacing) * 2, 280 + verticalOffset, colorBoxSize, colorBoxSize, 15);
   
     stroke(147, 208, 207);
     strokeWeight(3);
     noFill();
     if (seedColor.r === 0 && seedColor.g === 255 && seedColor.b === 0) {
-      rect(startX, 330 + verticalOffset, colorBoxSize * pulse, colorBoxSize * pulse, 15);
+      rect(startX, 280 + verticalOffset, colorBoxSize * pulse, colorBoxSize * pulse, 15);
     } else if (seedColor.r === 0 && seedColor.g === 0 && seedColor.b === 255) {
-      rect(startX + colorBoxSize + colorBoxSpacing, 330 + verticalOffset, colorBoxSize * pulse, colorBoxSize * pulse, 15);
+      rect(startX + colorBoxSize + colorBoxSpacing, 280 + verticalOffset, colorBoxSize * pulse, colorBoxSize * pulse, 15);
     } else if (seedColor.r === 255 && seedColor.g === 215 && seedColor.b === 0) {
-      rect(startX + (colorBoxSize + colorBoxSpacing) * 2, 330 + verticalOffset, colorBoxSize * pulse, colorBoxSize * pulse, 15);
+      rect(startX + (colorBoxSize + colorBoxSpacing) * 2, 280 + verticalOffset, colorBoxSize * pulse, colorBoxSize * pulse, 15);
     }
     noStroke();
   
     // Enter Your Nick – mniejsze pole tekstowe
     fill(249, 249, 242);
-    textSize(20);
-    text("Enter Your Nick", GAME_WIDTH / 2, 420 + verticalOffset);
+    textSize(18); // Zmniejszone z 20
+    text("Enter Your Nick", GAME_WIDTH / 2, 350 + verticalOffset); // Przesunięte z 420
     fill(128, 131, 134, 180);
     stroke(147, 208, 207);
     strokeWeight(3);
-    rect(GAME_WIDTH / 2 - 100, 440 + verticalOffset, 200, 40, 10);
+    rect(GAME_WIDTH / 2 - 90, 370 + verticalOffset, 180, 35, 10); // Szerokość z 200 na 180, wysokość z 40 na 35, przesunięte z 440
     fill(249, 249, 242);
-    textSize(18);
+    textSize(16); // Zmniejszone z 18
     textAlign(CENTER, CENTER);
     if (isTypingNick) {
       let cursor = (floor(millis() / 500) % 2 === 0) ? "|" : "";
-      text(playerNick + cursor, GAME_WIDTH / 2, 460 + verticalOffset);
+      text(playerNick + cursor, GAME_WIDTH / 2, 387 + verticalOffset); // Przesunięte z 460
     } else {
-      text(playerNick || "Click to type", GAME_WIDTH / 2, 460 + verticalOffset);
+      text(playerNick || "Click to type", GAME_WIDTH / 2, 387 + verticalOffset);
     }
     noStroke();
   
     // Start Button – mniejszy rozmiar
-    gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 500 + verticalOffset, GAME_WIDTH / 2 + 100, 500 + verticalOffset);
+    gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 90, 420 + verticalOffset, GAME_WIDTH / 2 + 90, 420 + verticalOffset);
     gradient.addColorStop(0, "#93D0CF");
     gradient.addColorStop(1, "#FFD700");
     drawingContext.fillStyle = gradient;
     stroke(147, 208, 207);
     strokeWeight(3);
-    rect(GAME_WIDTH / 2 - 100, 500 + verticalOffset, 200, 50, 15);
+    rect(GAME_WIDTH / 2 - 90, 420 + verticalOffset, 180, 45, 15); // Szerokość z 200 na 180, wysokość z 50 na 45, przesunięte z 500
     noStroke();
     fill(14, 39, 59);
-    textSize(24);
+    textSize(22); // Zmniejszone z 24
     let buttonText = savedGameState ? "RESUME" : "START";
-    text(buttonText, GAME_WIDTH / 2, 525 + verticalOffset);
+    text(buttonText, GAME_WIDTH / 2, 442 + verticalOffset); // Przesunięte z 525
   
     // Login/Logout Button – mniejszy rozmiar
     if (!isConnected) {
-      gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 570 + verticalOffset, GAME_WIDTH / 2 + 100, 570 + verticalOffset);
+      gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 90, 475 + verticalOffset, GAME_WIDTH / 2 + 90, 475 + verticalOffset);
       gradient.addColorStop(0, "#0E273B");
       gradient.addColorStop(1, "#808386");
       drawingContext.fillStyle = gradient;
       stroke(147, 208, 207);
       strokeWeight(3);
-      rect(GAME_WIDTH / 2 - 100, 570 + verticalOffset, 200, 50, 15);
+      rect(GAME_WIDTH / 2 - 90, 475 + verticalOffset, 180, 45, 15); // Szerokość z 200 na 180, wysokość z 50 na 45, przesunięte z 570
       noStroke();
       fill(249, 249, 242);
-      textSize(24);
-      text("LOGIN (Opt.)", GAME_WIDTH / 2, 595 + verticalOffset);
+      textSize(22); // Zmniejszone z 24
+      text("LOGIN (Opt.)", GAME_WIDTH / 2, 497 + verticalOffset); // Przesunięte z 595
     } else {
       fill(93, 208, 207);
-      textSize(16);
-      text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 560 + verticalOffset);
-      gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 590 + verticalOffset, GAME_WIDTH / 2 + 100, 590 + verticalOffset);
+      textSize(14); // Zmniejszone z 16
+      text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 465 + verticalOffset); // Przesunięte z 560
+      gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 90, 485 + verticalOffset, GAME_WIDTH / 2 + 90, 485 + verticalOffset);
       gradient.addColorStop(0, "#FF4500");
       gradient.addColorStop(1, "#FFD700");
       drawingContext.fillStyle = gradient;
       stroke(147, 208, 207);
       strokeWeight(3);
-      rect(GAME_WIDTH / 2 - 100, 590 + verticalOffset, 200, 50, 15);
+      rect(GAME_WIDTH / 2 - 90, 485 + verticalOffset, 180, 45, 15); // Szerokość z 200 na 180, wysokość z 50 na 45, przesunięte z 590
       noStroke();
       fill(249, 249, 242);
-      textSize(24);
-      text("LOGOUT", GAME_WIDTH / 2, 615 + verticalOffset);
+      textSize(22); // Zmniejszone z 24
+      text("LOGOUT", GAME_WIDTH / 2, 507 + verticalOffset); // Przesunięte z 615
     }
   
     // Komunikat o opcjonalnym logowaniu – mniejszy tekst
     fill(147, 208, 207, 200);
-    textSize(14);
+    textSize(12); // Zmniejszone z 14
     textStyle(NORMAL);
-    text("Login optional – save scores and claim NFT on Superseed Testnet", GAME_WIDTH / 2, 650 + verticalOffset);
-    text("after completing 10 orbits and defeating the boss!", GAME_WIDTH / 2, 670 + verticalOffset);
+    text("Login optional – save scores and claim NFT on Superseed Testnet", GAME_WIDTH / 2, 540 + verticalOffset); // Przesunięte z 650
+    text("after completing 10 orbits and defeating the boss!", GAME_WIDTH / 2, 555 + verticalOffset); // Przesunięte z 670
   
     // Przycisk "Claim Your NFT" – mniejszy rozmiar
     if (hasCompletedGame) {
       fill(93, 208, 207);
-      rect(GAME_WIDTH / 2 - 100, 700 + verticalOffset, 200, 50, 10);
+      rect(GAME_WIDTH / 2 - 90, 580 + verticalOffset, 180, 45, 10); // Szerokość z 200 na 180, wysokość z 50 na 45, przesunięte z 700
       fill(255);
-      textSize(20);
-      text("Claim Your NFT", GAME_WIDTH / 2, 725 + verticalOffset);
+      textSize(18); // Zmniejszone z 20
+      text("Claim Your NFT", GAME_WIDTH / 2, 602 + verticalOffset); // Przesunięte z 725
     }
   
     // Komunikat o wersji desktopowej – mniejszy tekst
     fill(255, 50, 50, 255);
-    textSize(28);
+    textSize(24); // Zmniejszone z 28
     textStyle(BOLD);
     drawingContext.shadowBlur = 0;
-    text("NOTICE: Desktop only for now", GAME_WIDTH / 2, 780 + verticalOffset);
+    text("NOTICE: Desktop only for now", GAME_WIDTH / 2, 640 + verticalOffset); // Przesunięte z 780
     fill(255, 215, 0, 200);
-    textSize(14);
-    text("Mobile version coming soon!", GAME_WIDTH / 2, 805 + verticalOffset);
+    textSize(12); // Zmniejszone z 14
+    text("Mobile version coming soon!", GAME_WIDTH / 2, 660 + verticalOffset); // Przesunięte z 805
   
     // Przyciski boczne (INFO, TUTORIAL, VIEW INTRO, ACHIEVEMENTS) – bez zmian
     let sideButtonWidth = 120;
@@ -1420,9 +1420,9 @@ function draw() {
   
     textAlign(CENTER, BASELINE);
   
-    // Informacja o twórcy w prawym dolnym rogu – poprawione z adjustedMouseX i adjustedMouseY
-    let adjustedMouseX = mouseX - (width - GAME_WIDTH) / 2; // Dodane
-    let adjustedMouseY = mouseY - (height - GAME_HEIGHT) / 2; // Dodane
+    // Informacja o twórcy w prawym dolnym rogu
+    let adjustedMouseX = mouseX - (width - GAME_WIDTH) / 2;
+    let adjustedMouseY = mouseY - (height - GAME_HEIGHT) / 2;
     let creatorTextX = GAME_WIDTH - 140;
     let creatorTextY = GAME_HEIGHT - 30;
     let creatorTextWidth = 120;
@@ -3406,13 +3406,13 @@ function mousePressed() {
       window.open("https://x.com/sebbtgk", "_blank");
     }
 
-    let verticalOffset = 80;
+    let verticalOffset = 60; // Zaktualizowane z 80
 
     // Choose Your Seed Color
-    let colorBoxSize = 50;
-    let colorBoxSpacing = 25;
+    let colorBoxSize = 45; // Zaktualizowane z 50
+    let colorBoxSpacing = 20; // Zaktualizowane z 25
     let startX = GAME_WIDTH / 2 - (colorBoxSize * 3 + colorBoxSpacing * 2) / 2;
-    if (adjustedMouseY >= 330 + verticalOffset && adjustedMouseY <= 330 + verticalOffset + colorBoxSize) {
+    if (adjustedMouseY >= 280 + verticalOffset && adjustedMouseY <= 280 + verticalOffset + colorBoxSize) { // Zaktualizowane z 330
       if (adjustedMouseX >= startX && adjustedMouseX <= startX + colorBoxSize) {
         seedColor = { r: 0, g: 255, b: 0 };
       } else if (
@@ -3430,10 +3430,10 @@ function mousePressed() {
 
     // Enter Your Nick
     if (
-      adjustedMouseY >= 440 + verticalOffset &&
-      adjustedMouseY <= 480 + verticalOffset &&
-      adjustedMouseX >= GAME_WIDTH / 2 - 100 &&
-      adjustedMouseX <= GAME_WIDTH / 2 + 100
+      adjustedMouseY >= 370 + verticalOffset && // Zaktualizowane z 440
+      adjustedMouseY <= 405 + verticalOffset && // Zaktualizowane z 480
+      adjustedMouseX >= GAME_WIDTH / 2 - 90 && // Zaktualizowane z 100
+      adjustedMouseX <= GAME_WIDTH / 2 + 90 // Zaktualizowane z 100
     ) {
       isTypingNick = true;
     } else {
@@ -3442,10 +3442,10 @@ function mousePressed() {
 
     // Start/Resume Button
     if (
-      adjustedMouseX >= GAME_WIDTH / 2 - 100 &&
-      adjustedMouseX <= GAME_WIDTH / 2 + 100 &&
-      adjustedMouseY >= 500 + verticalOffset &&
-      adjustedMouseY <= 550 + verticalOffset
+      adjustedMouseX >= GAME_WIDTH / 2 - 90 && // Zaktualizowane z 100
+      adjustedMouseX <= GAME_WIDTH / 2 + 90 && // Zaktualizowane z 100
+      adjustedMouseY >= 420 + verticalOffset && // Zaktualizowane z 500
+      adjustedMouseY <= 465 + verticalOffset // Zaktualizowane z 550
     ) {
       if (savedGameState) {
         console.log("Resuming paused game...");
@@ -3459,10 +3459,10 @@ function mousePressed() {
     // Login/Logout Button
     if (
       !isConnected &&
-      adjustedMouseX >= GAME_WIDTH / 2 - 100 &&
-      adjustedMouseX <= GAME_WIDTH / 2 + 100 &&
-      adjustedMouseY >= 570 + verticalOffset &&
-      adjustedMouseY <= 620 + verticalOffset
+      adjustedMouseX >= GAME_WIDTH / 2 - 90 && // Zaktualizowane z 100
+      adjustedMouseX <= GAME_WIDTH / 2 + 90 && // Zaktualizowane z 100
+      adjustedMouseY >= 475 + verticalOffset && // Zaktualizowane z 570
+      adjustedMouseY <= 520 + verticalOffset // Zaktualizowane z 620
     ) {
       console.log("Login clicked - initiating wallet connection");
       connectWallet(true)
@@ -3481,10 +3481,10 @@ function mousePressed() {
         });
     } else if (
       isConnected &&
-      adjustedMouseX >= GAME_WIDTH / 2 - 100 &&
-      adjustedMouseX <= GAME_WIDTH / 2 + 100 &&
-      adjustedMouseY >= 590 + verticalOffset &&
-      adjustedMouseY <= 640 + verticalOffset
+      adjustedMouseX >= GAME_WIDTH / 2 - 90 && // Zaktualizowane z 100
+      adjustedMouseX <= GAME_WIDTH / 2 + 90 && // Zaktualizowane z 100
+      adjustedMouseY >= 485 + verticalOffset && // Zaktualizowane z 590
+      adjustedMouseY <= 530 + verticalOffset // Zaktualizowane z 640
     ) {
       console.log("Logout clicked - disconnecting wallet");
       if (web3Modal) {
@@ -3502,10 +3502,10 @@ function mousePressed() {
     // OBSŁUGA KLIKNIĘCIA W "Claim Your NFT"
     if (
       hasCompletedGame &&
-      adjustedMouseX >= GAME_WIDTH / 2 - 100 &&
-      adjustedMouseX <= GAME_WIDTH / 2 + 100 &&
-      adjustedMouseY >= 700 + verticalOffset &&
-      adjustedMouseY <= 750 + verticalOffset
+      adjustedMouseX >= GAME_WIDTH / 2 - 90 && // Zaktualizowane z 100
+      adjustedMouseX <= GAME_WIDTH / 2 + 90 && // Zaktualizowane z 100
+      adjustedMouseY >= 580 + verticalOffset && // Zaktualizowane z 700
+      adjustedMouseY <= 625 + verticalOffset // Zaktualizowane z 750
     ) {
       gameState = "endgame";
       console.log("Returning to claim NFT!");
