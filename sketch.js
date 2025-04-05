@@ -131,6 +131,8 @@ let bossDefeatTimer = 0;
 let zoomLevel = 1;
 let bossDefeatedSuccessfully = false; 
 
+let scrollOffset = 0;
+
 const ethersLib = window.ethers;
 
 const SYNC_INTERVAL = 2000; // Do usunięcia w nowej mechanice, jeśli niepotrzebne
@@ -1640,10 +1642,9 @@ function draw() {
   }
 
   else if (gameState === "info") {
-    // Zmienna do śledzenia przewijania
-    let scrollOffset = 0; // Początkowa pozycja przewijania (globalna zmienna, zdefiniuj poza draw())
-    let maxScroll = 0; // Maksymalna wartość przewijania
-    let contentHeight = 0; // Całkowita wysokość zawartości
+    let deltaTime = 1000 / frameRate(); // For smooth scrolling
+    let contentHeight = 0; // Total height of scrollable content
+    let maxScroll = 0; // Maximum scroll distance
   
     // Gradient Background z trzema kolorami
     let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -1858,14 +1859,17 @@ function draw() {
     textSize(16);
     text("#SuperseedGrok3 – Powered by xAI", GAME_WIDTH / 2, GAME_HEIGHT - 30);
   
-    // Logika przewijania
-    if (mouseIsPressed && mx > 0 && mx < GAME_WIDTH && my > 0 && my < GAME_HEIGHT && !isBackHovering) {
-      scrollOffset += pmouseY - mouseY; // Odwrócona logika, bo przewijamy zawartość w górę/dół
+    // Scrollbar (opcjonalny)
+    if (maxScroll > 0) {
+      let scrollbarHeight = (GAME_HEIGHT / contentHeight) * GAME_HEIGHT;
+      let scrollbarY = map(scrollOffset, 0, -maxScroll, 0, GAME_HEIGHT - scrollbarHeight);
+      fill(93, 208, 207, 150);
+      rect(GAME_WIDTH - 20, scrollbarY, 10, scrollbarHeight, 5);
     }
-    if (keyIsDown(UP_ARROW)) scrollOffset += 5;
-    if (keyIsDown(DOWN_ARROW)) scrollOffset -= 5;
   
-    // Ograniczenie przewijania
+    // Logika przewijania strzałkami (płynna)
+    if (keyIsDown(UP_ARROW)) scrollOffset += 200 * deltaTime / 1000;
+    if (keyIsDown(DOWN_ARROW)) scrollOffset -= 200 * deltaTime / 1000;
     scrollOffset = constrain(scrollOffset, -maxScroll, 0);
   
     textAlign(CENTER, BASELINE); // Reset wyrównania
@@ -2319,6 +2323,27 @@ text(savedGameState ? "RESUME SYNC" : "START SYNC", GAME_WIDTH / 2, buttonY + TU
   }
 }
 // === KONIEC CZARNEJ DZIURY ===
+function mouseDragged() {
+  if (gameState === "info") {
+    let mx = mouseX - (width - GAME_WIDTH) / 2;
+    let my = mouseY - (height - GAME_HEIGHT) / 2;
+    let backX = 20;
+    let backY = 20;
+    let isBackHovering = mx > backX && mx < backX + 120 && my > backY && my < backY + 50;
+    if (!isBackHovering && mx > 0 && mx < GAME_WIDTH && my > 0 && my < GAME_HEIGHT) {
+      scrollOffset += pmouseY - mouseY;
+      scrollOffset = constrain(scrollOffset, -maxScroll, 0);
+    }
+  }
+}
+
+function mouseWheel(event) {
+  if (gameState === "info") {
+    scrollOffset += event.delta * 0.5; // Adjust sensitivity as needed
+    scrollOffset = constrain(scrollOffset, -maxScroll, 0);
+    return false; // Prevent default page scrolling
+  }
+}
 
     if (level >= 5 && random(1) < 0.01 && gameState === "playing" && !activeEvent) {
       gameState = "supernova";
