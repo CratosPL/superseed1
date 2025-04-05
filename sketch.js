@@ -902,17 +902,15 @@ function touchStarted() {
   return false; // Prevent default touch behavior
 }
 function touchMoved() {
-  if (touches.length >= 2 && gameState === "howToPlay") {
-    return true; // Zoom tylko w menu
-  }
   if (gameState === "info") {
-    let adjustedTouchY = mouseY - (height - GAME_HEIGHT) / 2; // mouseY updates with touch
+    let adjustedTouchY = mouseY - (height - GAME_HEIGHT) / 2;
     let prevTouchY = pmouseY - (height - GAME_HEIGHT) / 2;
-    scrollOffset += prevTouchY - adjustedTouchY; // Odwrócona logika dla naturalnego przewijania
+    scrollOffset += prevTouchY - adjustedTouchY; // Naturalne przewijanie
     scrollOffset = constrain(scrollOffset, -maxScroll, 0);
-    return false; // Zapobiega domyślnemu zachowaniu
+    console.log("Touch scrolling, scrollOffset:", scrollOffset);
+    return false; // Zapobiega domyślnemu przewijaniu strony
   }
-  return false;
+  return true;
 }
 
 
@@ -2346,24 +2344,24 @@ text(savedGameState ? "RESUME SYNC" : "START SYNC", GAME_WIDTH / 2, buttonY + TU
 // Tutaj są Twoje funkcje zdarzeń – POPRAWNE MIEJSCE
 function mouseDragged() {
   if (gameState === "info") {
-    let mx = mouseX - (width - GAME_WIDTH) / 2;
-    let my = mouseY - (height - GAME_HEIGHT) / 2;
-    let backX = 20;
-    let backY = 20;
-    let isBackHovering = mx > backX && mx < backX + 120 && my > backY && my < backY + 50;
-
-    if (!isBackHovering && !isDraggingScrollbar && mx > 0 && mx < GAME_WIDTH && my > 0 && my < GAME_HEIGHT) {
-      scrollOffset += pmouseY - mouseY;
-      scrollOffset = constrain(scrollOffset, -maxScroll, 0);
-    }
+    let adjustedMouseX = mouseX - (width - GAME_WIDTH) / 2;
+    let adjustedMouseY = mouseY - (height - GAME_HEIGHT) / 2;
 
     if (isDraggingScrollbar && maxScroll > 0) {
-      let scrollbarWidth = isMobile ? 20 : 10;
       let scrollbarHeight = (GAME_HEIGHT / contentHeight) * GAME_HEIGHT;
-      let newScrollY = my - scrollbarHeight / 2;
+      let newScrollY = adjustedMouseY - scrollbarHeight / 2;
       scrollOffset = map(newScrollY, 0, GAME_HEIGHT - scrollbarHeight, 0, -maxScroll);
       scrollOffset = constrain(scrollOffset, -maxScroll, 0);
       console.log("Dragging scrollbar, scrollOffset:", scrollOffset);
+    } else if (
+      adjustedMouseX > 0 &&
+      adjustedMouseX < GAME_WIDTH &&
+      adjustedMouseY > 0 &&
+      adjustedMouseY < GAME_HEIGHT
+    ) {
+      scrollOffset += pmouseY - mouseY;
+      scrollOffset = constrain(scrollOffset, -maxScroll, 0);
+      console.log("Dragging content, scrollOffset:", scrollOffset);
     }
   }
 }
@@ -3952,9 +3950,9 @@ function mousePressed() {
     let adjustedMouseX = mouseX - offsetX;
     let adjustedMouseY = mouseY - offsetY;
 
-    // Scrollbar dragging detection
+    // Scrollbar detection
     if (maxScroll > 0) {
-      let scrollbarWidth = isMobile ? 20 : 10;
+      let scrollbarWidth = isMobile ? 20 : 10; // Szerszy na mobile
       let scrollbarHeight = (GAME_HEIGHT / contentHeight) * GAME_HEIGHT;
       let scrollbarY = map(scrollOffset, 0, -maxScroll, 0, GAME_HEIGHT - scrollbarHeight);
       if (
@@ -3964,7 +3962,8 @@ function mousePressed() {
         adjustedMouseY <= scrollbarY + scrollbarHeight
       ) {
         isDraggingScrollbar = true;
-        console.log("Scrollbar clicked!");
+        console.log("Scrollbar clicked! Position:", adjustedMouseX, adjustedMouseY);
+        return; // Wychodzimy, żeby uniknąć konfliktów
       }
     }
 
@@ -3976,6 +3975,8 @@ function mousePressed() {
       adjustedMouseY <= 70
     ) {
       gameState = "howToPlay";
+      console.log("Back button clicked!");
+      return;
     }
   } else if (gameState === "intro") {
     // "NEXT" button handling – bez zmian
