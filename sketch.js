@@ -1224,7 +1224,7 @@ function draw() {
   
     // Zmniejszone logo na górze (z 400 na 320)
     let logoScale = 1 + sin(millis() * 0.002) * 0.05;
-    let logoSize = 320 * logoScale; // Zmniejszone o 20% z 400
+    let logoSize = 320 * logoScale;
     image(mainLogo, GAME_WIDTH / 2 - logoSize / 2, 30, logoSize, logoSize);
   
     // Zmniejszony verticalOffset z 100 na 80
@@ -1232,15 +1232,15 @@ function draw() {
   
     // Choose Your Seed Color – mniejszy tekst i odstępy
     fill(249, 249, 242);
-    textSize(20); // Zmniejszone z 24
-    text("Choose Your Seed Color", GAME_WIDTH / 2, 300 + verticalOffset); // Przesunięte w górę z 320
-    let colorBoxSize = 50; // Zmniejszone z 60
-    let colorBoxSpacing = 25; // Zmniejszone z 30
+    textSize(20);
+    text("Choose Your Seed Color", GAME_WIDTH / 2, 300 + verticalOffset);
+    let colorBoxSize = 50;
+    let colorBoxSpacing = 25;
     let startX = GAME_WIDTH / 2 - (colorBoxSize * 3 + colorBoxSpacing * 2) / 2;
     let pulse = 1 + sin(millis() * 0.005) * 0.1;
   
     fill(0, 255, 0);
-    rect(startX, 330 + verticalOffset, colorBoxSize, colorBoxSize, 15); // Przesunięte z 350
+    rect(startX, 330 + verticalOffset, colorBoxSize, colorBoxSize, 15);
     fill(0, 0, 255);
     rect(startX + colorBoxSize + colorBoxSpacing, 330 + verticalOffset, colorBoxSize, colorBoxSize, 15);
     fill(255, 215, 0);
@@ -1260,18 +1260,18 @@ function draw() {
   
     // Enter Your Nick – mniejsze pole tekstowe
     fill(249, 249, 242);
-    textSize(20); // Zmniejszone z 24
-    text("Enter Your Nick", GAME_WIDTH / 2, 420 + verticalOffset); // Przesunięte z 450
+    textSize(20);
+    text("Enter Your Nick", GAME_WIDTH / 2, 420 + verticalOffset);
     fill(128, 131, 134, 180);
     stroke(147, 208, 207);
     strokeWeight(3);
-    rect(GAME_WIDTH / 2 - 100, 440 + verticalOffset, 200, 40, 10); // Szerokość z 240 na 200, wysokość z 50 na 40, przesunięte z 470
+    rect(GAME_WIDTH / 2 - 100, 440 + verticalOffset, 200, 40, 10);
     fill(249, 249, 242);
-    textSize(18); // Zmniejszone z 20
+    textSize(18);
     textAlign(CENTER, CENTER);
     if (isTypingNick) {
       let cursor = (floor(millis() / 500) % 2 === 0) ? "|" : "";
-      text(playerNick + cursor, GAME_WIDTH / 2, 460 + verticalOffset); // Przesunięte z 495
+      text(playerNick + cursor, GAME_WIDTH / 2, 460 + verticalOffset);
     } else {
       text(playerNick || "Click to type", GAME_WIDTH / 2, 460 + verticalOffset);
     }
@@ -1284,12 +1284,12 @@ function draw() {
     drawingContext.fillStyle = gradient;
     stroke(147, 208, 207);
     strokeWeight(3);
-    rect(GAME_WIDTH / 2 - 100, 500 + verticalOffset, 200, 50, 15); // Szerokość z 240 na 200, wysokość z 60 na 50, przesunięte z 540
+    rect(GAME_WIDTH / 2 - 100, 500 + verticalOffset, 200, 50, 15);
     noStroke();
     fill(14, 39, 59);
-    textSize(24); // Zmniejszone z 28
+    textSize(24);
     let buttonText = savedGameState ? "RESUME" : "START";
-    text(buttonText, GAME_WIDTH / 2, 525 + verticalOffset); // Przesunięte z 570
+    text(buttonText, GAME_WIDTH / 2, 525 + verticalOffset);
   
     // Login/Logout Button – mniejszy rozmiar
     if (!isConnected) {
@@ -1299,53 +1299,53 @@ function draw() {
       drawingContext.fillStyle = gradient;
       stroke(147, 208, 207);
       strokeWeight(3);
-      rect(GAME_WIDTH / 2 - 100, 570 + verticalOffset, 200, 50, 15); // Szerokość z 240 na 200, wysokość z 60 na 50, przesunięte z 620
+      rect(GAME_WIDTH / 2 - 100, 570 + verticalOffset, 200, 50, 15);
       noStroke();
       fill(249, 249, 242);
-      textSize(24); // Zmniejszone z 28
-      text("LOGIN (Opt.)", GAME_WIDTH / 2, 595 + verticalOffset); // Przesunięte z 650
+      textSize(24);
+      text("LOGIN (Opt.)", GAME_WIDTH / 2, 595 + verticalOffset);
     } else {
       fill(93, 208, 207);
-      textSize(16); // Bez zmian
-      text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 560 + verticalOffset); // Przesunięte z 610
+      textSize(16);
+      text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 560 + verticalOffset);
       gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 100, 590 + verticalOffset, GAME_WIDTH / 2 + 100, 590 + verticalOffset);
       gradient.addColorStop(0, "#FF4500");
       gradient.addColorStop(1, "#FFD700");
       drawingContext.fillStyle = gradient;
       stroke(147, 208, 207);
       strokeWeight(3);
-      rect(GAME_WIDTH / 2 - 100, 590 + verticalOffset, 200, 50, 15); // Szerokość z 240 na 200, wysokość z 60 na 50, przesunięte z 640
+      rect(GAME_WIDTH / 2 - 100, 590 + verticalOffset, 200, 50, 15);
       noStroke();
       fill(249, 249, 242);
-      textSize(24); // Zmniejszone z 28
-      text("LOGOUT", GAME_WIDTH / 2, 615 + verticalOffset); // Przesunięte z 670
+      textSize(24);
+      text("LOGOUT", GAME_WIDTH / 2, 615 + verticalOffset);
     }
   
     // Komunikat o opcjonalnym logowaniu – mniejszy tekst
     fill(147, 208, 207, 200);
-    textSize(14); // Zmniejszone z 16
+    textSize(14);
     textStyle(NORMAL);
-    text("Login optional – save scores and claim NFT on Superseed Testnet", GAME_WIDTH / 2, 650 + verticalOffset); // Przesunięte z 700
-    text("after completing 10 orbits and defeating the boss!", GAME_WIDTH / 2, 670 + verticalOffset); // Przesunięte z 720
+    text("Login optional – save scores and claim NFT on Superseed Testnet", GAME_WIDTH / 2, 650 + verticalOffset);
+    text("after completing 10 orbits and defeating the boss!", GAME_WIDTH / 2, 670 + verticalOffset);
   
     // Przycisk "Claim Your NFT" – mniejszy rozmiar
     if (hasCompletedGame) {
       fill(93, 208, 207);
-      rect(GAME_WIDTH / 2 - 100, 700 + verticalOffset, 200, 50, 10); // Szerokość z 240 na 200, wysokość z 60 na 50, przesunięte z 740
+      rect(GAME_WIDTH / 2 - 100, 700 + verticalOffset, 200, 50, 10);
       fill(255);
-      textSize(20); // Zmniejszone z 24
-      text("Claim Your NFT", GAME_WIDTH / 2, 725 + verticalOffset); // Przesunięte z 770
+      textSize(20);
+      text("Claim Your NFT", GAME_WIDTH / 2, 725 + verticalOffset);
     }
   
     // Komunikat o wersji desktopowej – mniejszy tekst
     fill(255, 50, 50, 255);
-    textSize(28); // Zmniejszone z 32
+    textSize(28);
     textStyle(BOLD);
     drawingContext.shadowBlur = 0;
-    text("NOTICE: Desktop only for now", GAME_WIDTH / 2, 780 + verticalOffset); // Przesunięte z 820
+    text("NOTICE: Desktop only for now", GAME_WIDTH / 2, 780 + verticalOffset);
     fill(255, 215, 0, 200);
-    textSize(14); // Zmniejszone z 16
-    text("Mobile version coming soon!", GAME_WIDTH / 2, 805 + verticalOffset); // Przesunięte z 850
+    textSize(14);
+    text("Mobile version coming soon!", GAME_WIDTH / 2, 805 + verticalOffset);
   
     // Przyciski boczne (INFO, TUTORIAL, VIEW INTRO, ACHIEVEMENTS) – bez zmian
     let sideButtonWidth = 120;
@@ -1420,7 +1420,9 @@ function draw() {
   
     textAlign(CENTER, BASELINE);
   
-    // Informacja o twórcy w prawym dolnym rogu – bez zmian
+    // Informacja o twórcy w prawym dolnym rogu – poprawione z adjustedMouseX i adjustedMouseY
+    let adjustedMouseX = mouseX - (width - GAME_WIDTH) / 2; // Dodane
+    let adjustedMouseY = mouseY - (height - GAME_HEIGHT) / 2; // Dodane
     let creatorTextX = GAME_WIDTH - 140;
     let creatorTextY = GAME_HEIGHT - 30;
     let creatorTextWidth = 120;
@@ -3378,7 +3380,6 @@ function mousePressed() {
   let adjustedMouseY = mouseY - (height - GAME_HEIGHT) / 2;
 
   if (gameState === "howToPlay") {
-    // Kliknięcie na whiteLogo w lewym dolnym rogu – bez zmian
     let whiteLogoX = 20;
     let whiteLogoY = GAME_HEIGHT - 100;
     let whiteLogoWidth = 100;
@@ -3392,7 +3393,6 @@ function mousePressed() {
       window.open("https://www.superseed.xyz/", "_blank");
     }
 
-    // Kliknięcie na "Created by CratosPL" w prawym dolnym rogu – bez zmian
     let creatorTextX = GAME_WIDTH - 140;
     let creatorTextY = GAME_HEIGHT - 30;
     let creatorTextWidth = 120;
@@ -3406,47 +3406,46 @@ function mousePressed() {
       window.open("https://x.com/sebbtgk", "_blank");
     }
 
-    // Przesunięcie dla wszystkich elementów menu o verticalOffset
-    let verticalOffset = 100;
+    let verticalOffset = 80;
 
-    // Choose Your Seed Color – bez zmian
-    let colorBoxSize = 60;
-    let colorBoxSpacing = 30;
+    // Choose Your Seed Color
+    let colorBoxSize = 50;
+    let colorBoxSpacing = 25;
     let startX = GAME_WIDTH / 2 - (colorBoxSize * 3 + colorBoxSpacing * 2) / 2;
-    if (adjustedMouseY >= 350 + verticalOffset && adjustedMouseY <= 350 + verticalOffset + colorBoxSize) {
+    if (adjustedMouseY >= 330 + verticalOffset && adjustedMouseY <= 330 + verticalOffset + colorBoxSize) {
       if (adjustedMouseX >= startX && adjustedMouseX <= startX + colorBoxSize) {
-        seedColor = { r: 0, g: 255, b: 0 }; // Zielony
+        seedColor = { r: 0, g: 255, b: 0 };
       } else if (
         adjustedMouseX >= startX + colorBoxSize + colorBoxSpacing &&
         adjustedMouseX <= startX + colorBoxSize * 2 + colorBoxSpacing
       ) {
-        seedColor = { r: 0, g: 0, b: 255 }; // Niebieski
+        seedColor = { r: 0, g: 0, b: 255 };
       } else if (
         adjustedMouseX >= startX + (colorBoxSize + colorBoxSpacing) * 2 &&
         adjustedMouseX <= startX + (colorBoxSize + colorBoxSpacing) * 2 + colorBoxSize
       ) {
-        seedColor = { r: 255, g: 215, b: 0 }; // Złoty
+        seedColor = { r: 255, g: 215, b: 0 };
       }
     }
 
-    // Enter Your Nick – bez zmian
+    // Enter Your Nick
     if (
-      adjustedMouseY >= 470 + verticalOffset &&
-      adjustedMouseY <= 520 + verticalOffset &&
-      adjustedMouseX >= GAME_WIDTH / 2 - 120 &&
-      adjustedMouseX <= GAME_WIDTH / 2 + 120
+      adjustedMouseY >= 440 + verticalOffset &&
+      adjustedMouseY <= 480 + verticalOffset &&
+      adjustedMouseX >= GAME_WIDTH / 2 - 100 &&
+      adjustedMouseX <= GAME_WIDTH / 2 + 100
     ) {
       isTypingNick = true;
     } else {
       isTypingNick = false;
     }
 
-    // Start/Resume Button – bez zmian
+    // Start/Resume Button
     if (
-      adjustedMouseX >= GAME_WIDTH / 2 - 120 &&
-      adjustedMouseX <= GAME_WIDTH / 2 + 120 &&
-      adjustedMouseY >= 540 + verticalOffset &&
-      adjustedMouseY <= 600 + verticalOffset
+      adjustedMouseX >= GAME_WIDTH / 2 - 100 &&
+      adjustedMouseX <= GAME_WIDTH / 2 + 100 &&
+      adjustedMouseY >= 500 + verticalOffset &&
+      adjustedMouseY <= 550 + verticalOffset
     ) {
       if (savedGameState) {
         console.log("Resuming paused game...");
@@ -3457,13 +3456,13 @@ function mousePressed() {
       }
     }
 
-    // Login/Logout Button – bez zmian
+    // Login/Logout Button
     if (
       !isConnected &&
-      adjustedMouseX >= GAME_WIDTH / 2 - 120 &&
-      adjustedMouseX <= GAME_WIDTH / 2 + 120 &&
-      adjustedMouseY >= 620 + verticalOffset &&
-      adjustedMouseY <= 680 + verticalOffset
+      adjustedMouseX >= GAME_WIDTH / 2 - 100 &&
+      adjustedMouseX <= GAME_WIDTH / 2 + 100 &&
+      adjustedMouseY >= 570 + verticalOffset &&
+      adjustedMouseY <= 620 + verticalOffset
     ) {
       console.log("Login clicked - initiating wallet connection");
       connectWallet(true)
@@ -3482,10 +3481,10 @@ function mousePressed() {
         });
     } else if (
       isConnected &&
-      adjustedMouseX >= GAME_WIDTH / 2 - 120 &&
-      adjustedMouseX <= GAME_WIDTH / 2 + 120 &&
-      adjustedMouseY >= 640 + verticalOffset &&
-      adjustedMouseY <= 700 + verticalOffset
+      adjustedMouseX >= GAME_WIDTH / 2 - 100 &&
+      adjustedMouseX <= GAME_WIDTH / 2 + 100 &&
+      adjustedMouseY >= 590 + verticalOffset &&
+      adjustedMouseY <= 640 + verticalOffset
     ) {
       console.log("Logout clicked - disconnecting wallet");
       if (web3Modal) {
@@ -3500,19 +3499,19 @@ function mousePressed() {
       connectionError = null;
     }
 
-    // OBSŁUGA KLIKNIĘCIA W "Claim Your NFT" – bez zmian
+    // OBSŁUGA KLIKNIĘCIA W "Claim Your NFT"
     if (
       hasCompletedGame &&
-      adjustedMouseX >= GAME_WIDTH / 2 - 120 &&
-      adjustedMouseX <= GAME_WIDTH / 2 + 120 &&
-      adjustedMouseY >= 720 + verticalOffset &&
-      adjustedMouseY <= 780 + verticalOffset
+      adjustedMouseX >= GAME_WIDTH / 2 - 100 &&
+      adjustedMouseX <= GAME_WIDTH / 2 + 100 &&
+      adjustedMouseY >= 700 + verticalOffset &&
+      adjustedMouseY <= 750 + verticalOffset
     ) {
       gameState = "endgame";
       console.log("Returning to claim NFT!");
     }
 
-    // INFO Button – bez zmian
+    // Przyciski boczne – bez zmian
     let sideButtonX = GAME_WIDTH - 120 - 20;
     if (
       adjustedMouseX >= sideButtonX &&
@@ -3522,8 +3521,6 @@ function mousePressed() {
     ) {
       gameState = "info";
     }
-
-    // Tutorial Button – bez zmian
     if (
       adjustedMouseX >= sideButtonX &&
       adjustedMouseX <= sideButtonX + 120 &&
@@ -3532,8 +3529,6 @@ function mousePressed() {
     ) {
       gameState = "tutorial";
     }
-
-    // View Intro Button – bez zmian
     if (
       adjustedMouseX >= sideButtonX &&
       adjustedMouseX <= sideButtonX + 120 &&
@@ -3548,8 +3543,6 @@ function mousePressed() {
         introMusic.loop();
       }
     }
-
-    // ACHIEVEMENTS – bez zmian
     if (
       adjustedMouseX >= sideButtonX &&
       adjustedMouseX <= sideButtonX + 120 &&
