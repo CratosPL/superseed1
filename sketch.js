@@ -131,6 +131,19 @@ let bossDefeatedSuccessfully = false;
 let scrollOffset = 0; // Przesunięcie w pionie
 let maxScrollOffset = 0; // Maksymalne przesunięcie (obliczone na podstawie treści)
 
+// Mining Hub Variables
+let miningProbes = [];
+let miningHubTimer = 0;
+let offlineCap = 1000; // Maksymalna liczba punktów offline
+let miningPoints = 0;
+let probeCount = 5; // Początkowa liczba sond
+let miningUpgradeLevel = 1;
+let upgradeCost = 50;
+let miningMinigameActive = false;
+let minigameTarget = null;
+let minigameTimer = 0;
+let miningPreviewProbes = []; // Tablica na sondy w trybie podglądu
+
 const ethersLib = window.ethers;
 
 const SYNC_INTERVAL = 2000; // Do usunięcia w nowej mechanice, jeśli niepotrzebne
@@ -719,6 +732,85 @@ class Bullet {
   }
 }
 
+class MiningProbe {
+    constructor() {
+      this.x = GAME_WIDTH / 2;
+      this.y = GAME_HEIGHT / 2;
+      this.angle = random(TWO_PI);
+      this.radius = random(100, min(GAME_WIDTH, GAME_HEIGHT) * 0.3);
+      this.speed = random(0.005, 0.015);
+      this.size = 20;
+      this.trail = [];
+    }
+    update() {
+      this.angle += this.speed;
+      this.x = GAME_WIDTH / 2 + cos(this.angle) * this.radius;
+      this.y = GAME_HEIGHT / 2 + sin(this.angle) * this.radius;
+      this.trail.push({ x: this.x, y: this.y });
+      if (this.trail.length > 10) this.trail.shift();
+    }
+    show() {
+      // Ślady
+      for (let i = 0; i < this.trail.length; i++) {
+        let alpha = map(i, 0, this.trail.length, 0, 150);
+        fill(seedColor.r, seedColor.g, seedColor.b, alpha);
+        noStroke();
+        ellipse(this.trail[i].x, this.trail[i].y, this.size * 0.5);
+      }
+      // Sonda
+      fill(seedColor.r, seedColor.g, seedColor.b);
+      ellipse(this.x, this.y, this.size);
+      // Subtelny puls
+      let pulse = 1 + sin(millis() * 0.005) * 0.2;
+      noFill();
+      stroke(255, 215, 0, 100);
+      strokeWeight(2);
+      ellipse(this.x, this.y, this.size * pulse);
+      noStroke();
+    }
+  }
+
+// Tutaj wstawiamy klasę Probe
+class Probe {
+  constructor() {
+    this.radius = random(200, 300);
+    this.angle = random(TWO_PI);
+    this.speed = random(0.01, 0.03);
+    this.trail = []; // Ślad sondy
+  }
+  update() {
+    this.angle += this.speed;
+    let x = GAME_WIDTH / 2 + cos(this.angle) * this.radius;
+    let y = GAME_HEIGHT / 2 + sin(this.angle) * this.radius;
+    this.trail.push({ x, y, life: 100 });
+    if (this.trail.length > 10) this.trail.shift();
+    if (random(1) < 0.2) {
+      particles.push(new Particle(x, y, { r: 255, g: 215, b: 0 }));
+    }
+  }
+  show() { // Zmiana z draw() na show() dla spójności
+    let x = GAME_WIDTH / 2 + cos(this.angle) * this.radius;
+    let y = GAME_HEIGHT / 2 + sin(this.angle) * this.radius;
+    // Ślad
+    for (let t of this.trail) {
+      noStroke();
+      fill(255, 215, 0, t.life);
+      ellipse(t.x, t.y, 5, 5);
+      t.life -= 10;
+    }
+    push();
+    translate(x, y);
+    rotate(this.angle);
+    fill(255, 215, 0);
+    ellipse(0, 0, 15, 15);
+    noFill();
+    stroke(seedColor.r, seedColor.g, seedColor.b, 150);
+    strokeWeight(2);
+    ellipse(0, 0, 20 + sin(frameCount * 0.05) * 5, 20 + sin(frameCount * 0.05) * 5);
+    pop();
+  }
+}
+
 function star(x, y, radius1, radius2, npoints) {
   let angle = TWO_PI / npoints;
   let halfAngle = angle / 2.0;
@@ -807,10 +899,17 @@ function setup() {
   for (let i = 0; i < 20; i++) {
     bgParticles.push(new BgParticle());
   }
+  for (let i = 0; i < probeCount; i++) {
+    miningProbes.push(new MiningProbe());
+  }
+  // Inicjalizacja sond w trybie podglądu
+  for (let i = 0; i < 5; i++) {
+    miningPreviewProbes.push(new MiningProbe()); // Poprawiono "Probe" na "MiningProbe"
+  }
   clickSound.setVolume(1.0);
   backgroundMusic.setVolume(0.5);
   backgroundMusic2.setVolume(0.5);
-  backgroundMusic3.setVolume(0.5); // Ustawienie głośności dla nowej muzyki
+  backgroundMusic3.setVolume(0.5);
   introMusic.setVolume(0.6);
   powerUpSound.setVolume(0.5);
   meteorSound.setVolume(0.5);
@@ -1417,6 +1516,20 @@ drawingContext.shadowBlur = 0; // Reset cienia po użyciu
     textSize(16);
     textAlign(CENTER, CENTER);
     text("ACHIEVEMENTS", sideButtonX + sideButtonWidth / 2, 380 + sideButtonHeight / 2);
+
+    // Mining Hub Button
+gradient = drawingContext.createLinearGradient(sideButtonX, 440, sideButtonX + sideButtonWidth, 440);
+gradient.addColorStop(0, "#93D0CF");
+gradient.addColorStop(1, "#FFD700");
+drawingContext.fillStyle = gradient;
+stroke(147, 208, 207);
+strokeWeight(2);
+rect(sideButtonX, 440, sideButtonWidth, sideButtonHeight, 10);
+noStroke();
+fill(14, 39, 59);
+textSize(16);
+textAlign(CENTER, CENTER);
+text("MINING HUB", sideButtonX + sideButtonWidth / 2, 440 + sideButtonHeight / 2);
   
     // WhiteLogo w lewym dole – bez zmian
     let whiteLogoScale = 1 + sin(millis() * 0.003) * 0.05;
@@ -3198,7 +3311,145 @@ else if (gameState === "bossFight") {
     bossActive = false;
     // Nie zmieniaj muzyki tutaj – bossMusic gra dalej
 }
+
 }
+
+else if (gameState === "miningHub") {
+  // Gradient Background
+  let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
+  gradient.addColorStop(0, "#0E273B");
+  gradient.addColorStop(1, "#93D0CF");
+  drawingContext.fillStyle = gradient;
+  rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+  // Aktualizacja i rysowanie sond
+  miningHubTimer += deltaTime;
+  if (miningHubTimer >= 1000) { // 1 punkt co sekundę na sondę
+    miningPoints += probeCount * miningUpgradeLevel;
+    miningPoints = min(miningPoints, offlineCap);
+    miningHubTimer = 0;
+  }
+  for (let probe of miningProbes) {
+    probe.update();
+    probe.show();
+  }
+
+  // Nagłówek
+  fill(255, 215, 0);
+  textSize(32);
+  textStyle(BOLD);
+  text("Decentralized Mining Hub", GAME_WIDTH / 2, 50);
+
+  // Wyświetlanie punktów
+  fill(147, 208, 207);
+  textSize(20);
+  text(`Mining Points: ${floor(miningPoints)} / ${offlineCap}`, GAME_WIDTH / 2, 100);
+
+  // Przycisk ulepszenia
+  let upgradeButtonX = GAME_WIDTH / 2 - 100;
+  let upgradeButtonY = GAME_HEIGHT / 2 + 100;
+  let pulseScale = 1 + sin(millis() * 0.005) * 0.1;
+  fill(93, 208, 207);
+  rect(upgradeButtonX, upgradeButtonY, 200 * pulseScale, 50 * pulseScale, 10);
+  fill(255);
+  textSize(20);
+  text(`Upgrade (Cost: ${upgradeCost})`, GAME_WIDTH / 2, upgradeButtonY + 25);
+
+  // Przycisk minigry
+  let minigameButtonX = GAME_WIDTH / 2 - 100;
+  let minigameButtonY = GAME_HEIGHT / 2 + 160;
+  fill(255, 215, 0);
+  rect(minigameButtonX, minigameButtonY, 200 * pulseScale, 50 * pulseScale, 10);
+  fill(14, 39, 59);
+  textSize(20);
+  text("Boost Minigame", GAME_WIDTH / 2, minigameButtonY + 25);
+
+  // Przycisk powrotu
+  let backButtonX = GAME_WIDTH / 2 - 100;
+  let backButtonY = GAME_HEIGHT / 2 + 220;
+  fill(147, 208, 207);
+  rect(backButtonX, backButtonY, 200, 50, 10);
+  fill(255);
+  textSize(20);
+  text("Back to Menu", GAME_WIDTH / 2, backButtonY + 25);
+
+  // Minigra
+  if (miningMinigameActive) {
+    fill(0, 0, 0, 150);
+    rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    fill(255);
+    textSize(24);
+    text(`Click the target! ${floor(minigameTimer / 1000)}s`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50);
+    if (!minigameTarget) {
+      minigameTarget = { x: random(100, GAME_WIDTH - 100), y: random(100, GAME_HEIGHT - 100) };
+    }
+    fill(seedColor.r, seedColor.g, seedColor.b);
+    ellipse(minigameTarget.x, minigameTarget.y, 40 * pulseScale);
+    minigameTimer -= deltaTime;
+    if (minigameTimer <= 0) {
+      miningMinigameActive = false;
+      minigameTarget = null;
+    }
+  }
+
+  // Branding Superseed
+  let logoWidth = 100;
+  let logoHeight = 50;
+  image(whiteLogo, GAME_WIDTH - logoWidth - 20, GAME_HEIGHT - logoHeight - 20, logoWidth, logoHeight);
+}
+
+else if (gameState === "miningHubPreview") {
+  background(14, 39, 59, 200); // Tangaroa z przezroczystością
+  
+  // Gradientowy prostokąt
+  for (let y = 50; y < GAME_HEIGHT - 50; y++) {
+    let inter = map(y, 50, GAME_HEIGHT - 50, 0, 1);
+    let c = lerpColor(color(14, 39, 59), color(93, 208, 207), inter);
+    stroke(c);
+    line(50, y, GAME_WIDTH - 50, y);
+  }
+  noStroke();
+  fill(10, 20, 30, 230); // Lekka nakładka
+
+  fill(93, 208, 207); // Superseed Light Green
+  textSize(28);
+  textAlign(CENTER, CENTER);
+  text("Decentralized Mining Probes", GAME_WIDTH / 2, 100);
+
+  fill(249, 249, 242); // White (#F9F9F2)
+  textSize(14);
+  textAlign(LEFT, TOP);
+  let description = "Decentralized Mining Probes – Upcoming Idle Game Add-On!\n\n" +
+                   "A new idle game add-on fully tied to the Superseed Network is coming soon! Deploy Decentralized Mining Probes into space, collect Cosmic Fragments, and sync them to Superseed Testnet as TEST_FRAG tokens.\n\n" +
+                   "What’s in store:\n" +
+                   "- Passive Production: Probes generate 0.5 fragments every 5s per probe, with a 24h offline cap.\n" +
+                   "- Active Rewards: Log in daily for bonuses (50-200 fragments), activate production boosts (+50% for 1h), and hit milestones (e.g., 500 fragments for rewards).\n" +
+                   "- Superseed Blockchain: Sync fragments to Superseed Testnet as TEST_FRAG tokens, redeemable for future airdrop benefits!\n" +
+                   "- Customization: Spend fragments on skins (e.g., golden probes), in-game power-ups, or Superseed campaign XP.\n\n" +
+                   "This mode is being built with a Node.js backend for security and blockchain integration with Superseed Network. Check back soon to launch your probes and join the cosmic revolution!";
+  text(description, 70, 150, GAME_WIDTH - 140, GAME_HEIGHT - 200);
+
+  // Rysowanie i aktualizacja sond (zastępuje statyczne elipsy)
+  for (let probe of miningPreviewProbes) {
+    probe.update();
+    probe.show(); // Poprawiono "draw()" na "show()", aby było spójne z klasą MiningProbe
+  }
+
+  // Aktualizacja i rysowanie cząstek
+  for (let i = particles.length - 1; i >= 0; i--) {
+    particles[i].update();
+    particles[i].show(); // Poprawiono "draw()" na "show()", aby było spójne z klasą Particle
+    if (particles[i].isDead()) particles.splice(i, 1); // Poprawiono warunek z "life <= 0" na "isDead()"
+  }
+
+  // Przycisk powrotu
+  fill(93, 208, 207); // Superseed Light Green
+  rect(GAME_WIDTH / 2 - 50, GAME_HEIGHT - 80, 100, 40, 10);
+  fill(249, 249, 242); // White
+  textSize(18);
+  text("Back", GAME_WIDTH / 2, GAME_HEIGHT - 60);
+}
+
 pop(); // Zamknięcie push() z początku draw()
 } // Zamknięcie funkcji draw()
 
@@ -3618,6 +3869,16 @@ function mousePressed() {
     ) {
       gameState = "achievements";
     }
+
+    if (
+      adjustedMouseX >= sideButtonX &&
+      adjustedMouseX <= sideButtonX + 120 &&
+      adjustedMouseY >= 440 &&
+      adjustedMouseY <= 490
+    ) {
+      gameState = "miningHubPreview";
+    }
+
   } else if (gameState === "achievements") {
     // CLOSE
     if (
@@ -3668,29 +3929,47 @@ function mousePressed() {
     let modalHeight = GAME_HEIGHT * 0.8;
     let modalX = (GAME_WIDTH - modalWidth) / 2;
     let modalY = (GAME_HEIGHT - modalHeight) / 2;
-  
+
     // Back Button
     let backX = modalX + 20;
     let backY = modalY + modalHeight - 60;
-    if (adjustedMouseX > backX && adjustedMouseX < backX + 100 &&
-        adjustedMouseY > backY && adjustedMouseY < backY + 40) {
+    if (
+      adjustedMouseX >= backX && adjustedMouseX <= backX + 100 &&
+      adjustedMouseY >= backY && adjustedMouseY <= backY + 40
+    ) {
       gameState = "howToPlay";
-      console.log("Back clicked from tutorial modal!");
+      scrollOffset = 0; // Reset przewijania
+      console.log("Back clicked from tutorial – returning to howToPlay");
     }
-  
+
     // Start/Resume Button
     let buttonX = modalX + modalWidth - 200;
     let buttonY = modalY + modalHeight - 60;
-    if (adjustedMouseX > buttonX && adjustedMouseX < buttonX + 180 &&
-        adjustedMouseY > buttonY && adjustedMouseY < buttonY + 40) {
+    if (
+      adjustedMouseX >= buttonX && adjustedMouseX <= buttonX + 180 &&
+      adjustedMouseY >= buttonY && adjustedMouseY <= buttonY + 40
+    ) {
       if (savedGameState) {
         resumeGame();
-        console.log("Resume Sync clicked from tutorial modal!");
+        console.log("Resume Sync clicked from tutorial – resuming game");
       } else {
         startGame();
-        console.log("Start Sync clicked from tutorial modal!");
+        console.log("Start Sync clicked from tutorial – starting new game");
       }
     }
+  } else if (gameState === "miningHubPreview") {
+    // Przycisk powrotu w miningHubPreview
+    if (
+      adjustedMouseX >= GAME_WIDTH / 2 - 50 &&
+      adjustedMouseX <= GAME_WIDTH / 2 + 50 &&
+      adjustedMouseY >= GAME_HEIGHT - 80 &&
+      adjustedMouseY <= GAME_HEIGHT - 40
+    ) {
+      gameState = "howToPlay";
+      console.log("Back clicked from miningHubPreview – returning to howToPlay");
+    }
+  
+
   
 
     if (adjustedMouseX >= 10 && adjustedMouseX <= 110 && adjustedMouseY >= 10 && adjustedMouseY <= 50) {
@@ -3728,7 +4007,7 @@ function mousePressed() {
                 introMusic.loop(); // Uruchom introMusic od nowa
             }
         }
-    } else if (gameState === "start") {
+      } else if (gameState === "start") {
         startGame();
     } else if (gameState === "win") {
         gameState = "playing";
@@ -3738,13 +4017,91 @@ function mousePressed() {
         warpTimer = 0;
         lastPulse = millis();
         console.log(`Continuing to Orbit ${level}`);
+    } else if (gameState === "gameOver") {
+        let buttonX = GAME_WIDTH / 2 - 90; // Zaktualizowane z 100 na 90
+        let baseButtonY = mainnetBadgeEarned ? GAME_HEIGHT / 2 + 200 : GAME_HEIGHT / 2 + 100; // Dynamiczna pozycja
+        let relaunchButtonY = baseButtonY;
+        let shareScoreButtonY = baseButtonY + 50;
+        let menuButtonY = baseButtonY + 100;
+
+        if (
+            adjustedMouseX >= buttonX &&
+            adjustedMouseX <= buttonX + 180 &&
+            adjustedMouseY >= relaunchButtonY &&
+            adjustedMouseY <= relaunchButtonY + 40
+        ) {
+            console.log("Relaunch clicked!");
+            startGame();
+        }
+    } else if (gameState === "miningHub") {
+        let upgradeButtonX = GAME_WIDTH / 2 - 100;
+        let upgradeButtonY = GAME_HEIGHT / 2 + 100;
+        let minigameButtonX = GAME_WIDTH / 2 - 100;
+        let minigameButtonY = GAME_HEIGHT / 2 + 160;
+        let backButtonX = GAME_WIDTH / 2 - 100;
+        let backButtonY = GAME_HEIGHT / 2 + 220;
+
+        if (
+            adjustedMouseX >= upgradeButtonX &&
+            adjustedMouseX <= upgradeButtonX + 200 &&
+            adjustedMouseY >= upgradeButtonY &&
+            adjustedMouseY <= upgradeButtonY + 50 &&
+            miningPoints >= upgradeCost
+        ) {
+            miningPoints -= upgradeCost;
+            miningUpgradeLevel += 1;
+            upgradeCost = floor(upgradeCost * 1.5);
+            offlineCap += 500;
+            if (soundInitialized) powerUpSound.play();
+        }
+
+        if (
+            adjustedMouseX >= minigameButtonX &&
+            adjustedMouseX <= minigameButtonX + 200 &&
+            adjustedMouseY >= minigameButtonY &&
+            adjustedMouseY <= minigameButtonY + 50
+        ) {
+            miningMinigameActive = true;
+            minigameTimer = 10000; // 10 sekund
+            minigameTarget = null;
+            if (soundInitialized) warpSound.play();
+        }
+
+        if (
+            adjustedMouseX >= backButtonX &&
+            adjustedMouseX <= backButtonX + 200 &&
+            adjustedMouseY >= backButtonY &&
+            adjustedMouseY <= backButtonY + 50
+        ) {
+            gameState = "howToPlay";
+            miningMinigameActive = false;
+            minigameTarget = null;
+        }
+
+        if (miningMinigameActive && minigameTarget) {
+            let d = dist(adjustedMouseX, adjustedMouseY, minigameTarget.x, minigameTarget.y);
+            if (d < 20) {
+                miningPoints += 50 * miningUpgradeLevel;
+                miningMinigameActive = false;
+                minigameTarget = null;
+                for (let i = 0; i < 20; i++) {
+                    particles.push(new Particle(adjustedMouseX, adjustedMouseY, { r: seedColor.r, g: seedColor.g, b: seedColor.b }));
+                }
+                if (soundInitialized) levelSound.play();
+            }
+        }
     }
+
 } else if (gameState === "gameOver") {
   let buttonX = GAME_WIDTH / 2 - 90; // Zaktualizowane z 100 na 90
   let baseButtonY = mainnetBadgeEarned ? GAME_HEIGHT / 2 + 200 : GAME_HEIGHT / 2 + 100; // Dynamiczna pozycja
   let relaunchButtonY = baseButtonY;
   let shareScoreButtonY = baseButtonY + 50;
   let menuButtonY = baseButtonY + 100;
+
+
+
+
 
   // "RELAUNCH" Button
   if (
