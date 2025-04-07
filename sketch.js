@@ -1439,25 +1439,30 @@ function draw() {
       text("Claim Your NFT", GAME_WIDTH / 2, 602 + verticalOffset); // Przesunięte z 725
     }
   
-    // Komunikat o wersji desktopowej – wzmocniony napis
+    // Komunikat o wersji desktopowej – bardziej widoczny i większy na desktopie
 let noticeX = GAME_WIDTH / 2;
-let noticeY = 640 + verticalOffset; // Przesunięte z 780
-let mobileY = 660 + verticalOffset; // Przesunięte z 805
+let noticeY = 640 + verticalOffset; // Pozycja bazowa
+let mobileY = 670 + verticalOffset; // Lekko przesunięte w dół dla odstępu
 let pulseScale = 1 + sin(millis() * 0.005) * 0.1; // Subtelne pulsowanie
 
-// Tekst NOTICE – czerwony z cieniem i pulsowaniem
-drawingContext.shadowBlur = 5;
-drawingContext.shadowColor = "rgba(255, 50, 50, 0.8)";
-fill(255, 50, 50, 255);
-textStyle(BOLD);
-text("NOTICE: Desktop only for now", noticeX, noticeY);
+// Dynamiczna wielkość tekstu zależna od szerokości ekranu
+let noticeTextSize = GAME_WIDTH < 768 ? 16 : 24; // 16px na mobile, 24px na desktopie
+let mobileTextSize = GAME_WIDTH < 768 ? 12 : 18; // 12px na mobile, 18px na desktopie
 
-// Tekst Mobile version – żółty z cieniem
-drawingContext.shadowBlur = 3;
-drawingContext.shadowColor = "rgba(255, 215, 0, 0.6)";
-fill(255, 215, 0, 200);
-textSize(12); // Zachowana wielkość
-text("Mobile version coming soon!", noticeX, mobileY);
+// Tekst NOTICE – czerwony z wyraźnym cieniem i pulsowaniem
+drawingContext.shadowBlur = 8; // Zwiększony cień dla lepszej widoczności
+drawingContext.shadowColor = "rgba(255, 50, 50, 1)"; // Pełna nieprzezroczystość cienia
+fill(255, 50, 50, 255); // Jasnoczerwony, pełna nieprzezroczystość
+textStyle(BOLD);
+textSize(noticeTextSize);
+text("NOTICE: Desktop Only For Now", noticeX, noticeY);
+
+// Tekst Mobile version – żółty z wyraźnym cieniem
+drawingContext.shadowBlur = 5; // Nieco mniejszy cień dla drugiego tekstu
+drawingContext.shadowColor = "rgba(255, 215, 0, 0.8)"; // Lepsza widoczność cienia
+fill(255, 215, 0, 255); // Pełna nieprzezroczystość dla żółtego
+textSize(mobileTextSize);
+text("Mobile Version Coming Soon!", noticeX, mobileY);
 drawingContext.shadowBlur = 0; // Reset cienia po użyciu
   
     // Przyciski boczne (INFO, TUTORIAL, VIEW INTRO, ACHIEVEMENTS) – bez zmian
@@ -1839,7 +1844,7 @@ text("MINING HUB", sideButtonX + sideButtonWidth / 2, 440 + sideButtonHeight / 2
   }
 
   else if (gameState === "tutorial") {
-    // Gradient Background (cały ekran)
+    // Gradient Background
     let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
     gradient.addColorStop(0, "#0E273B");
     gradient.addColorStop(0.5, "#93D0CF");
@@ -1855,7 +1860,7 @@ text("MINING HUB", sideButtonX + sideButtonWidth / 2, 440 + sideButtonHeight / 2
     fill(14, 39, 59, 230);
     rect(modalX, modalY, modalWidth, modalHeight, 20);
   
-    // Pulsująca ramka wokół modala
+    // Pulsująca ramka
     let pulseProgress = sin(millis() * 0.002) * 0.5 + 0.5;
     stroke(93, 208, 207, map(pulseProgress, 0, 1, 100, 255));
     strokeWeight(5 + pulseProgress * 2);
@@ -1863,7 +1868,7 @@ text("MINING HUB", sideButtonX + sideButtonWidth / 2, 440 + sideButtonHeight / 2
     rect(modalX, modalY, modalWidth, modalHeight, 20);
     noStroke();
   
-    // Obszar przewijania z poprawnym clippingiem
+    // Obszar przewijania z clippingiem
     push();
     drawingContext.save();
     drawingContext.beginPath();
@@ -1871,26 +1876,26 @@ text("MINING HUB", sideButtonX + sideButtonWidth / 2, 440 + sideButtonHeight / 2
     drawingContext.clip();
     translate(0, -scrollOffset);
   
-    let contentY = modalY + 20; // Start treści w modalu
+    let contentY = modalY + 20;
     textAlign(CENTER, BASELINE);
   
-    // Tytuł z logo – przesunięty niżej o 10 pikseli
+    // Tytuł z logo
     fill(249, 249, 242);
     textSize(32);
     textStyle(BOLD);
-    text("Superseed Cosmic Network", modalX + modalWidth / 2, contentY + 10); // +10 pikseli w dół
-    contentY += 50; // Zwiększone z 40 na 50, aby uwzględnić przesunięcie tytułu
+    text("Superseed Cosmic Network", modalX + modalWidth / 2, contentY + 10);
+    contentY += 50;
     let logoScale = 1 + sin(millis() * 0.003) * 0.1;
     image(whiteLogo, modalX + modalWidth / 2 - 90, contentY, 180 * logoScale, 90 * logoScale);
     contentY += 100;
   
-    // Objective Section – zaktualizowana nagroda na NFT
+    // Objective Section
     fill(93, 208, 207);
     textSize(22);
     textStyle(BOLD);
     text("Objective", modalX + modalWidth / 2, contentY);
     fill(249, 249, 242);
-    textSize(15); // Zwiększone z 14 na 15
+    textSize(15);
     textStyle(NORMAL);
     let objectiveLines = [
       "Sync your way through 10 Orbits to fully activate the Superseed Mainnet.",
@@ -1898,7 +1903,7 @@ text("MINING HUB", sideButtonX + sideButtonWidth / 2, 440 + sideButtonHeight / 2
       "Test your reflexes and strategy in this decentralized challenge."
     ];
     for (let i = 0; i < objectiveLines.length; i++) {
-      text(objectiveLines[i], modalX + modalWidth / 2, contentY + 20 + i * 20); // Zwiększono odstęp z 18 na 20
+      text(objectiveLines[i], modalX + modalWidth / 2, contentY + 20 + i * 20);
     }
     contentY += 90;
   
@@ -1908,7 +1913,7 @@ text("MINING HUB", sideButtonX + sideButtonWidth / 2, 440 + sideButtonHeight / 2
     textStyle(BOLD);
     text("Gameplay Mechanics", modalX + modalWidth / 2, contentY);
     fill(249, 249, 242);
-    textSize(13); // Zwiększone z 12 na 13
+    textSize(13);
     textStyle(NORMAL);
     let gameplayLines = [
       "Click the pulsing Superseed logo when it glows green to score points.",
@@ -1917,17 +1922,17 @@ text("MINING HUB", sideButtonX + sideButtonWidth / 2, 440 + sideButtonHeight / 2
       "Adapt to shifting orbits and escalating speeds as you progress."
     ];
     for (let i = 0; i < gameplayLines.length; i++) {
-      text(gameplayLines[i], modalX + modalWidth / 2, contentY + 18 + i * 20); // Zwiększono odstęp z 18 na 20
+      text(gameplayLines[i], modalX + modalWidth / 2, contentY + 18 + i * 20);
     }
     contentY += 110;
   
-    // Power-Ups Section – zaktualizowane czasy trwania zgodnie z kodem
+    // Power-Ups Section
     fill(93, 208, 207);
     textSize(22);
     textStyle(BOLD);
     text("Power-Ups & Boosts", modalX + modalWidth / 2, contentY);
     fill(249, 249, 242);
-    textSize(13); // Zwiększone z 12 na 13
+    textSize(13);
     textStyle(NORMAL);
     let powerUpLines = [
       "Life (+1 life) – Restore vitality to keep syncing.",
@@ -1940,7 +1945,7 @@ text("MINING HUB", sideButtonX + sideButtonWidth / 2, 440 + sideButtonHeight / 2
       "Mainnet Wave (clears traps) – Reset the field for a fresh start [Lv7+]."
     ];
     for (let i = 0; i < powerUpLines.length; i++) {
-      text(powerUpLines[i], modalX + modalWidth / 2, contentY + 18 + i * 20); // Zwiększono odstęp z 18 na 20
+      text(powerUpLines[i], modalX + modalWidth / 2, contentY + 18 + i * 20);
     }
     let iconX = modalX + modalWidth / 2 - 230;
     push();
@@ -1959,7 +1964,7 @@ text("MINING HUB", sideButtonX + sideButtonWidth / 2, 440 + sideButtonHeight / 2
     textStyle(BOLD);
     text("Orbit Progression", modalX + modalWidth / 2, contentY);
     fill(249, 249, 242);
-    textSize(13); // Zwiększone z 12 na 13
+    textSize(13);
     textStyle(NORMAL);
     let progressionLines = [
       "Begin at Orbit 1 – earn 50 points to advance.",
@@ -1968,17 +1973,17 @@ text("MINING HUB", sideButtonX + sideButtonWidth / 2, 440 + sideButtonHeight / 2
       "Track your progress with the orbit bar at the top."
     ];
     for (let i = 0; i < progressionLines.length; i++) {
-      text(progressionLines[i], modalX + modalWidth / 2, contentY + 18 + i * 20); // Zwiększono odstęp z 18 na 20
+      text(progressionLines[i], modalX + modalWidth / 2, contentY + 18 + i * 20);
     }
     contentY += 110;
   
-    // Challenges Section – zaktualizowane wartości
+    // Challenges Section
     fill(93, 208, 207);
     textSize(22);
     textStyle(BOLD);
     text("Special Challenges", modalX + modalWidth / 2, contentY);
     fill(249, 249, 242);
-    textSize(13); // Zwiększone z 12 na 13
+    textSize(13);
     textStyle(NORMAL);
     let challengeLines = [
       "Supernova Rush (Lv5+) – 30s of intensified gameplay with doubled rewards.",
@@ -1987,7 +1992,7 @@ text("MINING HUB", sideButtonX + sideButtonWidth / 2, 440 + sideButtonHeight / 2
       "Quick Click Challenges – Hit 5 syncs in 12s for bonus points."
     ];
     for (let i = 0; i < challengeLines.length; i++) {
-      text(challengeLines[i], modalX + modalWidth / 2, contentY + 18 + i * 20); // Zwiększono odstęp z 18 na 20
+      text(challengeLines[i], modalX + modalWidth / 2, contentY + 18 + i * 20);
     }
     contentY += 110;
   
@@ -1997,7 +2002,7 @@ text("MINING HUB", sideButtonX + sideButtonWidth / 2, 440 + sideButtonHeight / 2
     textStyle(BOLD);
     text("Why Join the Network?", modalX + modalWidth / 2, contentY);
     fill(249, 249, 242);
-    textSize(13); // Zwiększone z 12 na 13
+    textSize(13);
     textStyle(NORMAL);
     let whyPlayLines = [
       "Experience Superseed’s vision of a decentralized future.",
@@ -2006,31 +2011,38 @@ text("MINING HUB", sideButtonX + sideButtonWidth / 2, 440 + sideButtonHeight / 2
       "Built with xAI’s Grok 3 – a cosmic collaboration."
     ];
     for (let i = 0; i < whyPlayLines.length; i++) {
-      text(whyPlayLines[i], modalX + modalWidth / 2, contentY + 18 + i * 20); // Zwiększono odstęp z 18 na 20
+      text(whyPlayLines[i], modalX + modalWidth / 2, contentY + 18 + i * 20);
     }
     contentY += 80;
   
-    // Migające logo superseed-logo.png
+    // Logo i podsumowanie
     push();
     let logoY = contentY + 25;
     let demoPulse = lerp(70, 100, sin(millis() * 0.002));
     tint(seedColor.r, seedColor.g, seedColor.b, 200);
     image(logo, modalX + modalWidth / 2, logoY, demoPulse, demoPulse);
     pop();
-    contentY += 100; // Bez zmian – pełna wysokość logo
+    fill(255, 215, 0);
+    textSize(16);
+    textStyle(BOLD);
+    text("Sync, Survive, Claim Your NFT!", modalX + modalWidth / 2, logoY + 70);
+    contentY += 120;
   
-    // Oblicz maxScrollOffset z marginesem dla logo
-    let logoMaxHeight = 100;
-    maxScrollOffset = max(0, contentY - modalHeight - modalY + logoMaxHeight);
+    // Poprawione obliczenie maxScrollOffset
+    let totalContentHeight = contentY - modalY + 20; // Dodatkowy margines
+    maxScrollOffset = max(0, totalContentHeight - modalHeight);
   
     drawingContext.restore();
     pop();
   
-    // Pasek przewijania (poza clippingiem)
-    let scrollBarHeight = modalHeight * (modalHeight / (contentY - modalY));
-    let scrollBarY = map(scrollOffset, 0, maxScrollOffset, modalY, modalY + modalHeight - scrollBarHeight);
-    fill(93, 208, 207, 150);
-    rect(modalX + modalWidth - 20, scrollBarY, 10, scrollBarHeight, 5);
+    // Poprawiony pasek przewijania
+    if (totalContentHeight > modalHeight) {
+      let scrollBarHeight = (modalHeight / totalContentHeight) * modalHeight;
+      scrollBarHeight = constrain(scrollBarHeight, 20, modalHeight); // Minimalna wysokość paska
+      let scrollBarY = map(scrollOffset, 0, maxScrollOffset, modalY, modalY + modalHeight - scrollBarHeight);
+      fill(93, 208, 207, 150);
+      rect(modalX + modalWidth - 20, scrollBarY, 10, scrollBarHeight, 5);
+    }
   
     // Back Button
     let backX = modalX + 20;
@@ -2054,13 +2066,12 @@ text("MINING HUB", sideButtonX + sideButtonWidth / 2, 440 + sideButtonHeight / 2
     textStyle(BOLD);
     text(savedGameState ? "RESUME SYNC" : "START SYNC", buttonX + 90, buttonY + 20);
   
-    // Footer Branding (poza modalem)
+    // Footer Branding
     fill(128, 131, 134, 150);
     textSize(10);
     textAlign(CENTER, BASELINE);
     text("#SuperseedGrok3 – Powered by xAI", GAME_WIDTH / 2, GAME_HEIGHT - 15);
   }
-  
   
   else if (gameState === "start") {
     fill(255);
