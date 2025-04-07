@@ -3325,89 +3325,7 @@ else if (gameState === "bossFight") {
 
 }
 
-else if (gameState === "miningHub") {
-  // Gradient Background
-  let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
-  gradient.addColorStop(0, "#0E273B");
-  gradient.addColorStop(1, "#93D0CF");
-  drawingContext.fillStyle = gradient;
-  rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-  // Aktualizacja i rysowanie sond
-  miningHubTimer += deltaTime;
-  if (miningHubTimer >= 1000) { // 1 punkt co sekundę na sondę
-    miningPoints += probeCount * miningUpgradeLevel;
-    miningPoints = min(miningPoints, offlineCap);
-    miningHubTimer = 0;
-  }
-  for (let probe of miningProbes) {
-    probe.update();
-    probe.show();
-  }
-
-  // Nagłówek
-  fill(255, 215, 0);
-  textSize(32);
-  textStyle(BOLD);
-  text("Decentralized Mining Hub", GAME_WIDTH / 2, 50);
-
-  // Wyświetlanie punktów
-  fill(147, 208, 207);
-  textSize(20);
-  text(`Mining Points: ${floor(miningPoints)} / ${offlineCap}`, GAME_WIDTH / 2, 100);
-
-  // Przycisk ulepszenia
-  let upgradeButtonX = GAME_WIDTH / 2 - 100;
-  let upgradeButtonY = GAME_HEIGHT / 2 + 100;
-  let pulseScale = 1 + sin(millis() * 0.005) * 0.1;
-  fill(93, 208, 207);
-  rect(upgradeButtonX, upgradeButtonY, 200 * pulseScale, 50 * pulseScale, 10);
-  fill(255);
-  textSize(20);
-  text(`Upgrade (Cost: ${upgradeCost})`, GAME_WIDTH / 2, upgradeButtonY + 25);
-
-  // Przycisk minigry
-  let minigameButtonX = GAME_WIDTH / 2 - 100;
-  let minigameButtonY = GAME_HEIGHT / 2 + 160;
-  fill(255, 215, 0);
-  rect(minigameButtonX, minigameButtonY, 200 * pulseScale, 50 * pulseScale, 10);
-  fill(14, 39, 59);
-  textSize(20);
-  text("Boost Minigame", GAME_WIDTH / 2, minigameButtonY + 25);
-
-  // Przycisk powrotu
-  let backButtonX = GAME_WIDTH / 2 - 100;
-  let backButtonY = GAME_HEIGHT / 2 + 220;
-  fill(147, 208, 207);
-  rect(backButtonX, backButtonY, 200, 50, 10);
-  fill(255);
-  textSize(20);
-  text("Back to Menu", GAME_WIDTH / 2, backButtonY + 25);
-
-  // Minigra
-  if (miningMinigameActive) {
-    fill(0, 0, 0, 150);
-    rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    fill(255);
-    textSize(24);
-    text(`Click the target! ${floor(minigameTimer / 1000)}s`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50);
-    if (!minigameTarget) {
-      minigameTarget = { x: random(100, GAME_WIDTH - 100), y: random(100, GAME_HEIGHT - 100) };
-    }
-    fill(seedColor.r, seedColor.g, seedColor.b);
-    ellipse(minigameTarget.x, minigameTarget.y, 40 * pulseScale);
-    minigameTimer -= deltaTime;
-    if (minigameTimer <= 0) {
-      miningMinigameActive = false;
-      minigameTarget = null;
-    }
-  }
-
-  // Branding Superseed
-  let logoWidth = 100;
-  let logoHeight = 50;
-  image(whiteLogo, GAME_WIDTH - logoWidth - 20, GAME_HEIGHT - logoHeight - 20, logoWidth, logoHeight);
-}
 
 else if (gameState === "miningHubPreview") {
   background(14, 39, 59, 200); // Tangaroa z przezroczystością
@@ -3454,11 +3372,14 @@ else if (gameState === "miningHubPreview") {
   }
 
   // Przycisk powrotu
-  fill(93, 208, 207); // Superseed Light Green
-  rect(GAME_WIDTH / 2 - 50, GAME_HEIGHT - 80, 100, 40, 10);
-  fill(249, 249, 242); // White
-  textSize(18);
-  text("Back", GAME_WIDTH / 2, GAME_HEIGHT - 60);
+let backButtonX = GAME_WIDTH / 2 - 100;
+let backButtonY = GAME_HEIGHT / 2 + 220;
+fill(93, 208, 207); // Superseed Light Green as base color
+rect(backButtonX, backButtonY, 200, 50, 10);
+fill(14, 39, 59); // Dark Tangaroa for text (better contrast than white)
+textSize(20);
+textAlign(CENTER, CENTER); // Center both horizontally and vertically
+text("Back to Menu", GAME_WIDTH / 2, backButtonY + 25); // Y position is now perfectly centered
 }
 
 pop(); // Zamknięcie push() z początku draw()
@@ -3969,15 +3890,16 @@ function mousePressed() {
       }
     }
   } else if (gameState === "miningHubPreview") {
-    // Przycisk powrotu w miningHubPreview
+    let backButtonX = GAME_WIDTH / 2 - 100;
+    let backButtonY = GAME_HEIGHT / 2 + 220;
+
     if (
-      adjustedMouseX >= GAME_WIDTH / 2 - 50 &&
-      adjustedMouseX <= GAME_WIDTH / 2 + 50 &&
-      adjustedMouseY >= GAME_HEIGHT - 80 &&
-      adjustedMouseY <= GAME_HEIGHT - 40
+        adjustedMouseX >= backButtonX &&
+        adjustedMouseX <= backButtonX + 200 &&
+        adjustedMouseY >= backButtonY &&
+        adjustedMouseY <= backButtonY + 50
     ) {
-      gameState = "howToPlay";
-      console.log("Back clicked from miningHubPreview – returning to howToPlay");
+        gameState = "howToPlay"; // Return to the main menu
     }
   
 
