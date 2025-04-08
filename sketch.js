@@ -9,6 +9,10 @@ let introMusic;
 let powerUpSound;
 let meteorSound;
 let levelSound;
+let lifeRestoreSound;
+let pulseBoostSound;
+let freezeSound;
+let growSound;
 let warpSound;
 let nebulaSound;
 let circleSize = 100;
@@ -907,6 +911,11 @@ function preload() {
   warpSound = loadSound('assets/warp-transition.mp3');
   nebulaSound = loadSound('assets/nebula-burst.mp3');
   holeSound = loadSound('assets/hole.mp3');
+  lifeRestoreSound = loadSound('assets/lifeRestoreSound.mp3');
+  pulseBoostSound = loadSound('assets/pulseBoostSound.mp3');
+  shieldOnSound = loadSound('assets/shieldOnSound.mp3');
+  freezeSound = loadSound('assets/freezeSound.mp3');
+  growSound = loadSound('assets/growSound.mp3');
   upadekBg = loadImage('assets/upadek-background.png');
   synchronizacjaBg = loadImage('assets/synchronizacja-background.png');
   nagrodaBg = loadImage('assets/nagroda-background.png');
@@ -1713,7 +1722,7 @@ text("MINING HUB", sideButtonX + sideButtonWidth / 2, 440 + sideButtonHeight / 2
     textSize(16); // Zwiększone z 14 na 16
     textStyle(NORMAL);
     text("Sync the Cosmic Seed when it pulses green!\nStart is easy – sync nodes slowly on Orbit 1 & 2!", GAME_WIDTH / 2, contentY + 35);
-    contentY += 80;
+    contentY += 100;
   
     // Combos Section
     fill(93, 208, 207);
@@ -1724,9 +1733,12 @@ text("MINING HUB", sideButtonX + sideButtonWidth / 2, 440 + sideButtonHeight / 2
     textSize(16); // Zwiększone z 14 na 16
     textStyle(NORMAL);
     text("Chain syncs for multipliers (x1, x2, ...).\n15+ syncs grants +1 life.", GAME_WIDTH / 2, contentY + 35);
-    contentY += 80;
+    
+    contentY += 100;
+
+
   
-    // Power-Ups & Boosts Section
+   // Power-Ups & Boosts Section
     fill(93, 208, 207);
     textSize(28); // Zwiększone z 24 na 28
     textStyle(BOLD);
@@ -1792,16 +1804,6 @@ text("MINING HUB", sideButtonX + sideButtonWidth / 2, 440 + sideButtonHeight / 2
     text("Freeze Nova: Freezes Pulse (10s+) [Lv3+]", GAME_WIDTH / 2, powerUpY);
     powerUpY += 40;
   
-    // Meteor Strike
-    fill(255, 100, 0, 200);
-    ellipse(iconX, powerUpY, 25);
-    fill(255, 0, 0, 150);
-    let tailLength = 10 + sin(millis() * 0.01) * 3;
-    triangle(iconX, powerUpY - 10, iconX - tailLength, powerUpY - 20, iconX + tailLength, powerUpY - 20);
-    fill(249, 249, 242);
-    text("Meteor Strike: More Traps, x2 Points (6s+) [Lv5+]", GAME_WIDTH / 2, powerUpY);
-    powerUpY += 40;
-  
     // Star Seed
     fill(147, 208, 207, 200);
     ellipse(iconX, powerUpY, 25, 15 + sin(millis() * 0.005) * 3);
@@ -1854,6 +1856,26 @@ text("MINING HUB", sideButtonX + sideButtonWidth / 2, 440 + sideButtonHeight / 2
     fill(249, 249, 242);
     text("Meteor Strike: Spawns Traps, x2 Points (3s) [Lv5+]", GAME_WIDTH / 2, trapY);
     contentY += 110;
+
+    contentY += 50;
+
+    // NOWA SEKCJA: Mainnet Challenge
+  fill(93, 208, 207);
+  textSize(28);
+  textStyle(BOLD);
+  text("Mainnet Challenge", GAME_WIDTH / 2, contentY);
+  fill(249, 249, 242);
+  textSize(14);
+  textStyle(NORMAL);
+  let challengeY = contentY + 30;
+  text(
+    "Reach Orbit 5+ and chain 10+ syncs after 2 minutes.\n" +
+    "Score 400 points in 60 seconds to earn the Mainnet Badge!\n" +
+    "Boosts like Gas Nebula (x2) or Gas+Star (x4) help a lot.",
+    GAME_WIDTH / 2,
+    challengeY
+  );
+  contentY += 90;
   
     // Stopka
     fill(128, 131, 134, 150);
@@ -2377,7 +2399,7 @@ text("MINING HUB", sideButtonX + sideButtonWidth / 2, 440 + sideButtonHeight / 2
       !mainnetChallengeActive &&
       !mainnetChallengeTriggered &&
       level >= 5 &&
-      combo >= 15 &&
+      combo >= 10 && // Zmieniono z combo >= 15
       (millis() - gameStartTime) >= 120000 &&
       random(1) < 0.005
     ) {
@@ -4379,51 +4401,55 @@ function mousePressed() {
     }
 
     // Power-upy i przeszkody
-    for (let i = powerUps.length - 1; i >= 0; i--) {
-      let pd = dist(adjustedMouseX, adjustedMouseY, powerUps[i].x, powerUps[i].y);
-      if (pd < powerUps[i].size) {
-        if (powerUps[i].type === "life") {
-          lifeBar = min(lifeBar + 30, 100); // Przywraca 30 HP, max 100
-          for (let j = 0; j < 10; j++) {
-            particles.push(new Particle(powerUps[i].x, powerUps[i].y, { r: 0, g: 255, b: 0 }));
-          }
-          if (soundInitialized) powerUpSound.play();
-        } else if (powerUps[i].type === "gas") {
-          powerUpEffect = "gas";
-          powerUpEffectTime = powerUpDurations.gas * (1 + level * 0.1);
-        } else if (powerUps[i].type === "pulse") {
-          fireRate = max(fireRate - 50, 100); // Przyspieszenie strzelania w bossFight
-          powerUpEffect = "pulse";
-          powerUpEffectTime = powerUpDurations.pulse * (1 + level * 0.1);
-        } else if (powerUps[i].type === "orbit") {
-          powerUpEffect = "orbit";
-          shieldActive = true;
-          powerUpEffectTime = powerUpDurations.orbit * (1 + level * 0.1);
-        } else if (powerUps[i].type === "meteor") {
-          powerUpEffect = "meteor";
-          meteorShowerActive = true;
-          powerUpEffectTime = powerUpDurations.meteor * (1 + level * 0.1);
-        } else if (powerUps[i].type === "star") {
-          powerUpEffect = "star";
-          starBoostActive = true;
-          powerUpEffectTime = powerUpDurations.star * (1 + level * 0.1);
-        } else if (powerUps[i].type === "wave") {
-          if (gameState === "bossFight") {
-            bossBullets = []; // Czyści pociski bossa
-            for (let j = 0; j < 20; j++) {
-              particles.push(new Particle(player.x, player.y, { r: seedColor.r, g: seedColor.g, b: seedColor.b }));
-            }
-          }
-        }
-        if (powerUps[i].type !== "wave") { // "Wave" nie wymaga dodatkowych cząstek
-          for (let j = 0; j < 20; j++) {
-            particles.push(new Particle(powerUps[i].x, powerUps[i].y, { r: seedColor.r, g: seedColor.g, b: seedColor.b }));
-          }
-          if (soundInitialized) powerUpSound.play();
-        }
-        powerUps.splice(i, 1);
+for (let i = powerUps.length - 1; i >= 0; i--) {
+  let pd = dist(adjustedMouseX, adjustedMouseY, powerUps[i].x, powerUps[i].y);
+  if (pd < powerUps[i].size) {
+    if (powerUps[i].type === "life") {
+      lifeBar = min(lifeBar + 30, 100); // Przywraca 30 HP, max 100
+      for (let j = 0; j < 10; j++) {
+        particles.push(new Particle(powerUps[i].x, powerUps[i].y, { r: 0, g: 255, b: 0 }));
       }
+      if (soundInitialized) lifeRestoreSound.play();
+    } else if (powerUps[i].type === "gas") {
+      powerUpEffect = "gas";
+      powerUpEffectTime = powerUpDurations.gas * (1 + level * 0.1);
+      if (soundInitialized) powerUpSound.play();
+    } else if (powerUps[i].type === "pulse") {
+      fireRate = max(fireRate - 50, 100); // Przyspieszenie strzelania w bossFight
+      powerUpEffect = "pulse";
+      powerUpEffectTime = powerUpDurations.pulse * (1 + level * 0.1);
+      if (soundInitialized) pulseBoostSound.play();
+    } else if (powerUps[i].type === "orbit") {
+      powerUpEffect = "orbit";
+      shieldActive = true;
+      powerUpEffectTime = powerUpDurations.orbit * (1 + level * 0.1);
+      if (soundInitialized) shieldOnSound.play();
+    } else if (powerUps[i].type === "meteor") {
+      powerUpEffect = "meteor";
+      meteorShowerActive = true;
+      powerUpEffectTime = powerUpDurations.meteor * (1 + level * 0.1);
+      if (soundInitialized) powerUpSound.play();
+    } else if (powerUps[i].type === "star") {
+      powerUpEffect = "star";
+      starBoostActive = true;
+      powerUpEffectTime = powerUpDurations.star * (1 + level * 0.1);
+      if (soundInitialized) growSound.play(); // Nowy dedykowany dźwięk
+    } else if (powerUps[i].type === "wave") {
+      if (gameState === "bossFight") {
+        bossBullets = []; // Czyści pociski bossa
+        for (let j = 0; j < 20; j++) {
+          particles.push(new Particle(player.x, player.y, { r: seedColor.r, g: seedColor.g, b: seedColor.b }));
+        }
+      }
+    } else if (powerUps[i].type === "nova") {
+      powerUpEffect = "nova";
+      freezeActive = true;
+      powerUpEffectTime = powerUpDurations.nova * (1 + level * 0.1);
+      if (soundInitialized) freezeSound.play();
     }
+    powerUps.splice(i, 1); // Usunięcie zebranego power-upu
+  }
+}
 
     // Przeszkody – scalona i poprawiona logika
     for (let i = obstacles.length - 1; i >= 0; i--) {
