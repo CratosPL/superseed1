@@ -1088,6 +1088,20 @@ function draw() {
     fill(14, 39, 59);
     textSize(16);
     text("MINING HUB", sideButtonX + sideButtonWidth / 2, 465);
+
+    // W draw(), w sekcji gameState === "howToPlay", po istniejących przyciskach bocznych:
+gradient = drawingContext.createLinearGradient(sideButtonX, 500, sideButtonX + sideButtonWidth, 500);
+gradient.addColorStop(0, "#FF4500"); // Nowy kolor: pomarańczowy gradient
+gradient.addColorStop(1, "#FFD700"); // Złoty akcent
+drawingContext.fillStyle = gradient;
+stroke(147, 208, 207);
+strokeWeight(2);
+rect(sideButtonX, 500, sideButtonWidth, 50, 10);
+noStroke();
+fill(14, 39, 59);
+textSize(16);
+textAlign(CENTER, CENTER);
+text("LEADERBOARD", sideButtonX + sideButtonWidth / 2, 525);
   
     let whiteLogoScale = 1 + sin(millis() * 0.003) * 0.05;
     let whiteLogoWidth = 100 * whiteLogoScale;
@@ -3155,6 +3169,152 @@ if (productionBoost) {
   fill(249, 249, 242);
   textSize(18);
   text("Back", GAME_WIDTH - 70, 40);
+}
+
+
+else if (gameState === "leaderboard") {
+  // Gradientowe tło
+  let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
+  gradient.addColorStop(0, "#0E273B");
+  gradient.addColorStop(0.5, "#93D0CF");
+  gradient.addColorStop(1, "#808386");
+  drawingContext.fillStyle = gradient;
+  rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
+
+  // Modal
+  let modalWidth = GAME_WIDTH * 0.8;
+  let modalHeight = GAME_HEIGHT * 0.8;
+  let modalX = (GAME_WIDTH - modalWidth) / 2;
+  let modalY = (GAME_HEIGHT - modalHeight) / 2;
+  fill(14, 39, 59, 230);
+  rect(modalX, modalY, modalWidth, modalHeight, 20);
+
+  // Pulsująca ramka
+  let pulseProgress = sin(millis() * 0.002) * 0.5 + 0.5;
+  stroke(255, 215, 0, map(pulseProgress, 0, 1, 100, 255));
+  strokeWeight(5 + pulseProgress * 2);
+  noFill();
+  rect(modalX, modalY, modalWidth, modalHeight, 20);
+  noStroke();
+
+  // Obszar przewijania
+  push();
+  drawingContext.save();
+  drawingContext.beginPath();
+  drawingContext.rect(modalX, modalY, modalWidth, modalHeight);
+  drawingContext.clip();
+  translate(0, -scrollOffset);
+
+  let contentY = modalY + 20;
+  textAlign(CENTER, BASELINE);
+
+  // Nagłówek
+  gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 200, contentY, GAME_WIDTH / 2 + 200, contentY);
+  gradient.addColorStop(0, "#FF4500");
+  gradient.addColorStop(1, "#FFD700");
+  drawingContext.fillStyle = gradient;
+  textSize(36);
+  textStyle(BOLD);
+  text("Leaderboard", GAME_WIDTH / 2, contentY + 20);
+  contentY += 60;
+
+  // Tabela wyników blockchain
+  fill(93, 208, 207);
+  textSize(24);
+  textStyle(BOLD);
+  text("Top Scores (Blockchain)", GAME_WIDTH / 2, contentY);
+  contentY += 40;
+
+  if (!isConnected) {
+    fill(249, 249, 242);
+    textSize(16);
+    text("Connect wallet to view blockchain leaderboard", GAME_WIDTH / 2, contentY);
+    contentY += 30;
+  } else if (!leaderboardFetched) {
+    fill(249, 249, 242);
+    textSize(16);
+    text("Loading blockchain scores...", GAME_WIDTH / 2, contentY);
+    contentY += 30;
+  } else if (blockchainLeaderboard.length === 0) {
+    fill(249, 249, 242);
+    textSize(16);
+    text("No scores available yet", GAME_WIDTH / 2, contentY);
+    contentY += 30;
+  } else {
+    let tableWidth = modalWidth - 40;
+    let tableX = modalX + 20;
+    let entryHeight = 40;
+    for (let i = 0; i < blockchainLeaderboard.length; i++) {
+      let yPos = contentY + i * entryHeight;
+      fill(i % 2 === 0 ? "rgba(93, 208, 207, 0.2)" : "rgba(255, 215, 0, 0.1)");
+      rect(tableX, yPos - 20, tableWidth, entryHeight, 5);
+      fill(255, 215, 0);
+      textSize(16);
+      textAlign(LEFT, CENTER);
+      text(`${i + 1}.`, tableX + 10, yPos);
+      fill(249, 249, 242);
+      textAlign(LEFT, CENTER);
+      text(blockchainLeaderboard[i].nick, tableX + 50, yPos);
+      fill(255, 215, 0);
+      textAlign(RIGHT, CENTER);
+      text(blockchainLeaderboard[i].score, tableX + tableWidth - 10, yPos);
+    }
+    contentY += blockchainLeaderboard.length * entryHeight;
+  }
+
+  // Stopka
+  fill(128, 131, 134, 150);
+  textSize(14);
+  text("#SuperseedGrok3 – Powered by xAI", GAME_WIDTH / 2, contentY + 40);
+
+  // Oblicz maxScrollOffset
+  maxScrollOffset = max(0, contentY + 60 - modalHeight - modalY);
+
+  drawingContext.restore();
+  pop();
+
+  // Pasek przewijania
+  if (maxScrollOffset > 0) {
+    let scrollBarHeight = modalHeight * (modalHeight / (contentY + 60 - modalY));
+    let scrollBarY = map(scrollOffset, 0, maxScrollOffset, modalY, modalY + modalHeight - scrollBarHeight);
+    fill(255, 215, 0, 150);
+    rect(modalX + modalWidth - 20, scrollBarY, 10, scrollBarHeight, 5);
+  }
+// Nowy przycisk "MAIN MENU"
+let menuButtonX = GAME_WIDTH / 2 - 75; // Wyśrodkowany poziomo
+let menuButtonY = modalY + modalHeight - 60; // 60 pikseli od dolnej krawędzi modala
+let menuButtonWidth = 150;
+let menuButtonHeight = 40;
+
+// Efekt hover
+let adjustedMouseX = mouseX - (width - GAME_WIDTH) / 2;
+let adjustedMouseY = mouseY - (height - GAME_HEIGHT) / 2;
+let isMenuHovering = (
+  adjustedMouseX >= menuButtonX &&
+  adjustedMouseX <= menuButtonX + menuButtonWidth &&
+  adjustedMouseY >= menuButtonY &&
+  adjustedMouseY <= menuButtonY + menuButtonHeight
+);
+
+// Styl przycisku z gradientem
+gradient = drawingContext.createLinearGradient(menuButtonX, menuButtonY, menuButtonX + menuButtonWidth, menuButtonY);
+gradient.addColorStop(0, "#93D0CF"); // Superseed Light Green
+gradient.addColorStop(1, "#FFD700"); // Złoty akcent
+drawingContext.fillStyle = gradient;
+fill(isMenuHovering ? 255 : 200); // Lekkie rozjaśnienie przy hoverze
+stroke(147, 208, 207); // Obramowanie w kolorze Superseed Light Green
+strokeWeight(2);
+rect(menuButtonX, menuButtonY, menuButtonWidth, menuButtonHeight, 10); // Zaokrąglone rogi
+noStroke();
+
+// Tekst przycisku
+fill(14, 39, 59); // Ciemny kolor tekstu dla kontrastu
+textSize(18);
+textStyle(BOLD);
+textAlign(CENTER, CENTER);
+text("MAIN MENU", menuButtonX + menuButtonWidth / 2, menuButtonY + menuButtonHeight / 2);
+
+ 
 }
 
 pop(); // Zamknięcie push() z początku draw()

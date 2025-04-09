@@ -1,40 +1,42 @@
 function touchStarted() {
     if (touches.length >= 2) {
-      // Jeśli są dwa palce, pozwól na domyślne zachowanie (zoomowanie)
-      return true;
+        // Jeśli są dwa palce, pozwól na domyślne zachowanie (zoomowanie)
+        return true;
     }
     if (!soundInitialized) {
-      soundInitialized = true;
-      backgroundMusic.loop();
+        soundInitialized = true;
+        backgroundMusic.loop();
     }
-  
-    let adjustedTouchX = mouseX - (width - GAME_WIDTH) / 2; // mouseX is updated by p5.js for touch
+
+    let adjustedTouchX = mouseX - (width - GAME_WIDTH) / 2; // mouseX jest aktualizowany przez p5.js dla dotyku
     let adjustedTouchY = mouseY - (height - GAME_HEIGHT) / 2;
-  
+
     if (gameState === "howToPlay" && !isConnected) {
-      let verticalOffset = 100; // Przesunięcie z draw()
-      if (
-        adjustedTouchX >= GAME_WIDTH / 2 - 120 && // Poprawiona szerokość z 100 na 120, zgodnie z draw()
-        adjustedTouchX <= GAME_WIDTH / 2 + 120 &&
-        adjustedTouchY >= 620 + verticalOffset &&
-        adjustedTouchY <= 680 + verticalOffset
-      ) {
-        console.log("Touch login initiated on mobile");
-        connectWallet(true).then(() => {
-          if (isConnected) {
-            console.log("Wallet connected successfully via touch");
-          } else {
-            console.log("Wallet connection failed via touch");
-          }
-        }).catch((error) => {
-          console.error("Touch connectWallet error:", error);
-          connectionError = "Touch connection failed: " + error.message;
-        });
-      }
+        let verticalOffset = 100; // Przesunięcie z draw()
+        if (
+            adjustedTouchX >= GAME_WIDTH / 2 - 120 &&
+            adjustedTouchX <= GAME_WIDTH / 2 + 120 &&
+            adjustedTouchY >= 620 + verticalOffset &&
+            adjustedTouchY <= 680 + verticalOffset
+        ) {
+            console.log("Touch login initiated on mobile");
+            connectWallet(true).then(() => {
+                if (isConnected) {
+                    console.log("Wallet connected successfully via touch");
+                } else {
+                    console.log("Wallet connection failed via touch");
+                }
+            }).catch((error) => {
+                console.error("Touch connectWallet error:", error);
+                connectionError = "Touch connection failed: " + error.message;
+            });
+        }
     }
-    mousePressed(); // Keep existing mouse logic
-    return false; // Prevent default touch behavior
-  }
+
+    // Wywołaj mousePressed z dostosowanymi współrzędnymi
+    mousePressed(adjustedTouchX, adjustedTouchY);
+    return false; // Zapobiegnij domyślnemu zachowaniu dotyku
+}
   
   function mousePressed() {
     let adjustedMouseX = mouseX - (width - GAME_WIDTH) / 2;
@@ -221,6 +223,16 @@ function touchStarted() {
       ) {
         gameState = "miningHubPreview";
       }
+
+      if (
+        adjustedMouseX >= sideButtonX &&
+        adjustedMouseX <= sideButtonX + 120 &&
+        adjustedMouseY >= 500 &&
+        adjustedMouseY <= 550
+      ) {
+        gameState = "leaderboard";
+        scrollOffset = 0; // Reset przewijania
+      }
   
     } else if (gameState === "achievements") {
       // CLOSE
@@ -249,6 +261,33 @@ function touchStarted() {
         gameState = "howToPlay"; // Powrót do "How to Play"
         scrollOffset = 0; // Reset przewijania
       }
+
+    } else if (gameState === "leaderboard") {
+      // Nowa obsługa przycisku "MAIN MENU"
+      let modalWidth = GAME_WIDTH * 0.8;
+      let modalHeight = GAME_HEIGHT * 0.8;
+      let modalX = (GAME_WIDTH - modalWidth) / 2;
+      let modalY = (GAME_HEIGHT - modalHeight) / 2;
+
+      let menuButtonX = GAME_WIDTH / 2 - 75;
+      let menuButtonY = modalY + modalHeight - 60;
+      let menuButtonWidth = 150;
+      let menuButtonHeight = 40;
+
+      if (
+        adjustedMouseX >= menuButtonX &&
+        adjustedMouseX <= menuButtonX + menuButtonWidth &&
+        adjustedMouseY >= menuButtonY &&
+        adjustedMouseY <= menuButtonY + menuButtonHeight
+      ) {
+        console.log("Main Menu button clicked in leaderboard - switching to howToPlay");
+        gameState = "howToPlay";
+        scrollOffset = 0; // Reset przewijania
+        if (soundInitialized) {
+          clickSound.play(); // Odtwarzanie dźwięku kliknięcia, jeśli dostępny
+        }
+      }
+
     } else if (gameState === "intro") {
       // "NEXT" button handling – bez zmian
       let nextButtonX = GAME_WIDTH - 100;
@@ -322,6 +361,14 @@ function touchStarted() {
         gameState = "howToPlay";
         console.log("Przełączono na howToPlay z miningHubPreview"); // Debug
       }
+
+      
+
+      
+
+
+
+
       // Przycisk "DEMO"
       else if (
         adjustedMouseX >= demoButtonX &&
@@ -720,6 +767,8 @@ function touchStarted() {
       }
     }
   }
+
+  
   
   function keyPressed() {
     if (gameState === "howToPlay") {
