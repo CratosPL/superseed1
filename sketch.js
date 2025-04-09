@@ -1,5 +1,64 @@
 
-
+const contractAddress = "0xd6D6fC885506EE85D6079F3f648DBCeE76C0e43b"; // Wstaw adres z wdrożenia
+const contractABI = [
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_score",
+        "type": "uint256"
+      }
+    ],
+    "name": "saveScore",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_player",
+        "type": "address"
+      }
+    ],
+    "name": "getScore",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "player",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "score",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "ScoreUpdated",
+    "type": "event"
+  }
+];
 
 // Klasy przeniesione do classes.js
 
@@ -92,20 +151,19 @@ function initializeWeb3Modal() {
 // Funkcja do połączenia z portfelem
 async function connectWallet(forceReconnect = false) {
   if (isConnecting) {
-    console.log("Connection already in progress, please wait...");
+    console.log("Połączenie w toku, proszę czekać...");
     return;
   }
   isConnecting = true;
   try {
-    console.log("Starting wallet connection...");
+    console.log("Rozpoczynanie połączenia z portfelem...");
     if (!web3Modal) {
-      console.log("Web3Modal not initialized, initializing now...");
+      console.log("Web3Modal nie zainicjalizowany, inicjalizuję teraz...");
       await initializeWeb3Modal();
     }
-    if (!web3Modal) throw new Error("Web3Modal failed to initialize");
+    if (!web3Modal) throw new Error("Inicjalizacja Web3Modal nie powiodła się");
 
     if (forceReconnect) {
-      console.log("Clearing cached provider...");
       web3Modal.clearCachedProvider();
       localStorage.removeItem("WEB3_CONNECT_CACHED_PROVIDER");
       localStorage.removeItem("walletconnect");
@@ -115,37 +173,38 @@ async function connectWallet(forceReconnect = false) {
       signer = null;
     }
 
-    console.log("Attempting to connect with Web3Modal...");
     const instance = await Promise.race([
       web3Modal.connect(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Connection timed out after 20s")), 20000)),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Przekroczono czas połączenia po 20s")), 20000)),
     ]);
-
-    console.log("Connected instance:", instance);
 
     provider = new ethers.BrowserProvider(instance);
     signer = await provider.getSigner();
     userAddress = await signer.getAddress();
 
+    // Inicjalizacja kontraktu
+    gameContract = new ethers.Contract(contractAddress, contractABI, signer);
+    console.log("Kontrakt gry zainicjalizowany:", gameContract);
+
     console.log("Accounts:", await provider.listAccounts());
     isConnected = true;
 
     const network = await provider.getNetwork();
-    console.log("Current network chainId:", network.chainId);
+    console.log("Aktualna sieć chainId:", network.chainId);
     if (network.chainId !== 53302) {
-      console.log("Switching to Superseed Sepolia Testnet...");
+      console.log("Przełączanie na Superseed Sepolia Testnet...");
       await provider.send("wallet_switchEthereumChain", [{ chainId: "0xD036" }]);
     }
 
-    console.log("Connected to wallet:", userAddress);
+    console.log("Połączono z portfelem:", userAddress);
     connectionError = null;
   } catch (error) {
-    console.error("Wallet connection failed:", error);
+    console.error("Połączenie z portfelem nie powiodło się:", error);
     isConnected = false;
     userAddress = null;
     provider = null;
     signer = null;
-    connectionError = "Failed to connect wallet: " + error.message;
+    connectionError = "Nie udało się połączyć z portfelem: " + error.message;
   } finally {
     isConnecting = false;
   }
@@ -204,6 +263,22 @@ async function initializeWeb3Modal() {
   } catch (error) {
     console.error("Web3Modal initialization failed:", error);
     connectionError = "Web3Modal init failed: " + error.message;
+  }
+}
+
+async function saveScoreToBlockchain(score) {
+  if (!isConnected || !gameContract || !signer) {
+    console.warn("Nie można zapisać wyniku: brak połączenia z portfelem lub kontrakt nie zainicjalizowany");
+    return;
+  }
+  try {
+    console.log(`Zapisywanie wyniku ${score} dla ${userAddress}...`);
+    const tx = await gameContract.saveScore(score);
+    console.log("Transakcja wysłana:", tx.hash);
+    const receipt = await tx.wait();
+    console.log("Wynik zapisany na blockchainie:", receipt);
+  } catch (error) {
+    console.error("Nie udało się zapisać wyniku:", error);
   }
 }
 
@@ -1629,6 +1704,7 @@ function draw() {
     let blackHoleSize = 200 + sin(millis() * 0.005) * 20;
     ellipse(eventX, eventY, blackHoleSize, blackHoleSize);
     if (!blackHoleSoundPlayed && soundInitialized) {
+      holeSound.setVolume(0.45); // Ustawienie na 0.45 zamiast domyślnego 0.5
       holeSound.play();
       blackHoleSoundPlayed = true;
     }
@@ -2144,6 +2220,15 @@ if (gameState === "supernova") {
       backgroundMusic.loop(); // Wróć do muzyki tła
     }
     bossDefeatedSuccessfully = false; // Reset znacznika przy przegranej
+
+    leaderboard.push({ nick: playerNick || "Anonymous", score: score });
+  leaderboard.sort((a, b) => b.score - a.score);
+  leaderboard = leaderboard.slice(0, 5);
+  localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+  if (isConnected && !scoreSaved) {
+    saveScoreToBlockchain(score);
+    scoreSaved = true;
+  }
   
     // Gradient background
     let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
@@ -2961,6 +3046,8 @@ function startGame() {
   mainnetChallengeScore = 0;
   musicSwitched = "level1-4";
   stateStartTime = 0;
+  
+  
 
   // Zmienne dla mechaniki strzelanki
   player = null;

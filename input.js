@@ -493,6 +493,10 @@ function touchStarted() {
           alert("Badge share text copied to clipboard: " + shareText);
         }
       }
+
+
+
+      
     } else if (gameState === "playing" || gameState === "supernova" || gameState === "bossFight") {
       lastClickTime = millis();
       if (inactivityWarning) inactivityWarning = false;

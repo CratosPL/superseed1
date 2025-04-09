@@ -1,5 +1,8 @@
 // Global Variables
 
+let gameContract = null;
+let scoreSaved = false; // Flaga zapobiegająca wielokrotnemu zapisowi
+
 const SLOWDOWN_DURATION = 10000;
 const SLOWDOWN_COOLDOWN = 30000;
 const SLOWDOWN_FACTOR = 1.5;
@@ -228,3 +231,9 @@ let newsMessages = [
 let currentNewsIndex = 0; // Indeks aktualnej wiadomości
 let newsOffset = 0; // Przesunięcie tekstu dla efektu przewijania
 let newsSpeed = 5; // Prędkość przewijania (piksele na klatkę)
+
+let showSaveButton = false; // Czy pokazywać przycisk zapisu
+let blockchainScores = [];  // Lista wyników z blockchainu
+let leaderboardOffset = 0;  // Przesunięcie dla przewijania tablicy wyników
+
+

@@ -1,0 +1,19 @@
+{
+  "name": "superseedsync",
+  "version": "1.0.0",
+  "main": "classes.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "dotenv": "^16.4.7",
+    "ethers": "^5.8.0",
+    "hardhat": "^2.22.19",
+    "hardhat-gas-reporter": "^2.2.2"
+  }
+}
