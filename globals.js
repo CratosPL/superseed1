@@ -248,3 +248,4 @@ let saveMessageTimer = 0; // Czas wyświetlania komunikatu (w ms)
 
 
 
+

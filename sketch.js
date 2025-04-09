@@ -455,7 +455,7 @@ function setup() {
 
   waitForScripts().then(() => {
     initializeWeb3Modal().then(() => {
-      if (web3Modal && web3Modal.cachedProvider) connectWallet();
+      
     });
   });
 }
