@@ -159,6 +159,7 @@ async function connectWallet(forceReconnect = false) {
   isConnecting = true;
   try {
     console.log("Rozpoczynanie połączenia z portfelem...");
+
     if (!web3Modal) {
       console.log("Web3Modal nie zainicjalizowany, inicjalizuję teraz...");
       await initializeWeb3Modal();
@@ -166,13 +167,19 @@ async function connectWallet(forceReconnect = false) {
     if (!web3Modal) throw new Error("Inicjalizacja Web3Modal nie powiodła się");
 
     if (forceReconnect) {
+      console.log("Wylogowanie: Czyszczenie pamięci podręcznej...");
       web3Modal.clearCachedProvider();
       localStorage.removeItem("WEB3_CONNECT_CACHED_PROVIDER");
       localStorage.removeItem("walletconnect");
+      if (provider) {
+        await provider.destroy();
+      }
       isConnected = false;
       userAddress = null;
       provider = null;
       signer = null;
+      gameContract = null;
+      return;
     }
 
     const instance = await Promise.race([
@@ -184,32 +191,66 @@ async function connectWallet(forceReconnect = false) {
     signer = await provider.getSigner();
     userAddress = await signer.getAddress();
 
+    let network = await provider.getNetwork();
+    console.log("Aktualna sieć chainId:", network.chainId);
+
+    if (network.chainId !== 53302n) {
+      console.log("Przełączanie na Superseed Sepolia Testnet...");
+      await provider.send("wallet_switchEthereumChain", [{ chainId: "0xD036" }]);
+
+      await new Promise((resolve, reject) => {
+        const chainChangeHandler = (newChainId) => {
+          const chainId = parseInt(newChainId, 16);
+          console.log("Sieć zmieniona na chainId:", chainId);
+          if (chainId === 53302) {
+            instance.off("chainChanged", chainChangeHandler);
+            resolve();
+          } else {
+            reject(new Error("Zmieniono na nieprawidłową sieć: " + chainId));
+          }
+        };
+        instance.on("chainChanged", chainChangeHandler);
+        setTimeout(() => {
+          instance.off("chainChanged", chainChangeHandler);
+          reject(new Error("Timeout waiting for chain change"));
+        }, 10000);
+      });
+
+      // Dodajemy opóźnienie, aby ethers.js zaktualizował stan
+      await new Promise(resolve => setTimeout(resolve, 1000)); // 1 sekunda
+    }
+
     gameContract = new ethers.Contract(contractAddress, contractABI, signer);
     console.log("Kontrakt gry zainicjalizowany:", gameContract);
 
     console.log("Accounts:", await provider.listAccounts());
     isConnected = true;
-
-    const network = await provider.getNetwork();
-    console.log("Aktualna sieć chainId:", network.chainId);
-    if (network.chainId !== 53302n) { // Używam 53302n, bo network.chainId jest BigInt
-      console.log("Przełączanie na Superseed Sepolia Testnet...");
-      await Promise.race([
-        provider.send("wallet_switchEthereumChain", [{ chainId: "0xD036" }]),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("Switch chain timeout")), 10000)),
-      ]);
-    }
-
     console.log("Połączono z portfelem:", userAddress);
     connectionError = null;
 
-    await fetchBlockchainLeaderboard(); // Pobierz leaderboard po połączeniu
+    instance.removeAllListeners("chainChanged");
+    instance.on("chainChanged", (newChainId) => {
+      const chainId = parseInt(newChainId, 16);
+      console.log("Sieć zmieniona na chainId:", chainId);
+      if (chainId !== 53302) {
+        console.warn("Zmiana sieci na inną niż Superseed Sepolia Testnet!");
+        connectionError = "Please switch to Superseed Sepolia Testnet (chainId 53302)";
+        isConnected = false;
+      } else {
+        connectionError = null;
+        isConnected = true;
+        fetchBlockchainLeaderboard();
+      }
+    });
+
+    await fetchBlockchainLeaderboard();
   } catch (error) {
     console.error("Połączenie z portfelem nie powiodło się:", error);
     isConnected = false;
     userAddress = null;
     provider = null;
     signer = null;
+    gameContract = null;
     connectionError = "Nie udało się połączyć z portfelem: " + error.message;
   } finally {
     isConnecting = false;
@@ -276,13 +317,22 @@ async function initializeWeb3Modal() {
 
 // Pobieranie leaderboardu
 async function fetchBlockchainLeaderboard() {
-  console.log("Fetching leaderboard, called from:", new Error().stack.split("\n")[2]); // Pokazuje miejsce wywołania
-  if (!gameContract) {
-    console.warn("Contract not initialized, cannot fetch leaderboard");
+  console.log("Fetching leaderboard, called from:", new Error().stack.split("\n")[2]);
+  if (!gameContract || !provider) {
+    console.warn("Contract or provider not initialized, cannot fetch leaderboard");
     blockchainLeaderboard = [];
     return;
   }
   try {
+    // Sprawdzenie sieci przed zapytaniem
+    const network = await provider.getNetwork();
+    if (network.chainId !== 53302n) {
+      console.warn("Wrong network detected:", network.chainId, "Expected: 53302");
+      blockchainLeaderboard = [];
+      leaderboardFetched = false;
+      throw new Error("Please switch to Superseed Sepolia Testnet (chainId 53302)");
+    }
+
     const scores = await gameContract.getTopScores();
     blockchainLeaderboard = scores
       .map((entry) => ({
@@ -295,8 +345,29 @@ async function fetchBlockchainLeaderboard() {
     leaderboardFetched = true;
   } catch (error) {
     console.error("Failed to fetch blockchain leaderboard:", error);
-    blockchainLeaderboard = [];
-    leaderboardFetched = false;
+    if (error.message.includes("network changed")) {
+      console.log("Network changed detected, retrying after delay...");
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Czekaj 1 sekundę
+      try {
+        const scores = await gameContract.getTopScores();
+        blockchainLeaderboard = scores
+          .map((entry) => ({
+            nick: entry.player.slice(0, 6) + "..." + entry.player.slice(-4),
+            score: parseInt(entry.score),
+          }))
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 5);
+        console.log("Blockchain leaderboard updated after retry:", blockchainLeaderboard);
+        leaderboardFetched = true;
+      } catch (retryError) {
+        console.error("Retry failed:", retryError);
+        blockchainLeaderboard = [];
+        leaderboardFetched = false;
+      }
+    } else {
+      blockchainLeaderboard = [];
+      leaderboardFetched = false;
+    }
   }
 }
 
@@ -455,7 +526,7 @@ function setup() {
 
   waitForScripts().then(() => {
     initializeWeb3Modal().then(() => {
-      
+      if (web3Modal && web3Modal.cachedProvider) connectWallet();
     });
   });
 }
@@ -2533,30 +2604,44 @@ if (saveMessageTimer > 0) {
   textSize(20);
   text("Claim your NFT on Supersync Network soon! #SuperseedGrok3", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 290);
 
-// Status zapisu wyniku
-if (isConnected) {
-  fill(scoreSaved ? [0, 255, 0] : [255, 215, 0], 200); // Zielony jeśli zapisany, żółty jeśli nie
-  textSize(16);
-  text(scoreSaved ? "Score Saved to Blockchain!" : "Score Not Saved Yet", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 320);
-} else {
-  fill(128, 131, 134, 200); // Szary dla niepodłączonego portfela
-  textSize(16);
-  text("Connect Wallet to Save Score", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 320);
-}
+  // Status zapisu wyniku
+  if (isConnected) {
+    fill(scoreSaved ? [0, 255, 0] : [255, 215, 0], 200); // Zielony jeśli zapisane, żółty jeśli nie
+    textSize(16);
+    text(
+      scoreSaved ? "Score Saved to Blockchain!" : "Score Not Saved Yet",
+      GAME_WIDTH / 2,
+      GAME_HEIGHT / 2 + 330
+    );
+  } else {
+    fill(128, 131, 134, 200);
+    textSize(16);
+    text("Connect Wallet to Save Score", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 330);
+  }
 
-  // Przycisk "Claim NFT" – bez zmian
+  // Przyciski poniżej wszystkich napisów
+  // Przycisk "Claim NFT"
   fill(93, 208, 207);
-  rect(GAME_WIDTH / 2 - 100, GAME_HEIGHT / 2 + 320, 200, 50, 10);
+  rect(GAME_WIDTH / 2 - 100, GAME_HEIGHT / 2 + 370, 200, 50, 10);
   fill(255);
   textSize(24);
-  text("Claim NFT", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 345);
+  text("Claim NFT", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 395);
 
-  // Przycisk "Back to Menu" – bez zmian
+  // Przycisk "Save Score to Blockchain" (tylko jeśli nie zapisane i portfel podłączony)
+  if (isConnected && !scoreSaved) {
+    fill(93, 208, 207);
+    rect(GAME_WIDTH / 2 - 100, GAME_HEIGHT / 2 + 440, 200, 50, 10);
+    fill(255);
+    textSize(24);
+    text("Save Score", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 465);
+  }
+
+  // Przycisk "Back to Menu"
   fill(147, 208, 207);
-  rect(GAME_WIDTH / 2 - 100, GAME_HEIGHT / 2 + 400, 200, 50, 10);
+  rect(GAME_WIDTH / 2 - 100, GAME_HEIGHT / 2 + 510, 200, 50, 10);
   fill(255);
   textSize(24);
-  text("Back to Menu", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 425);
+  text("Back to Menu", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 535);
 }
 
 else if (gameState === "bossIntro") {

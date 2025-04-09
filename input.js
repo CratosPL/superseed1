@@ -118,47 +118,47 @@ function touchStarted() {
       }
   
       // Login/Logout Button
-      if (
-        !isConnected &&
-        adjustedMouseX >= GAME_WIDTH / 2 - 90 && // Zaktualizowane z 100
-        adjustedMouseX <= GAME_WIDTH / 2 + 90 && // Zaktualizowane z 100
-        adjustedMouseY >= 475 + verticalOffset && // Zaktualizowane z 570
-        adjustedMouseY <= 520 + verticalOffset // Zaktualizowane z 620
-      ) {
-        console.log("Login clicked - initiating wallet connection");
-        connectWallet(true)
-          .then(() => {
-            if (isConnected) {
-              console.log("Wallet connected successfully");
-              if (savedGameState) resumeGame();
-              else startGame();
-            } else {
-              console.log("Wallet connection failed");
-            }
-          })
-          .catch((error) => {
-            console.error("Wallet connection error:", error);
-            connectionError = "Connection failed: " + error.message;
-          });
-      } else if (
-        isConnected &&
-        adjustedMouseX >= GAME_WIDTH / 2 - 90 && // Zaktualizowane z 100
-        adjustedMouseX <= GAME_WIDTH / 2 + 90 && // Zaktualizowane z 100
-        adjustedMouseY >= 485 + verticalOffset && // Zaktualizowane z 590
-        adjustedMouseY <= 530 + verticalOffset // Zaktualizowane z 640
-      ) {
-        console.log("Logout clicked - disconnecting wallet");
-        if (web3Modal) {
-          web3Modal.clearCachedProvider();
-          localStorage.removeItem("WEB3_CONNECT_CACHED_PROVIDER");
-          localStorage.removeItem("walletconnect");
-        }
-        isConnected = false;
-        userAddress = null;
-        provider = null;
-        signer = null;
-        connectionError = null;
+    if (
+      !isConnected &&
+      adjustedMouseX >= GAME_WIDTH / 2 - 90 &&
+      adjustedMouseX <= GAME_WIDTH / 2 + 90 &&
+      adjustedMouseY >= 475 + verticalOffset &&
+      adjustedMouseY <= 520 + verticalOffset
+    ) {
+      console.log("Login clicked - initiating wallet connection");
+      connectWallet()
+        .then(() => {
+          if (isConnected) {
+            console.log("Wallet connected successfully");
+            // Nie wywołujemy startGame() ani resumeGame() – pozostajemy w howToPlay
+            gameState = "howToPlay"; // Jawnie ustawiamy, aby upewnić się, że stan się nie zmienia
+          } else {
+            console.log("Wallet connection failed");
+          }
+        })
+        .catch((error) => {
+          console.error("Wallet connection error:", error);
+          connectionError = "Connection failed: " + error.message;
+        });
+    } else if (
+      isConnected &&
+      adjustedMouseX >= GAME_WIDTH / 2 - 90 &&
+      adjustedMouseX <= GAME_WIDTH / 2 + 90 &&
+      adjustedMouseY >= 485 + verticalOffset &&
+      adjustedMouseY <= 530 + verticalOffset
+    ) {
+      console.log("Logout clicked - disconnecting wallet");
+      if (web3Modal) {
+        web3Modal.clearCachedProvider();
+        localStorage.removeItem("WEB3_CONNECT_CACHED_PROVIDER");
+        localStorage.removeItem("walletconnect");
       }
+      isConnected = false;
+      userAddress = null;
+      provider = null;
+      signer = null;
+      connectionError = null;
+    }
   
       // OBSŁUGA KLIKNIĘCIA W "Claim Your NFT"
       if (
@@ -387,7 +387,7 @@ function touchStarted() {
     } else if (gameState === "start" || gameState === "win" || gameState === "endgame") {
       if (gameState === "endgame") {
         let claimButtonX = GAME_WIDTH / 2 - 100;
-        let claimButtonY = GAME_HEIGHT / 2 + 320;
+        let claimButtonY = GAME_HEIGHT / 2 + 370;
         if (
           adjustedMouseX >= claimButtonX &&
           adjustedMouseX <= claimButtonX + 200 &&
@@ -397,8 +397,28 @@ function touchStarted() {
           console.log("Claim NFT clicked!");
           alert("NFT claim functionality coming soon on Superseed Network!");
         }
+      
+        let saveButtonX = GAME_WIDTH / 2 - 100;
+        let saveButtonY = GAME_HEIGHT / 2 + 440;
+        if (
+          isConnected &&
+          !scoreSaved &&
+          adjustedMouseX >= saveButtonX &&
+          adjustedMouseX <= saveButtonX + 200 &&
+          adjustedMouseY >= saveButtonY &&
+          adjustedMouseY <= saveButtonY + 50
+        ) {
+          console.log("Save Score to Blockchain clicked in endgame!");
+          saveScoreToBlockchain(score).then(() => {
+            scoreSaved = true;
+            console.log("Score saved successfully in endgame");
+          }).catch((error) => {
+            console.error("Error saving score in endgame:", error);
+          });
+        }
+      
         let backButtonX = GAME_WIDTH / 2 - 100;
-        let backButtonY = GAME_HEIGHT / 2 + 400;
+        let backButtonY = GAME_HEIGHT / 2 + 510;
         if (
           adjustedMouseX >= backButtonX &&
           adjustedMouseX <= backButtonX + 200 &&
