@@ -1383,6 +1383,8 @@ text("LEADERBOARD", sideButtonX + sideButtonWidth / 2, 525);
   textSize(14);
   textStyle(NORMAL);
   let challengeY = contentY + 30;
+
+  drawMainnetBadge(GAME_WIDTH / 2 - 250, challengeY - 10, 30); // Ikonka o rozmiarze 30, wyrównana do tekstu
   text(
     "Reach Orbit 5+ and chain 10+ syncs after 2 minutes.\n" +
     "Score 400 points in 60 seconds to earn the Mainnet Badge!\n" +
@@ -3280,41 +3282,40 @@ else if (gameState === "leaderboard") {
     fill(255, 215, 0, 150);
     rect(modalX + modalWidth - 20, scrollBarY, 10, scrollBarHeight, 5);
   }
-// Nowy przycisk "MAIN MENU"
-let menuButtonX = GAME_WIDTH / 2 - 75; // Wyśrodkowany poziomo
-let menuButtonY = modalY + modalHeight - 60; // 60 pikseli od dolnej krawędzi modala
-let menuButtonWidth = 150;
-let menuButtonHeight = 40;
 
-// Efekt hover
-let adjustedMouseX = mouseX - (width - GAME_WIDTH) / 2;
-let adjustedMouseY = mouseY - (height - GAME_HEIGHT) / 2;
-let isMenuHovering = (
-  adjustedMouseX >= menuButtonX &&
-  adjustedMouseX <= menuButtonX + menuButtonWidth &&
-  adjustedMouseY >= menuButtonY &&
-  adjustedMouseY <= menuButtonY + menuButtonHeight
-);
+  // Nowy przycisk "MAIN MENU"
+  let menuButtonX = GAME_WIDTH / 2 - 75; // Wyśrodkowany poziomo
+  let menuButtonY = modalY + modalHeight - 60; // 60 pikseli od dolnej krawędzi modala
+  let menuButtonWidth = 150;
+  let menuButtonHeight = 40;
 
-// Styl przycisku z gradientem
-gradient = drawingContext.createLinearGradient(menuButtonX, menuButtonY, menuButtonX + menuButtonWidth, menuButtonY);
-gradient.addColorStop(0, "#93D0CF"); // Superseed Light Green
-gradient.addColorStop(1, "#FFD700"); // Złoty akcent
-drawingContext.fillStyle = gradient;
-fill(isMenuHovering ? 255 : 200); // Lekkie rozjaśnienie przy hoverze
-stroke(147, 208, 207); // Obramowanie w kolorze Superseed Light Green
-strokeWeight(2);
-rect(menuButtonX, menuButtonY, menuButtonWidth, menuButtonHeight, 10); // Zaokrąglone rogi
-noStroke();
+  // Efekt hover
+  let adjustedMouseX = mouseX - (width - GAME_WIDTH) / 2;
+  let adjustedMouseY = mouseY - (height - GAME_HEIGHT) / 2;
+  let isMenuHovering = (
+    adjustedMouseX >= menuButtonX &&
+    adjustedMouseX <= menuButtonX + menuButtonWidth &&
+    adjustedMouseY >= menuButtonY &&
+    adjustedMouseY <= menuButtonY + menuButtonHeight
+  );
 
-// Tekst przycisku
-fill(14, 39, 59); // Ciemny kolor tekstu dla kontrastu
-textSize(18);
-textStyle(BOLD);
-textAlign(CENTER, CENTER);
-text("MAIN MENU", menuButtonX + menuButtonWidth / 2, menuButtonY + menuButtonHeight / 2);
+  // Styl przycisku z gradientem
+  gradient = drawingContext.createLinearGradient(menuButtonX, menuButtonY, menuButtonX + menuButtonWidth, menuButtonY);
+  gradient.addColorStop(0, "#93D0CF"); // Superseed Light Green
+  gradient.addColorStop(1, "#FFD700"); // Złoty akcent
+  drawingContext.fillStyle = gradient;
+  fill(isMenuHovering ? 255 : 200); // Lekkie rozjaśnienie przy hoverze
+  stroke(147, 208, 207); // Obramowanie w kolorze Superseed Light Green
+  strokeWeight(2);
+  rect(menuButtonX, menuButtonY, menuButtonWidth, menuButtonHeight, 10); // Zaokrąglone rogi
+  noStroke();
 
- 
+  // Tekst przycisku
+  fill(14, 39, 59); // Ciemny kolor tekstu dla kontrastu
+  textSize(18);
+  textStyle(BOLD);
+  textAlign(CENTER, CENTER);
+  text("MAIN MENU", menuButtonX + menuButtonWidth / 2, menuButtonY + menuButtonHeight / 2);
 }
 
 pop(); // Zamknięcie push() z początku draw()
