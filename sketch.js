@@ -679,25 +679,51 @@ function draw() {
     drawingContext.fillStyle = gradient;
     rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
   
-    // Zmniejszone logo na górze (z 320 na 280)
+    // === System newsów ===
+    // Tło paska newsów
+    fill(14, 39, 59, 200); // Ciemne tło z lekką przezroczystością
+    rect(0, 0, GAME_WIDTH, 40); // Pasek na górze ekranu, wysokość 40px
+  
+    // Tekst newsów
+    fill(255, 215, 0); // Złoty kolor dla widoczności
+    textSize(16);
+    textStyle(BOLD);
+    textAlign(LEFT, CENTER);
+  
+    let currentNews = newsMessages[currentNewsIndex];
+    let textWidth = drawingContext.measureText(currentNews).width; // Poprawnie mierzona szerokość tekstu
+  
+
+    
+    // Przewijanie tekstu
+    text(currentNews, newsOffset, 20); // Pozycja y=20 (środek paska)
+    newsOffset -= newsSpeed; // Przesuwaj w lewo
+  
+    // Jeśli tekst całkowicie przewinął się poza ekran, zmień na kolejny
+    if (newsOffset < -textWidth) {
+      newsOffset = GAME_WIDTH; // Resetuj pozycję na prawo
+      currentNewsIndex = (currentNewsIndex + 1) % newsMessages.length; // Przejdź do następnej wiadomości
+    }
+    // === Koniec systemu newsów ===
+  
+    // Logo przesunięte w dół o 40px, aby zrobić miejsce na pasek newsów
     let logoScale = 1 + sin(millis() * 0.002) * 0.05;
     let logoSize = 280 * logoScale; // Zmniejszone z 320
-    image(mainLogo, GAME_WIDTH / 2 - logoSize / 2, 20, logoSize, logoSize); // Przesunięte z 30 na 20
+    image(mainLogo, GAME_WIDTH / 2 - logoSize / 2, 20 + 40, logoSize, logoSize); // Przesunięte z 20 na 60
   
-    // Zmniejszony verticalOffset z 80 na 60
     let verticalOffset = 60;
   
-    // Choose Your Seed Color – mniejszy tekst i odstępy
+    // Reszta kodu howToPlay pozostaje bez zmian
     fill(249, 249, 242);
-    textSize(18); // Zmniejszone z 20
-    text("Choose Your Seed Color", GAME_WIDTH / 2, 260 + verticalOffset); // Przesunięte z 300
-    let colorBoxSize = 45; // Zmniejszone z 50
-    let colorBoxSpacing = 20; // Zmniejszone z 25
+    textSize(18);
+    text("Choose Your Seed Color", GAME_WIDTH / 2, 260 + verticalOffset);
+    let colorBoxSize = 45;
+    let colorBoxSpacing = 20;
     let startX = GAME_WIDTH / 2 - (colorBoxSize * 3 + colorBoxSpacing * 2) / 2;
     let pulse = 1 + sin(millis() * 0.005) * 0.1;
   
     fill(0, 255, 0);
-    rect(startX, 280 + verticalOffset, colorBoxSize, colorBoxSize, 15); // Przesunięte z 330
+    rect(startX, 280 + verticalOffset, colorBoxSize, colorBoxSize, 15);
     fill(0, 0, 255);
     rect(startX + colorBoxSize + colorBoxSpacing, 280 + verticalOffset, colorBoxSize, colorBoxSize, 15);
     fill(255, 215, 0);
@@ -715,40 +741,37 @@ function draw() {
     }
     noStroke();
   
-    // Enter Your Nick – mniejsze pole tekstowe
     fill(249, 249, 242);
-    textSize(18); // Zmniejszone z 20
-    text("Enter Your Nick", GAME_WIDTH / 2, 350 + verticalOffset); // Przesunięte z 420
+    textSize(18);
+    text("Enter Your Nick", GAME_WIDTH / 2, 350 + verticalOffset);
     fill(128, 131, 134, 180);
     stroke(147, 208, 207);
     strokeWeight(3);
-    rect(GAME_WIDTH / 2 - 90, 370 + verticalOffset, 180, 35, 10); // Szerokość z 200 na 180, wysokość z 40 na 35, przesunięte z 440
+    rect(GAME_WIDTH / 2 - 90, 370 + verticalOffset, 180, 35, 10);
     fill(249, 249, 242);
-    textSize(16); // Zmniejszone z 18
+    textSize(16);
     textAlign(CENTER, CENTER);
     if (isTypingNick) {
       let cursor = (floor(millis() / 500) % 2 === 0) ? "|" : "";
-      text(playerNick + cursor, GAME_WIDTH / 2, 387 + verticalOffset); // Przesunięte z 460
+      text(playerNick + cursor, GAME_WIDTH / 2, 387 + verticalOffset);
     } else {
       text(playerNick || "Click to type", GAME_WIDTH / 2, 387 + verticalOffset);
     }
     noStroke();
   
-    // Start Button – mniejszy rozmiar
     gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 90, 420 + verticalOffset, GAME_WIDTH / 2 + 90, 420 + verticalOffset);
     gradient.addColorStop(0, "#93D0CF");
     gradient.addColorStop(1, "#FFD700");
     drawingContext.fillStyle = gradient;
     stroke(147, 208, 207);
     strokeWeight(3);
-    rect(GAME_WIDTH / 2 - 90, 420 + verticalOffset, 180, 45, 15); // Szerokość z 200 na 180, wysokość z 50 na 45, przesunięte z 500
+    rect(GAME_WIDTH / 2 - 90, 420 + verticalOffset, 180, 45, 15);
     noStroke();
     fill(14, 39, 59);
-    textSize(22); // Zmniejszone z 24
+    textSize(22);
     let buttonText = savedGameState ? "RESUME" : "START";
-    text(buttonText, GAME_WIDTH / 2, 442 + verticalOffset); // Przesunięte z 525
+    text(buttonText, GAME_WIDTH / 2, 442 + verticalOffset);
   
-    // Login/Logout Button – mniejszy rozmiar
     if (!isConnected) {
       gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 90, 475 + verticalOffset, GAME_WIDTH / 2 + 90, 475 + verticalOffset);
       gradient.addColorStop(0, "#0E273B");
@@ -756,73 +779,65 @@ function draw() {
       drawingContext.fillStyle = gradient;
       stroke(147, 208, 207);
       strokeWeight(3);
-      rect(GAME_WIDTH / 2 - 90, 475 + verticalOffset, 180, 45, 15); // Szerokość z 200 na 180, wysokość z 50 na 45, przesunięte z 570
+      rect(GAME_WIDTH / 2 - 90, 475 + verticalOffset, 180, 45, 15);
       noStroke();
       fill(249, 249, 242);
-      textSize(22); // Zmniejszone z 24
-      text("LOGIN (Opt.)", GAME_WIDTH / 2, 497 + verticalOffset); // Przesunięte z 595
+      textSize(22);
+      text("LOGIN (Opt.)", GAME_WIDTH / 2, 497 + verticalOffset);
     } else {
       fill(93, 208, 207);
-      textSize(14); // Zmniejszone z 16
-      text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 465 + verticalOffset); // Przesunięte z 560
+      textSize(14);
+      text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 465 + verticalOffset);
       gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 90, 485 + verticalOffset, GAME_WIDTH / 2 + 90, 485 + verticalOffset);
       gradient.addColorStop(0, "#FF4500");
       gradient.addColorStop(1, "#FFD700");
       drawingContext.fillStyle = gradient;
       stroke(147, 208, 207);
       strokeWeight(3);
-      rect(GAME_WIDTH / 2 - 90, 485 + verticalOffset, 180, 45, 15); // Szerokość z 200 na 180, wysokość z 50 na 45, przesunięte z 590
+      rect(GAME_WIDTH / 2 - 90, 485 + verticalOffset, 180, 45, 15);
       noStroke();
       fill(249, 249, 242);
-      textSize(22); // Zmniejszone z 24
-      text("LOGOUT", GAME_WIDTH / 2, 507 + verticalOffset); // Przesunięte z 615
+      textSize(22);
+      text("LOGOUT", GAME_WIDTH / 2, 507 + verticalOffset);
     }
   
-    // Komunikat o opcjonalnym logowaniu – mniejszy tekst
     fill(147, 208, 207, 200);
-    textSize(12); // Zmniejszone z 14
+    textSize(12);
     textStyle(NORMAL);
-    text("Login optional – save scores and claim NFT on Superseed Testnet", GAME_WIDTH / 2, 540 + verticalOffset); // Przesunięte z 650
-    text("after completing 10 orbits and defeating the boss!", GAME_WIDTH / 2, 555 + verticalOffset); // Przesunięte z 670
+    text("Login optional – save scores and claim NFT on Superseed Testnet", GAME_WIDTH / 2, 540 + verticalOffset);
+    text("after completing 10 orbits and defeating the boss!", GAME_WIDTH / 2, 555 + verticalOffset);
   
-    // Przycisk "Claim Your NFT" – mniejszy rozmiar
     if (hasCompletedGame) {
       fill(93, 208, 207);
-      rect(GAME_WIDTH / 2 - 90, 580 + verticalOffset, 180, 45, 10); // Szerokość z 200 na 180, wysokość z 50 na 45, przesunięte z 700
+      rect(GAME_WIDTH / 2 - 90, 580 + verticalOffset, 180, 45, 10);
       fill(255);
-      textSize(18); // Zmniejszone z 20
-      text("Claim Your NFT", GAME_WIDTH / 2, 602 + verticalOffset); // Przesunięte z 725
+      textSize(18);
+      text("Claim Your NFT", GAME_WIDTH / 2, 602 + verticalOffset);
     }
   
-    // Komunikat o wersji desktopowej – bardziej widoczny i większy na desktopie
-let noticeX = GAME_WIDTH / 2;
-let noticeY = 640 + verticalOffset; // Pozycja bazowa
-let mobileY = 670 + verticalOffset; // Lekko przesunięte w dół dla odstępu
-let pulseScale = 1 + sin(millis() * 0.005) * 0.1; // Subtelne pulsowanie
-
-// Dynamiczna wielkość tekstu zależna od szerokości ekranu
-let noticeTextSize = GAME_WIDTH < 768 ? 16 : 24; // 16px na mobile, 24px na desktopie
-let mobileTextSize = GAME_WIDTH < 768 ? 12 : 18; // 12px na mobile, 18px na desktopie
-
-// Tekst NOTICE – czerwony z wyraźnym cieniem i pulsowaniem
-drawingContext.shadowBlur = 8; // Zwiększony cień dla lepszej widoczności
-drawingContext.shadowColor = "rgba(255, 50, 50, 1)"; // Pełna nieprzezroczystość cienia
-fill(255, 50, 50, 255); // Jasnoczerwony, pełna nieprzezroczystość
-textStyle(BOLD);
-textSize(noticeTextSize);
-text("NOTICE: Desktop Only For Now", noticeX, noticeY);
-
-// Tekst Mobile version – żółty z wyraźnym cieniem
-drawingContext.shadowBlur = 5; // Nieco mniejszy cień dla drugiego tekstu
-drawingContext.shadowColor = "rgba(255, 215, 0, 0.8)"; // Lepsza widoczność cienia
-fill(255, 215, 0, 255); // Pełna nieprzezroczystość dla żółtego
-textSize(mobileTextSize);
-text("Mobile Version Coming Soon!", noticeX, mobileY);
-drawingContext.shadowBlur = 0; // Reset cienia po użyciu
+    let noticeX = GAME_WIDTH / 2;
+    let noticeY = 640 + verticalOffset;
+    let mobileY = 670 + verticalOffset;
+    let pulseScale = 1 + sin(millis() * 0.005) * 0.1;
   
-    // Przyciski boczne (INFO, TUTORIAL, VIEW INTRO, ACHIEVEMENTS) – bez zmian
+    let noticeTextSize = GAME_WIDTH < 768 ? 16 : 24;
+    let mobileTextSize = GAME_WIDTH < 768 ? 12 : 18;
+  
+    drawingContext.shadowBlur = 8;
+    drawingContext.shadowColor = "rgba(255, 50, 50, 1)";
+    fill(255, 50, 50, 255);
+    textStyle(BOLD);
+    textSize(noticeTextSize);
+    text("NOTICE: Desktop Only For Now", noticeX, noticeY);
+  
+    drawingContext.shadowBlur = 5;
+    drawingContext.shadowColor = "rgba(255, 215, 0, 0.8)";
+    fill(255, 215, 0, 255);
+    textSize(mobileTextSize);
+    text("Mobile Version Coming Soon!", noticeX, mobileY);
+    drawingContext.shadowBlur = 0;
+  
     let sideButtonWidth = 120;
-    let sideButtonHeight = 50;
     let sideButtonX = GAME_WIDTH - sideButtonWidth - 20;
   
     gradient = drawingContext.createLinearGradient(sideButtonX, 200, sideButtonX + sideButtonWidth, 200);
@@ -831,12 +846,12 @@ drawingContext.shadowBlur = 0; // Reset cienia po użyciu
     drawingContext.fillStyle = gradient;
     stroke(147, 208, 207);
     strokeWeight(2);
-    rect(sideButtonX, 200, sideButtonWidth, sideButtonHeight, 10);
+    rect(sideButtonX, 200, sideButtonWidth, 50, 10);
     noStroke();
     fill(14, 39, 59);
     textSize(16);
     textAlign(CENTER, CENTER);
-    text("INFO", sideButtonX + sideButtonWidth / 2, 200 + sideButtonHeight / 2);
+    text("INFO", sideButtonX + sideButtonWidth / 2, 225);
   
     gradient = drawingContext.createLinearGradient(sideButtonX, 260, sideButtonX + sideButtonWidth, 260);
     gradient.addColorStop(0, "#93D0CF");
@@ -844,12 +859,11 @@ drawingContext.shadowBlur = 0; // Reset cienia po użyciu
     drawingContext.fillStyle = gradient;
     stroke(147, 208, 207);
     strokeWeight(2);
-    rect(sideButtonX, 260, sideButtonWidth, sideButtonHeight, 10);
+    rect(sideButtonX, 260, sideButtonWidth, 50, 10);
     noStroke();
     fill(14, 39, 59);
     textSize(16);
-    textAlign(CENTER, CENTER);
-    text("TUTORIAL", sideButtonX + sideButtonWidth / 2, 260 + sideButtonHeight / 2);
+    text("TUTORIAL", sideButtonX + sideButtonWidth / 2, 285);
   
     gradient = drawingContext.createLinearGradient(sideButtonX, 320, sideButtonX + sideButtonWidth, 320);
     gradient.addColorStop(0, "#93D0CF");
@@ -857,12 +871,11 @@ drawingContext.shadowBlur = 0; // Reset cienia po użyciu
     drawingContext.fillStyle = gradient;
     stroke(147, 208, 207);
     strokeWeight(2);
-    rect(sideButtonX, 320, sideButtonWidth, sideButtonHeight, 10);
+    rect(sideButtonX, 320, sideButtonWidth, 50, 10);
     noStroke();
     fill(14, 39, 59);
     textSize(16);
-    textAlign(CENTER, CENTER);
-    text("VIEW INTRO", sideButtonX + sideButtonWidth / 2, 320 + sideButtonHeight / 2);
+    text("VIEW INTRO", sideButtonX + sideButtonWidth / 2, 345);
   
     gradient = drawingContext.createLinearGradient(sideButtonX, 380, sideButtonX + sideButtonWidth, 380);
     gradient.addColorStop(0, "#93D0CF");
@@ -870,28 +883,24 @@ drawingContext.shadowBlur = 0; // Reset cienia po użyciu
     drawingContext.fillStyle = gradient;
     stroke(147, 208, 207);
     strokeWeight(2);
-    rect(sideButtonX, 380, sideButtonWidth, sideButtonHeight, 10);
+    rect(sideButtonX, 380, sideButtonWidth, 50, 10);
     noStroke();
     fill(14, 39, 59);
     textSize(16);
-    textAlign(CENTER, CENTER);
-    text("ACHIEVEMENTS", sideButtonX + sideButtonWidth / 2, 380 + sideButtonHeight / 2);
-
-    // Mining Hub Button
-gradient = drawingContext.createLinearGradient(sideButtonX, 440, sideButtonX + sideButtonWidth, 440);
-gradient.addColorStop(0, "#93D0CF");
-gradient.addColorStop(1, "#FFD700");
-drawingContext.fillStyle = gradient;
-stroke(147, 208, 207);
-strokeWeight(2);
-rect(sideButtonX, 440, sideButtonWidth, sideButtonHeight, 10);
-noStroke();
-fill(14, 39, 59);
-textSize(16);
-textAlign(CENTER, CENTER);
-text("MINING HUB", sideButtonX + sideButtonWidth / 2, 440 + sideButtonHeight / 2);
+    text("ACHIEVEMENTS", sideButtonX + sideButtonWidth / 2, 405);
   
-    // WhiteLogo w lewym dole – bez zmian
+    gradient = drawingContext.createLinearGradient(sideButtonX, 440, sideButtonX + sideButtonWidth, 440);
+    gradient.addColorStop(0, "#93D0CF");
+    gradient.addColorStop(1, "#FFD700");
+    drawingContext.fillStyle = gradient;
+    stroke(147, 208, 207);
+    strokeWeight(2);
+    rect(sideButtonX, 440, sideButtonWidth, 50, 10);
+    noStroke();
+    fill(14, 39, 59);
+    textSize(16);
+    text("MINING HUB", sideButtonX + sideButtonWidth / 2, 465);
+  
     let whiteLogoScale = 1 + sin(millis() * 0.003) * 0.05;
     let whiteLogoWidth = 100 * whiteLogoScale;
     let whiteLogoHeight = 50 * whiteLogoScale;
@@ -907,7 +916,6 @@ text("MINING HUB", sideButtonX + sideButtonWidth / 2, 440 + sideButtonHeight / 2
   
     textAlign(CENTER, BASELINE);
   
-    // Informacja o twórcy w prawym dolnym rogu
     let adjustedMouseX = mouseX - (width - GAME_WIDTH) / 2;
     let adjustedMouseY = mouseY - (height - GAME_HEIGHT) / 2;
     let creatorTextX = GAME_WIDTH - 140;

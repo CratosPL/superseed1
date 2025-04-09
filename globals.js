@@ -1,4 +1,13 @@
 // Global Variables
+
+const SLOWDOWN_DURATION = 10000;
+const SLOWDOWN_COOLDOWN = 30000;
+const SLOWDOWN_FACTOR = 1.5;
+
+const ethersLib = window.ethers;
+
+const SYNC_INTERVAL = 2000; // Do usunięcia w nowej mechanice, jeśli niepotrzebne
+
 let logo;
 let whiteLogo;
 let smallSuperseedIntro;
@@ -190,6 +199,8 @@ let bossBullets = []; // Pociski bossa
 let lastFireTime = 0; // Ostatni czas strzału gracza
 let fireRate = 400; // Częstotliwość strzelania (ms)
 
+
+
 let powerUpDurations = {
   gas: 5000,
   pulse: 4000,
@@ -198,3 +209,22 @@ let powerUpDurations = {
   meteor: 6000,
   star: 6000 // Zmień z 5000 na 6000 dla spójności
 };
+
+let superseedSepolia = {
+    chainId: "0xD036",
+    chainName: "Superseed Sepolia Testnet",
+    nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+    rpcUrls: ["https://sepolia.superseed.xyz"],
+    blockExplorerUrls: ["https://sepolia-explorer.superseed.xyz"],
+  };
+
+  // globals.js
+let newsMessages = [
+  "Superseed Testnet live now! Sync to earn rewards.",
+  "Mobile version coming soon – stay tuned!",
+  "Reach Orbit 10 to claim your Cosmic Core NFT!",
+  "New Mining Hub preview available – check it out!"
+]; // Lista wiadomości
+let currentNewsIndex = 0; // Indeks aktualnej wiadomości
+let newsOffset = 0; // Przesunięcie tekstu dla efektu przewijania
+let newsSpeed = 5; // Prędkość przewijania (piksele na klatkę)
