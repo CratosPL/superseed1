@@ -434,6 +434,78 @@ function drawMainnetBadge(x, y, size) {
   pop();
 }
 
+function drawBossSlayerBadge(x, y, size) {
+  push();
+  translate(x, y);
+  let gradient = drawingContext.createLinearGradient(-size / 2, 0, size / 2, 0);
+  gradient.addColorStop(0, "rgb(255, 69, 0)");
+  gradient.addColorStop(1, "rgb(255, 215, 0)");
+  drawingContext.fillStyle = gradient;
+  ellipse(0, 0, size, size);
+  let pulseScale = 1 + sin(millis() * 0.005) * 0.1;
+  noFill();
+  stroke(255, 69, 0, 200);
+  strokeWeight(4);
+  ellipse(0, 0, size * pulseScale, size * pulseScale);
+  noStroke();
+  fill(255);
+  textSize(size / 4);
+  textStyle(BOLD);
+  textFont("Open Sans");
+  text("B", 0, -size / 8);
+  textSize(size / 10);
+  textStyle(BOLD);
+  let textRadius = size / 2 + 10;
+  for (let i = 0; i < "Boss Slayer".length; i++) {
+    let angle = map(i, 0, "Boss Slayer".length, -PI / 2, 3 * PI / 2);
+    let tx = textRadius * cos(angle);
+    let ty = textRadius * sin(angle);
+    push();
+    translate(tx, ty);
+    rotate(angle + PI / 2);
+    fill(255, 215, 0);
+    text("Boss Slayer"[i], 0, 0);
+    pop();
+  }
+  pop();
+}
+
+function drawScoreMasterBadge(x, y, size) {
+  push();
+  translate(x, y);
+  let gradient = drawingContext.createLinearGradient(-size / 2, 0, size / 2, 0);
+  gradient.addColorStop(0, "rgb(0, 191, 255)");
+  gradient.addColorStop(1, "rgb(255, 215, 0)");
+  drawingContext.fillStyle = gradient;
+  ellipse(0, 0, size, size);
+  let pulseScale = 1 + sin(millis() * 0.005) * 0.1;
+  noFill();
+  stroke(0, 191, 255, 200);
+  strokeWeight(4);
+  ellipse(0, 0, size * pulseScale, size * pulseScale);
+  noStroke();
+  fill(255);
+  textSize(size / 4);
+  textStyle(BOLD);
+  textFont("Open Sans");
+  text("S", 0, -size / 8);
+  textSize(size / 10);
+  textStyle(BOLD);
+  let textRadius = size / 2 + 10;
+  for (let i = 0; i < "Score Master".length; i++) {
+    let angle = map(i, 0, "Score Master".length, -PI / 2, 3 * PI / 2);
+    let tx = textRadius * cos(angle);
+    let ty = textRadius * sin(angle);
+    push();
+    translate(tx, ty);
+    rotate(angle + PI / 2);
+    fill(255, 215, 0);
+    text("Score Master"[i], 0, 0);
+    pop();
+  }
+  pop();
+}
+
 function preload() {
   logo = loadImage('assets/superseed-logo.png');
   whiteLogo = loadImage('assets/White.webp');
@@ -1155,6 +1227,8 @@ text("LEADERBOARD", sideButtonX + sideButtonWidth / 2, 525);
   
     // Lista osiągnięć
     let yOffset = -300;
+  
+    // Mainnet Badge
     if (mainnetBadgeEarned) {
       drawMainnetBadge(GAME_WIDTH / 2 - 250, GAME_HEIGHT / 2 + yOffset, 40);
       fill(255, 215, 0);
@@ -1165,7 +1239,32 @@ text("LEADERBOARD", sideButtonX + sideButtonWidth / 2, 525);
       textSize(16);
       text("Mainnet Badge: Locked", GAME_WIDTH / 2 - 200, GAME_HEIGHT / 2 + yOffset + 50);
     }
-    // Miejsce na przyszłe odznaki
+    yOffset += 100;
+  
+    // Boss Slayer
+    if (bossSlayerEarned) {
+      drawBossSlayerBadge(GAME_WIDTH / 2 - 250, GAME_HEIGHT / 2 + yOffset, 40);
+      fill(255, 215, 0);
+      textSize(16);
+      text("Boss Slayer Earned!", GAME_WIDTH / 2 - 200, GAME_HEIGHT / 2 + yOffset + 50);
+    } else {
+      fill(128, 131, 134);
+      textSize(16);
+      text("Boss Slayer: Locked", GAME_WIDTH / 2 - 200, GAME_HEIGHT / 2 + yOffset + 50);
+    }
+    yOffset += 100;
+  
+    // Score Master
+    if (scoreMasterEarned) {
+      drawScoreMasterBadge(GAME_WIDTH / 2 - 250, GAME_HEIGHT / 2 + yOffset, 40);
+      fill(255, 215, 0);
+      textSize(16);
+      text("Score Master Earned!", GAME_WIDTH / 2 - 200, GAME_HEIGHT / 2 + yOffset + 50);
+    } else {
+      fill(128, 131, 134);
+      textSize(16);
+      text("Score Master: Locked", GAME_WIDTH / 2 - 200, GAME_HEIGHT / 2 + yOffset + 50);
+    }
     yOffset += 100;
   
     // Przycisk zamknięcia
@@ -1951,7 +2050,7 @@ text("LEADERBOARD", sideButtonX + sideButtonWidth / 2, 525);
 
       if (mainnetChallengeScore >= mainnetChallengeGoal) {
         mainnetChallengeActive = false;
-        mainnetBadgeEarned = true;
+        
         badgeMessageTimer = 3000; // Reset timera przy każdym zdobyciu
         lives += 1;
         lifeBar = min(lifeBar + 20, 100);
@@ -2071,12 +2170,15 @@ text("LEADERBOARD", sideButtonX + sideButtonWidth / 2, 525);
   pop();
   drawingContext.shadowBlur = 0;
 
-  // TUTAJ ODZNAKA
-  if (mainnetBadgeEarned) {
+  
+
+   // Wyświetlanie odznaki z zanikaniem
+   if (mainnetBadgeEarned && badgeMessageTimer > 0) {
     drawMainnetBadge(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 150, 60);
-    fill(255, 215, 0, 200);
+    fill(255, 215, 0, map(badgeMessageTimer, 0, 3000, 0, 200)); // Zanikanie przezroczystości
     textSize(16);
-    text("Mainnet Badge", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 200);
+    text("Mainnet Badge Earned!", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 200);
+    badgeMessageTimer -= deltaTime;
   }
 
   if (isReadyToClick) {
@@ -2878,11 +2980,12 @@ else if (gameState === "bossFight") {
     zoomLevel = 1;
     playerBullets = [];
     bossBullets = [];
-    bossDefeatedSuccessfully = true; // Ustaw znacznik na true
+    bossDefeatedSuccessfully = true;
+    bossSlayerEarned = true; // NOWE: Przyznanie odznaki "Boss Slayer"
     if (soundInitialized) {
-        levelSound.play();
+      levelSound.play();
     }
-}
+  }
   if (lifeBar <= 0) {
     gameState = "gameOver";
     shakeTimer = 500;
@@ -3444,6 +3547,8 @@ function pauseGame() {
     mainnetChallengeGoal,
     mainnetChallengeScore,
     mainnetBadgeEarned,
+    bossSlayerEarned, // NOWE: Zapis stanu odznaki Boss Slayer
+    scoreMasterEarned, // NOWE: Zapis stanu odznaki Score Master
     mainnetChallengeTriggered,
     gameStartTime,
     stateStartTime, // Dodane: zapis stateStartTime
@@ -3475,6 +3580,7 @@ function pauseGame() {
     // Włącz muzykę z intra
     introMusic.loop();
   }
+  localStorage.setItem('savedGameState', JSON.stringify(savedGameState)); // NOWE: Zapis do localStorage
 }
 
 // Funkcja resumeGame() – zaktualizowana o nowe zmienne

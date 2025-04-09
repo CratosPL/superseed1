@@ -636,54 +636,62 @@ function touchStarted() {
       }
   
       // Logika klikania zależna od stanu gry
-      if (gameState === "playing" || gameState === "supernova") {
-        let d = dist(adjustedMouseX, adjustedMouseY, logoX, logoY);
-        if (d < circleSize / 2 && isReadyToClick) {
-          if (activeEvent === "blackHole" && dist(logoX, logoY, eventX, eventY) < 300) {
-            return;
-          }
-          combo += 1;
-          comboBar = min(comboBar + 2, 10);
-          let multiplier = (powerUpEffect === "gas" || meteorShowerActive || gameState === "supernova") ? 3 : 1;
-          if (powerUpCombo === "gas+star") multiplier = 4;
-          let basePoints = level === 1 ? 2 : 1;
-          let points = combo * basePoints * multiplier;
-          if (activeEvent === "overload") {
-            if (eventColor === 2) points += 10;
-            else if (eventColor === 1) points -= 5;
-            activeEvent = null;
-          }
-          score += points;
-          if (soundInitialized) clickSound.rate(1 + combo * 0.1);
-          if (soundInitialized) clickSound.play();
-          shakeTimer = 100;
-          for (let i = 0; i < 15 + combo * 2; i++) {
-            particles.push(new Particle(logoX, logoY, { r: seedColor.r, g: seedColor.g, b: seedColor.b }));
-          }
-          seeds.push(new Seed(random(100, GAME_WIDTH - 100), random(100, GAME_HEIGHT - 100)));
-          if (challengeActive) {
-            challengeClicks += 1;
-          }
-          if (mainnetChallengeActive) {
-            mainnetChallengeScore += points;
-          }
-        } else if (d < circleSize / 2) {
-          combo = 0;
-          comboBar = 0;
-          misses += 1;
-          if (misses >= (level <= 2 ? 5 : 3) && !shieldActive) {
-            lives -= 1;
-            lifeBar -= 20;
-            misses = 0;
-            shakeTimer = 500;
-          }
-          score -= 5;
-          if (score < 0) score = 0;
-          for (let i = 0; i < 5; i++) {
-            particles.push(new Particle(logoX, logoY, { r: 255, g: 0, b: 0 }));
-          }
-        }
-      }
+if (gameState === "playing" || gameState === "supernova") {
+  let d = dist(adjustedMouseX, adjustedMouseY, logoX, logoY);
+  if (d < circleSize / 2 && isReadyToClick) {
+    if (activeEvent === "blackHole" && dist(logoX, logoY, eventX, eventY) < 300) {
+      return;
+    }
+    combo += 1;
+    comboBar = min(comboBar + 2, 10);
+    let multiplier = (powerUpEffect === "gas" || meteorShowerActive || gameState === "supernova") ? 3 : 1;
+    if (powerUpCombo === "gas+star") multiplier = 4;
+    let basePoints = level === 1 ? 2 : 1;
+    let points = combo * basePoints * multiplier;
+    if (activeEvent === "overload") {
+      if (eventColor === 2) points += 10;
+      else if (eventColor === 1) points -= 5;
+      activeEvent = null;
+    }
+    score += points;
+    
+    // NOWE: Sprawdzanie dla odznaki "Score Master"
+    if (score >= 2000 && !scoreMasterEarned) {
+      scoreMasterEarned = true;
+      badgeMessageTimer = 3000;
+      if (soundInitialized) levelSound.play(); // Opcjonalny dźwięk
+    }
+    
+    if (soundInitialized) clickSound.rate(1 + combo * 0.1);
+    if (soundInitialized) clickSound.play();
+    shakeTimer = 100;
+    for (let i = 0; i < 15 + combo * 2; i++) {
+      particles.push(new Particle(logoX, logoY, { r: seedColor.r, g: seedColor.g, b: seedColor.b }));
+    }
+    seeds.push(new Seed(random(100, GAME_WIDTH - 100), random(100, GAME_HEIGHT - 100)));
+    if (challengeActive) {
+      challengeClicks += 1;
+    }
+    if (mainnetChallengeActive) {
+      mainnetChallengeScore += points;
+    }
+  } else if (d < circleSize / 2) {
+    combo = 0;
+    comboBar = 0;
+    misses += 1;
+    if (misses >= (level <= 2 ? 5 : 3) && !shieldActive) {
+      lives -= 1;
+      lifeBar -= 20;
+      misses = 0;
+      shakeTimer = 500;
+    }
+    score -= 5;
+    if (score < 0) score = 0;
+    for (let i = 0; i < 5; i++) {
+      particles.push(new Particle(logoX, logoY, { r: 255, g: 0, b: 0 }));
+    }
+  }
+}
   
       // Power-upy i przeszkody
       for (let i = powerUps.length - 1; i >= 0; i--) {
