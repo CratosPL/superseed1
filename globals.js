@@ -232,8 +232,19 @@ let currentNewsIndex = 0; // Indeks aktualnej wiadomości
 let newsOffset = 0; // Przesunięcie tekstu dla efektu przewijania
 let newsSpeed = 5; // Prędkość przewijania (piksele na klatkę)
 
+// W globals.js lub na górze sketch.js
 let showSaveButton = false; // Czy pokazywać przycisk zapisu
-let blockchainScores = [];  // Lista wyników z blockchainu
-let leaderboardOffset = 0;  // Przesunięcie dla przewijania tablicy wyników
+let blockchainScores = []; // Lista wyników z blockchainu
+let leaderboardOffset = 0; // Przesunięcie dla przewijania tablicy
+let blockchainLeaderboard = [];
+let leaderboardFetched = false; // Nowa flaga
+
+let saveMessage = ""; // Treść komunikatu
+let saveMessageTimer = 0; // Czas wyświetlania komunikatu (w ms)
+
+
+
+
+
 
 

@@ -1,62 +1,63 @@
 
-const contractAddress = "0xd6D6fC885506EE85D6079F3f648DBCeE76C0e43b"; // Wstaw adres z wdrożenia
+const contractAddress = "0x2847ed1F9b57014Ac016aECf88267181572CB0E0"; // Nowy kontrakt z getTopScores
 const contractABI = [
   {
+    "anonymous": false,
     "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_score",
-        "type": "uint256"
-      }
+      { "indexed": true, "internalType": "address", "name": "player", "type": "address" },
+      { "indexed": false, "internalType": "uint256", "name": "score", "type": "uint256" },
+      { "indexed": false, "internalType": "uint256", "name": "timestamp", "type": "uint256" }
     ],
-    "name": "saveScore",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    "name": "ScoreUpdated",
+    "type": "event"
   },
   {
     "inputs": [
-      {
-        "internalType": "address",
-        "name": "_player",
-        "type": "address"
-      }
+      { "internalType": "address", "name": "_player", "type": "address" }
     ],
     "name": "getScore",
     "outputs": [
+      { "internalType": "uint256", "name": "", "type": "uint256" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getTopScores",
+    "outputs": [
       {
-        "internalType": "uint256",
+        "components": [
+          { "internalType": "address", "name": "player", "type": "address" },
+          { "internalType": "uint256", "name": "score", "type": "uint256" }
+        ],
+        "internalType": "struct SuperseedGameScores.Score[]",
         "name": "",
-        "type": "uint256"
+        "type": "tuple[]"
       }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "anonymous": false,
     "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "player",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "score",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "timestamp",
-        "type": "uint256"
-      }
+      { "internalType": "address", "name": "", "type": "address" }
     ],
-    "name": "ScoreUpdated",
-    "type": "event"
+    "name": "playerScores",
+    "outputs": [
+      { "internalType": "uint256", "name": "", "type": "uint256" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_score", "type": "uint256" }
+    ],
+    "name": "saveScore",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   }
 ];
 
@@ -149,6 +150,7 @@ function initializeWeb3Modal() {
 }
 
 // Funkcja do połączenia z portfelem
+// Połączenie z portfelem (zaktualizowane o fetchBlockchainLeaderboard)
 async function connectWallet(forceReconnect = false) {
   if (isConnecting) {
     console.log("Połączenie w toku, proszę czekać...");
@@ -182,7 +184,6 @@ async function connectWallet(forceReconnect = false) {
     signer = await provider.getSigner();
     userAddress = await signer.getAddress();
 
-    // Inicjalizacja kontraktu
     gameContract = new ethers.Contract(contractAddress, contractABI, signer);
     console.log("Kontrakt gry zainicjalizowany:", gameContract);
 
@@ -191,13 +192,18 @@ async function connectWallet(forceReconnect = false) {
 
     const network = await provider.getNetwork();
     console.log("Aktualna sieć chainId:", network.chainId);
-    if (network.chainId !== 53302) {
+    if (network.chainId !== 53302n) { // Używam 53302n, bo network.chainId jest BigInt
       console.log("Przełączanie na Superseed Sepolia Testnet...");
-      await provider.send("wallet_switchEthereumChain", [{ chainId: "0xD036" }]);
+      await Promise.race([
+        provider.send("wallet_switchEthereumChain", [{ chainId: "0xD036" }]),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Switch chain timeout")), 10000)),
+      ]);
     }
 
     console.log("Połączono z portfelem:", userAddress);
     connectionError = null;
+
+    await fetchBlockchainLeaderboard(); // Pobierz leaderboard po połączeniu
   } catch (error) {
     console.error("Połączenie z portfelem nie powiodło się:", error);
     isConnected = false;
@@ -218,6 +224,8 @@ async function initializeWeb3Modal() {
     connectionError = "Wallet libraries not loaded";
     return;
   }
+
+
 
   const providerOptions = {
     walletconnect: {
@@ -266,19 +274,55 @@ async function initializeWeb3Modal() {
   }
 }
 
-async function saveScoreToBlockchain(score) {
-  if (!isConnected || !gameContract || !signer) {
-    console.warn("Nie można zapisać wyniku: brak połączenia z portfelem lub kontrakt nie zainicjalizowany");
+// Pobieranie leaderboardu
+async function fetchBlockchainLeaderboard() {
+  console.log("Fetching leaderboard, called from:", new Error().stack.split("\n")[2]); // Pokazuje miejsce wywołania
+  if (!gameContract) {
+    console.warn("Contract not initialized, cannot fetch leaderboard");
+    blockchainLeaderboard = [];
     return;
   }
   try {
-    console.log(`Zapisywanie wyniku ${score} dla ${userAddress}...`);
-    const tx = await gameContract.saveScore(score);
-    console.log("Transakcja wysłana:", tx.hash);
-    const receipt = await tx.wait();
-    console.log("Wynik zapisany na blockchainie:", receipt);
+    const scores = await gameContract.getTopScores();
+    blockchainLeaderboard = scores
+      .map((entry) => ({
+        nick: entry.player.slice(0, 6) + "..." + entry.player.slice(-4),
+        score: parseInt(entry.score),
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+    console.log("Blockchain leaderboard updated:", blockchainLeaderboard);
+    leaderboardFetched = true;
   } catch (error) {
-    console.error("Nie udało się zapisać wyniku:", error);
+    console.error("Failed to fetch blockchain leaderboard:", error);
+    blockchainLeaderboard = [];
+    leaderboardFetched = false;
+  }
+}
+
+// Zapis wyniku (zaktualizowany o odświeżenie leaderboardu)
+async function saveScoreToBlockchain(score) {
+  if (!isConnected || !gameContract || !signer) {
+    console.warn("Cannot save score: Wallet not connected or contract not initialized");
+    saveMessage = "Connect wallet to save score!";
+    saveMessageTimer = 5000;
+    return;
+  }
+  try {
+    console.log(`Saving score ${score} for ${userAddress} to Superseed Testnet...`);
+    const tx = await gameContract.saveScore(Math.floor(score));
+    console.log("Transaction sent:", tx.hash);
+    const receipt = await tx.wait();
+    console.log("Score saved to blockchain:", receipt);
+    await fetchBlockchainLeaderboard(); // Odśwież leaderboard
+    saveMessage = "Score saved to Superseed Testnet!";
+    saveMessageTimer = 5000; 
+    return true;
+  } catch (error) {
+    console.error("Failed to save score:", error);
+    saveMessage = "Failed to save score: " + error.message;
+    saveMessageTimer = 5000;
+    throw error;
   }
 }
 
@@ -410,10 +454,9 @@ function setup() {
   connectionError = null;
 
   waitForScripts().then(() => {
-    initializeWeb3Modal();
-    if (web3Modal && web3Modal.cachedProvider) {
-      connectWallet();
-    }
+    initializeWeb3Modal().then(() => {
+      if (web3Modal && web3Modal.cachedProvider) connectWallet();
+    });
   });
 }
 
@@ -788,33 +831,32 @@ function draw() {
   
     let verticalOffset = 60;
   
-    // Reszta kodu howToPlay pozostaje bez zmian
-    fill(249, 249, 242);
-    textSize(18);
-    text("Choose Your Seed Color", GAME_WIDTH / 2, 260 + verticalOffset);
-    let colorBoxSize = 45;
-    let colorBoxSpacing = 20;
-    let startX = GAME_WIDTH / 2 - (colorBoxSize * 3 + colorBoxSpacing * 2) / 2;
-    let pulse = 1 + sin(millis() * 0.005) * 0.1;
-  
-    fill(0, 255, 0);
-    rect(startX, 280 + verticalOffset, colorBoxSize, colorBoxSize, 15);
-    fill(0, 0, 255);
-    rect(startX + colorBoxSize + colorBoxSpacing, 280 + verticalOffset, colorBoxSize, colorBoxSize, 15);
-    fill(255, 215, 0);
-    rect(startX + (colorBoxSize + colorBoxSpacing) * 2, 280 + verticalOffset, colorBoxSize, colorBoxSize, 15);
-  
-    stroke(147, 208, 207);
-    strokeWeight(3);
-    noFill();
-    if (seedColor.r === 0 && seedColor.g === 255 && seedColor.b === 0) {
-      rect(startX, 280 + verticalOffset, colorBoxSize * pulse, colorBoxSize * pulse, 15);
-    } else if (seedColor.r === 0 && seedColor.g === 0 && seedColor.b === 255) {
-      rect(startX + colorBoxSize + colorBoxSpacing, 280 + verticalOffset, colorBoxSize * pulse, colorBoxSize * pulse, 15);
-    } else if (seedColor.r === 255 && seedColor.g === 215 && seedColor.b === 0) {
-      rect(startX + (colorBoxSize + colorBoxSpacing) * 2, 280 + verticalOffset, colorBoxSize * pulse, colorBoxSize * pulse, 15);
-    }
-    noStroke();
+    // "Choose Your Seed Color" – z wyraźnym wyśrodkowaniem
+  fill(249, 249, 242);
+  textSize(18);
+  textAlign(CENTER, BASELINE); // Upewniamy się, że jest wyśrodkowane
+  text("Choose Your Seed Color", GAME_WIDTH / 2, 260 + verticalOffset);
+  let colorBoxSize = 45;
+  let colorBoxSpacing = 20;
+  let startX = GAME_WIDTH / 2 - (colorBoxSize * 3 + colorBoxSpacing * 2) / 2;
+  let pulse = 1 + sin(millis() * 0.005) * 0.1;
+  fill(0, 255, 0);
+  rect(startX, 280 + verticalOffset, colorBoxSize, colorBoxSize, 15);
+  fill(0, 0, 255);
+  rect(startX + colorBoxSize + colorBoxSpacing, 280 + verticalOffset, colorBoxSize, colorBoxSize, 15);
+  fill(255, 215, 0);
+  rect(startX + (colorBoxSize + colorBoxSpacing) * 2, 280 + verticalOffset, colorBoxSize, colorBoxSize, 15);
+  stroke(147, 208, 207);
+  strokeWeight(3);
+  noFill();
+  if (seedColor.r === 0 && seedColor.g === 255 && seedColor.b === 0) {
+    rect(startX, 280 + verticalOffset, colorBoxSize * pulse, colorBoxSize * pulse, 15);
+  } else if (seedColor.r === 0 && seedColor.g === 0 && seedColor.b === 255) {
+    rect(startX + colorBoxSize + colorBoxSpacing, 280 + verticalOffset, colorBoxSize * pulse, colorBoxSize * pulse, 15);
+  } else if (seedColor.r === 255 && seedColor.g === 215 && seedColor.b === 0) {
+    rect(startX + (colorBoxSize + colorBoxSpacing) * 2, 280 + verticalOffset, colorBoxSize * pulse, colorBoxSize * pulse, 15);
+  }
+  noStroke();
   
     fill(249, 249, 242);
     textSize(18);
@@ -862,7 +904,7 @@ function draw() {
     } else {
       fill(93, 208, 207);
       textSize(14);
-      text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 465 + verticalOffset);
+      text(`Connected: ${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`, GAME_WIDTH / 2, 475 + verticalOffset);
       gradient = drawingContext.createLinearGradient(GAME_WIDTH / 2 - 90, 485 + verticalOffset, GAME_WIDTH / 2 + 90, 485 + verticalOffset);
       gradient.addColorStop(0, "#FF4500");
       gradient.addColorStop(1, "#FFD700");
@@ -2215,99 +2257,120 @@ if (gameState === "supernova") {
   } // Zamknięcie bloku if (gameState === "playing" || gameState === "supernova") – poprawne miejsce
 
   else if (gameState === "gameOver") {
+    // Zatrzymaj muzykę
     if (bossMusic.isPlaying()) {
       bossMusic.stop();
-      backgroundMusic.loop(); // Wróć do muzyki tła
     }
-    bossDefeatedSuccessfully = false; // Reset znacznika przy przegranej
-
-    leaderboard.push({ nick: playerNick || "Anonymous", score: score });
-  leaderboard.sort((a, b) => b.score - a.score);
-  leaderboard = leaderboard.slice(0, 5);
-  localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
-  if (isConnected && !scoreSaved) {
-    saveScoreToBlockchain(score);
-    scoreSaved = true;
-  }
+    if (backgroundMusic.isPlaying()) {
+      backgroundMusic.stop();
+    }
+    if (backgroundMusic2.isPlaying()) {
+      backgroundMusic2.stop();
+    }
+    if (backgroundMusic3.isPlaying()) {
+      backgroundMusic3.stop();
+    }
   
-    // Gradient background
+    // Gradientowe tło
     let gradient = drawingContext.createLinearGradient(0, 0, GAME_WIDTH, GAME_HEIGHT);
     gradient.addColorStop(0, "rgb(14, 39, 59)");
     gradient.addColorStop(1, "rgb(93, 208, 207)");
     drawingContext.fillStyle = gradient;
     rect(0, 0, GAME_WIDTH, GAME_HEIGHT, 20);
   
-    // Main game logo – zmniejszone z 400x400 na 280x280
-    let mainLogoWidth = 280; // Zmniejszone z 400
-    let mainLogoHeight = 280; // Zmniejszone z 400
-    image(mainLogo, GAME_WIDTH / 2 - mainLogoWidth / 2, 20, mainLogoWidth, mainLogoHeight); // Przesunięte z 50 na 20
+    // Główne logo gry
+    let mainLogoWidth = 280;
+    let mainLogoHeight = 280;
+    image(mainLogo, GAME_WIDTH / 2 - mainLogoWidth / 2, 20, mainLogoWidth, mainLogoHeight);
   
-    // Game Over message and score – mniejszy tekst i przesunięte w górę
+    // Wiadomość "Game Over" i wynik
     fill(255, 200);
-    textSize(32); // Zmniejszone z 40
+    textSize(32);
     textStyle(BOLD);
-    text(`Network Down!\nScore: ${score.toFixed(1)}`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 120); // Przesunięte z -100 na -120
+    text(`Network Down!\nScore: ${score.toFixed(1)}`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 150);
   
-    // Leaderboard title – mniejszy tekst
-    textSize(20); // Zmniejszone z 24
-    text("Top Synced Networks", GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50); // Przesunięte z -20 na -50
+    // Tytuł leaderboardu blockchainowego
+    textSize(20);
+    text("Blockchain Leaderboard", GAME_WIDTH / 2, GAME_HEIGHT / 2 - 80);
   
-    // Leaderboard entries – mniejszy tekst i mniejsze odstępy
-    textSize(16); // Zmniejszone z 18
-    for (let i = 0; i < leaderboard.length; i++) {
-      text(`${i + 1}. ${leaderboard[i].nick}: ${leaderboard[i].score}`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 30 + i * 25); // Odstęp z 30 na 25, przesunięte z 20 na -30
+  
+    // Wyświetlanie wyników z blockchaina
+    textSize(16);
+    if (blockchainLeaderboard.length > 0) {
+      for (let i = 0; i < Math.min(blockchainLeaderboard.length, 5); i++) {
+        text(`${i + 1}. ${blockchainLeaderboard[i].nick}: ${blockchainLeaderboard[i].score}`, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 60 + i * 25);
+      }
+    } else if (!isConnected) {
+      text("Connect wallet to see blockchain scores", GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50);
+    } else if (!leaderboardFetched) {
+      text("Loading blockchain scores...", GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50);
+    } else {
+      text("No scores available yet", GAME_WIDTH / 2, GAME_HEIGHT / 2 - 50);
     }
   
-    // Mainnet Badge (jeśli zdobyta) – przesunięte w dół i zmniejszone
+    // Reszta Twojego kodu dla gameOver (np. przyciski, odznaka Mainnet)
     if (mainnetBadgeEarned) {
-      drawMainnetBadge(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 90, 50); // Zmniejszone z 60 na 50, przesunięte z 150 na 90
+      drawMainnetBadge(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 90, 50);
       fill(255, 215, 0, 200);
-      textSize(14); // Zmniejszone z 16
-      text("Mainnet Badge", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 130); // Przesunięte z 200 na 130
+      textSize(14);
+      text("Mainnet Badge", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 130);
+    }
   
-      // "SHARE BADGE" Button – mniejszy rozmiar
-      let buttonX = GAME_WIDTH / 2 - 90; // Zmniejszone z 100 na 90
-      let buttonY = GAME_HEIGHT / 2 + 150; // Przesunięte z 270 na 150
-      let gradient = drawingContext.createLinearGradient(buttonX, buttonY, buttonX + 180, buttonY); // Szerokość z 200 na 180
+    let buttonX = GAME_WIDTH / 2 - 90;
+    let baseButtonY = mainnetBadgeEarned ? GAME_HEIGHT / 2 + 180 : GAME_HEIGHT / 2 + 120;
+  
+    if (isConnected && !scoreSaved && showSaveButton) {
+      fill(93, 208, 207);
+      rect(buttonX, baseButtonY, 180, 40, 10);
+      fill(255);
+      textSize(18);
+      text("Save to Blockchain", GAME_WIDTH / 2, baseButtonY + 20);
+    }
+  
+    fill(93, 208, 207);
+    rect(buttonX, baseButtonY + 50, 180, 40, 10);
+    fill(255);
+    textSize(22);
+    textAlign(CENTER, CENTER);
+    text("RELAUNCH", GAME_WIDTH / 2, baseButtonY + 70);
+  
+    fill(93, 208, 207);
+    rect(buttonX, baseButtonY + 100, 180, 40, 10);
+    fill(255);
+    textSize(18);
+    text("SHARE SCORE", GAME_WIDTH / 2, baseButtonY + 120);
+  
+    fill(147, 208, 207);
+    rect(buttonX, baseButtonY + 150, 180, 40, 10);
+    fill(255);
+    textSize(18);
+    text("MENU", GAME_WIDTH / 2, baseButtonY + 170);
+  
+    if (mainnetBadgeEarned) {
+      let badgeButtonY = baseButtonY + 200;
+      let gradient = drawingContext.createLinearGradient(buttonX, badgeButtonY, buttonX + 180, badgeButtonY);
       gradient.addColorStop(0, "rgb(93, 208, 207)");
       gradient.addColorStop(1, "rgb(255, 215, 0)");
       drawingContext.fillStyle = gradient;
-      rect(buttonX, buttonY, 180, 40, 10); // Szerokość z 200 na 180, wysokość z 50 na 40
+      rect(buttonX, badgeButtonY, 180, 40, 10);
       fill(255, 215, 0);
-      textSize(18); // Zmniejszone z 20
-      text("SHARE BADGE", GAME_WIDTH / 2, buttonY + 20); // Wyśrodkowanie w pionie
+      textSize(18);
+      text("SHARE BADGE", GAME_WIDTH / 2, badgeButtonY + 20);
     }
   
-    // Buttons: Relaunch, Share Score, and Menu – mniejsze rozmiary i mniejsze odstępy
-    let buttonX = GAME_WIDTH / 2 - 90; // Zmniejszone z 100 na 90
-    let baseButtonY = mainnetBadgeEarned ? GAME_HEIGHT / 2 + 200 : GAME_HEIGHT / 2 + 100; // Dynamiczna pozycja w zależności od odznaki
-  
-    // Relaunch Button
-    fill(93, 208, 207);
-    rect(buttonX, baseButtonY, 180, 40, 10); // Szerokość z 200 na 180, wysokość z 50 na 40
-    fill(255);
-    textSize(22); // Zmniejszone z 30
-    textAlign(CENTER, CENTER);
-    text("RELAUNCH", GAME_WIDTH / 2, baseButtonY + 20); // Wyśrodkowanie w pionie
-  
-    // Share Score Button
-    fill(93, 208, 207);
-    rect(buttonX, baseButtonY + 50, 180, 40, 10); // Przesunięte z 260 na +50 od baseButtonY
-    fill(255);
-    textSize(18); // Zmniejszone z 20
-    text("SHARE SCORE", GAME_WIDTH / 2, baseButtonY + 70); // Wyśrodkowanie w pionie
-  
-    // Menu Button
-    fill(147, 208, 207);
-    rect(buttonX, baseButtonY + 100, 180, 40, 10); // Przesunięte z 340 na +100 od baseButtonY
-    fill(255);
-    textSize(18); // Zmniejszone z 20
-    text("MENU", GAME_WIDTH / 2, baseButtonY + 120); // Wyśrodkowanie w pionie
-  
-    // Small White logo at the bottom – bez zmian, ale przesunięte w górę
+// Komunikat pod przyciskami
+if (saveMessageTimer > 0) {
+  saveMessageTimer -= deltaTime;
+  let alpha = map(saveMessageTimer, 0, 3000, 0, 200); // Zanikanie
+  fill(saveMessage.includes("Failed") ? [255, 0, 0] : [0, 255, 0], alpha);
+  textSize(16 + sin(millis() * 0.005) * 2); // Subtelne pulsowanie
+  textStyle(BOLD);
+  text(saveMessage, GAME_WIDTH / 2, baseButtonY + (mainnetBadgeEarned ? 250 : 200));
+}
+
     let whiteLogoWidth = 100;
     let whiteLogoHeight = 50;
-    image(whiteLogo, GAME_WIDTH / 2 - whiteLogoWidth / 2, GAME_HEIGHT - whiteLogoHeight - 10, whiteLogoWidth, whiteLogoHeight); // Przesunięte z -20 na -10
+    image(whiteLogo, GAME_WIDTH / 2 - whiteLogoWidth / 2, GAME_HEIGHT - whiteLogoHeight - 10, whiteLogoWidth, whiteLogoHeight);
   }
    else if (gameState === "win") {
   // Tło z gradientem dla spójności
@@ -2469,6 +2532,17 @@ if (gameState === "supernova") {
   text("Superseed Cosmic Core Unlocked!", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 250);
   textSize(20);
   text("Claim your NFT on Supersync Network soon! #SuperseedGrok3", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 290);
+
+// Status zapisu wyniku
+if (isConnected) {
+  fill(scoreSaved ? [0, 255, 0] : [255, 215, 0], 200); // Zielony jeśli zapisany, żółty jeśli nie
+  textSize(16);
+  text(scoreSaved ? "Score Saved to Blockchain!" : "Score Not Saved Yet", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 320);
+} else {
+  fill(128, 131, 134, 200); // Szary dla niepodłączonego portfela
+  textSize(16);
+  text("Connect Wallet to Save Score", GAME_WIDTH / 2, GAME_HEIGHT / 2 + 320);
+}
 
   // Przycisk "Claim NFT" – bez zmian
   fill(93, 208, 207);
@@ -3046,8 +3120,9 @@ function startGame() {
   mainnetChallengeScore = 0;
   musicSwitched = "level1-4";
   stateStartTime = 0;
-  
-  
+  scoreSaved = false; // Resetowanie flagi zapisu
+  showSaveButton = true; // Pokazanie przycisku przy nowej grze
+  leaderboardFetched = false;
 
   // Zmienne dla mechaniki strzelanki
   player = null;
@@ -3070,7 +3145,6 @@ function startGame() {
     console.log("Music reset: backgroundMusic started for new game");
   }
 
-  // Ustawienie stanu gry na "playing" i czyszczenie savedGameState
   gameState = "playing";
   savedGameState = null;
   console.log("New game started – gameState: 'playing', lives:", lives, "lifeBar:", lifeBar);

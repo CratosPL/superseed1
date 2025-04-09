@@ -428,71 +428,92 @@ function touchStarted() {
         console.log(`Continuing to Orbit ${level}`);
       }
     } else if (gameState === "gameOver") {
-      let buttonX = GAME_WIDTH / 2 - 90; // Zaktualizowane z 100 na 90
-      let baseButtonY = mainnetBadgeEarned ? GAME_HEIGHT / 2 + 200 : GAME_HEIGHT / 2 + 100; // Dynamiczna pozycja
+      let buttonX = GAME_WIDTH / 2 - 90;
+      let baseButtonY = mainnetBadgeEarned ? GAME_HEIGHT / 2 + 200 : GAME_HEIGHT / 2 + 100;
+      let saveButtonY = baseButtonY - 60; // Pozycja przycisku "Save to Blockchain"
       let relaunchButtonY = baseButtonY;
       let shareScoreButtonY = baseButtonY + 50;
       let menuButtonY = baseButtonY + 100;
-  
-      // "RELAUNCH" Button
+      let badgeButtonY = baseButtonY + 150;
+    
+      // "Save Score to Blockchain" Button
       if (
+        isConnected &&
+        !scoreSaved &&
+        showSaveButton &&
         adjustedMouseX >= buttonX &&
-        adjustedMouseX <= buttonX + 180 && // Zaktualizowane z 200 na 180
-        adjustedMouseY >= relaunchButtonY &&
-        adjustedMouseY <= relaunchButtonY + 40 // Zaktualizowane z 50 na 40
+        adjustedMouseX <= buttonX + 180 &&
+        adjustedMouseY >= baseButtonY &&
+        adjustedMouseY <= baseButtonY + 40
       ) {
-        console.log("Relaunch clicked!");
-        startGame();
+        console.log("Save Score to Blockchain clicked!");
+        saveScoreToBlockchain(score).then(() => {
+          scoreSaved = true;
+          showSaveButton = false;
+        }).catch((error) => {
+          console.error("Error saving score:", error);
+        });
       }
-  
-      // "SHARE SCORE" Button
-      if (
-        adjustedMouseX >= buttonX &&
-        adjustedMouseX <= buttonX + 180 && // Zaktualizowane z 200 na 180
-        adjustedMouseY >= shareScoreButtonY &&
-        adjustedMouseY <= shareScoreButtonY + 40 // Zaktualizowane z 50 na 40
-      ) {
-        console.log("Share Score clicked!");
-        let shareText = `I synced ${score.toFixed(1)} points in Superseed Cosmic Network! #SuperseedGrok3`;
-        navigator.clipboard.writeText(shareText);
-        alert("Score copied to clipboard: " + shareText);
-      }
-  
-      // "MENU" Button
-      if (
-        adjustedMouseX >= buttonX &&
-        adjustedMouseX <= buttonX + 180 && // Zaktualizowane z 200 na 180
-        adjustedMouseY >= menuButtonY &&
-        adjustedMouseY <= menuButtonY + 40 // Zaktualizowane z 50 na 40
-      ) {
-        console.log("Menu clicked!");
-        gameState = "howToPlay";
-        savedGameState = null; // Czyść zapisany stan
-        if (soundInitialized) {
-          backgroundMusic.stop();
-          backgroundMusic2.stop();
-          backgroundMusic3.stop();
-          bossMusic.stop();
-          introMusic.stop();
-          introMusic.loop();
-        }
-      }
-  
-      // "SHARE BADGE" Button (jeśli zdobyta odznaka)
-      if (mainnetBadgeEarned) {
-        let badgeButtonY = GAME_HEIGHT / 2 + 150; // Zaktualizowane z 270 na 150
-        if (
-          adjustedMouseX >= buttonX &&
-          adjustedMouseX <= buttonX + 180 && // Zaktualizowane z 200 na 180
-          adjustedMouseY >= badgeButtonY &&
-          adjustedMouseY <= badgeButtonY + 40 // Zaktualizowane z 50 na 40
-        ) {
-          console.log("Share Badge clicked!");
-          let shareText = `I just unlocked the Superseed Mainnet in the Grok3 Game Contest! Join the challenge and win a Tesla! (virtual:) #SuperseedGrok3 [game link]`;
-          navigator.clipboard.writeText(shareText);
-          alert("Badge share text copied to clipboard: " + shareText);
-        }
-      }
+
+  // "Relaunch" Button
+  if (
+    adjustedMouseX >= buttonX &&
+    adjustedMouseX <= buttonX + 180 &&
+    adjustedMouseY >= baseButtonY + 50 &&
+    adjustedMouseY <= baseButtonY + 90
+  ) {
+    console.log("Relaunch clicked!");
+    startGame();
+  }
+
+  // "Share Score" Button
+  if (
+    adjustedMouseX >= buttonX &&
+    adjustedMouseX <= buttonX + 180 &&
+    adjustedMouseY >= baseButtonY + 100 &&
+    adjustedMouseY <= baseButtonY + 140
+  ) {
+    console.log("Share Score clicked!");
+    let shareText = `I synced ${score.toFixed(1)} points in Superseed Cosmic Network! #SuperseedGrok3`;
+    navigator.clipboard.writeText(shareText);
+    alert("Score copied to clipboard: " + shareText);
+  }
+
+  // "Menu" Button
+  if (
+    adjustedMouseX >= buttonX &&
+    adjustedMouseX <= buttonX + 180 &&
+    adjustedMouseY >= baseButtonY + 150 &&
+    adjustedMouseY <= baseButtonY + 190
+  ) {
+    console.log("Menu clicked!");
+    gameState = "howToPlay";
+    savedGameState = null;
+    if (soundInitialized) {
+      backgroundMusic.stop();
+      backgroundMusic2.stop();
+      backgroundMusic3.stop();
+      bossMusic.stop();
+      introMusic.stop();
+      introMusic.loop();
+    }
+  }
+
+  // "Share Badge" Button (jeśli zdobyta odznaka)
+  if (mainnetBadgeEarned) {
+    let badgeButtonY = baseButtonY + 200;
+    if (
+      adjustedMouseX >= buttonX &&
+      adjustedMouseX <= buttonX + 180 &&
+      adjustedMouseY >= badgeButtonY &&
+      adjustedMouseY <= badgeButtonY + 40
+    ) {
+      console.log("Share Badge clicked!");
+      let shareText = `I just unlocked the Superseed Mainnet in the Grok3 Game Contest! Join the challenge and win a Tesla! (virtual:) #SuperseedGrok3 [game link]`;
+      navigator.clipboard.writeText(shareText);
+      alert("Badge share text copied to clipboard: " + shareText);
+    }
+  }
 
 
 
