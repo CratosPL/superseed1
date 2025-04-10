@@ -833,6 +833,57 @@ function keyPressed() {
   }
 }
 
+
+// Nowa funkcja touchMoved() dla przewijania dotykowego
+function touchMoved() {
+  if (gameState === "info" || gameState === "tutorial" || gameState === "leaderboard") {
+    let modalWidth = GAME_WIDTH * 0.8;
+    let modalHeight = GAME_HEIGHT * 0.8;
+    let modalX = (GAME_WIDTH - modalWidth) / 2;
+    let modalY = (GAME_HEIGHT - modalHeight) / 2;
+
+    let adjustedTouchX = touches[0].x - (width - GAME_WIDTH) / 2;
+    let adjustedTouchY = touches[0].y - (height - GAME_HEIGHT) / 2;
+    if (
+      adjustedTouchX >= modalX &&
+      adjustedTouchX <= modalX + modalWidth &&
+      adjustedTouchY >= modalY &&
+      adjustedTouchY <= modalY + modalHeight
+    ) {
+      let deltaY = touches[0].y - pmouseY;
+      scrollOffset += deltaY * 0.5;
+      scrollOffset = constrain(scrollOffset, 0, maxScrollOffset);
+      return false;
+    }
+  }
+  return true;
+}
+
+// Tutaj dodaj funkcję mouseWheel
+function mouseWheel(event) {
+  if (gameState === "info" || gameState === "tutorial" || gameState === "leaderboard") {
+    let modalWidth = GAME_WIDTH * 0.8;
+    let modalHeight = GAME_HEIGHT * 0.8;
+    let modalX = (GAME_WIDTH - modalWidth) / 2;
+    let modalY = (GAME_HEIGHT - modalHeight) / 2;
+
+    // Sprawdzamy, czy mysz jest w obrębie modala
+    let adjustedMouseX = mouseX - (width - GAME_WIDTH) / 2;
+    let adjustedMouseY = mouseY - (height - GAME_HEIGHT) / 2;
+    if (
+      adjustedMouseX >= modalX &&
+      adjustedMouseX <= modalX + modalWidth &&
+      adjustedMouseY >= modalY &&
+      adjustedMouseY <= modalY + modalHeight
+    ) {
+      // Aktualizacja scrollOffset na podstawie ruchu kółka
+      scrollOffset -= event.delta * 0.5;
+      scrollOffset = constrain(scrollOffset, 0, maxScrollOffset);
+      return false; // Zatrzymanie domyślnego przewijania strony
+    }
+  }
+}
+
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   GAME_WIDTH = windowWidth;
