@@ -3,6 +3,8 @@
 let gameContract = null;
 let scoreSaved = false; // Flaga zapobiegająca wielokrotnemu zapisowi
 
+let isDraggingScrollBar = false;
+
 const SLOWDOWN_DURATION = 10000;
 const SLOWDOWN_COOLDOWN = 30000;
 const SLOWDOWN_FACTOR = 1.5;

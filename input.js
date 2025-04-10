@@ -292,6 +292,42 @@ function mousePressed() {
       scrollOffset = 0; // Reset przewijania
     }
 
+    else if (gameState === "info") {
+      let modalWidth = GAME_WIDTH * 0.8;
+      let modalHeight = GAME_HEIGHT * 0.8;
+      let modalX = (GAME_WIDTH - modalWidth) / 2;
+      let modalY = (GAME_HEIGHT - modalHeight) / 2;
+      let backX = modalX + 20;
+      let backY = modalY + modalHeight - 60;
+    
+      // Obsługa przycisku Back
+      if (
+        adjustedMouseX > backX &&
+        adjustedMouseX < backX + 100 &&
+        adjustedMouseY > backY &&
+        adjustedMouseY < backY + 40
+      ) {
+        gameState = "howToPlay";
+        scrollOffset = 0;
+      }
+    
+      // Obsługa kliknięcia paska przewijania
+      if (maxScrollOffset > 0) {
+        let scrollBarHeight = (modalHeight / totalContentHeight) * modalHeight;
+        scrollBarHeight = constrain(scrollBarHeight, 20, modalHeight);
+        let scrollBarX = modalX + modalWidth - 20;
+        let scrollBarY = map(scrollOffset, 0, maxScrollOffset, modalY, modalY + modalHeight - scrollBarHeight);
+        if (
+          adjustedMouseX >= scrollBarX &&
+          adjustedMouseX <= scrollBarX + 10 &&
+          adjustedMouseY >= scrollBarY &&
+          adjustedMouseY <= scrollBarY + scrollBarHeight
+        ) {
+          isDraggingScrollBar = true;
+        }
+      }
+    }
+
   } else if (gameState === "leaderboard") {
     // Nowa obsługa przycisku "MAIN MENU"
     let modalWidth = GAME_WIDTH * 0.8;
@@ -882,6 +918,9 @@ function mouseWheel(event) {
       return false; // Zatrzymanie domyślnego przewijania strony
     }
   }
+
+
+  
 }
 
 function windowResized() {
