@@ -2047,7 +2047,7 @@ text("LEADERBOARD", sideButtonX + sideButtonWidth / 2, 525);
   }
 
   // Wir cząstek
-  if (random(1) < 0.2) {
+  if (random(1) < 0.2 && particles.length < 50) { // Maksymalnie 50 cząsteczek
     particles.push(new Particle(eventX, eventY, { r: 255, g: 255, b: 255 }));
   }
   particles.forEach(p => {
@@ -2893,12 +2893,13 @@ else if (gameState === "bossFight") {
   for (let i = playerBullets.length - 1; i >= 0; i--) {
     playerBullets[i].update();
     playerBullets[i].show();
-    let d = dist(playerBullets[i].x, playerBullets[i].y, GAME_WIDTH / 2, GAME_HEIGHT / 2);
-    if (d < bossSize / 2) {
+    if (dist(playerBullets[i].x, playerBullets[i].y, GAME_WIDTH / 2, GAME_HEIGHT / 2) < bossSize / 2) {
       bossHealth -= 5;
       score += 10;
-      for (let j = 0; j < 5; j++) {
-        particles.push(new Particle(playerBullets[i].x, playerBullets[i].y, { r: 0, g: 255, b: 255 }));
+      if (particles.length < 50) { // Maksymalnie 50 cząsteczek
+        for (let j = 0; j < 5; j++) {
+          particles.push(new Particle(playerBullets[i].x, playerBullets[i].y, { r: 0, g: 255, b: 255 }));
+        }
       }
       playerBullets.splice(i, 1);
     } else if (playerBullets[i].isOffScreen()) {
@@ -3579,6 +3580,7 @@ function startGame() {
 }
 
 
+
 // Funkcja pauseGame() – zaktualizowana o nowe zmienne
 function pauseGame() {
   savedGameState = {
@@ -3723,21 +3725,34 @@ function resumeGame() {
     bossPhase = savedGameState.bossPhase;
     bossActive = savedGameState.bossActive;
     bossAttackTimer = savedGameState.bossAttackTimer;
+    musicSwitched = savedGameState.musicSwitched;
 
     savedGameState = null;
     if (soundInitialized) {
+      // Zatrzymaj wszystkie ścieżki
       introMusic.stop();
+      backgroundMusic.stop();
+      backgroundMusic2.stop();
+      backgroundMusic3.stop();
+      bossMusic.stop();
+      // Odtwórz odpowiednią muzykę w zależności od poziomu
       if (level === 10) {
-        backgroundMusic3.play();
-      } else if (level >= 5 && musicSwitched === "level5-9") {
-        backgroundMusic2.play();
+        backgroundMusic3.loop();
+        console.log("resumeGame: Level 10, backgroundMusic3 started");
+      } else if (level >= 9) {
+        backgroundMusic3.loop();
+        console.log("resumeGame: Level 9, backgroundMusic3 started");
+      } else if (level >= 5) {
+        backgroundMusic2.loop();
+        console.log("resumeGame: Level 5-8, backgroundMusic2 started");
       } else {
-        backgroundMusic.play();
+        backgroundMusic.loop();
+        console.log("resumeGame: Level 1-4, backgroundMusic started");
       }
     }
   } else {
     console.log("No valid saved game state or not in 'playing' – starting new game");
-    startGame(); // Zamiast przywracać "gameOver", zacznij nową grę
+    startGame();
   }
 }
 

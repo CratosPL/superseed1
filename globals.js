@@ -1,26 +1,5 @@
 // Global Variables
 
-let legitLevel = 1; // Legalny poziom, aktualizowany tylko przez logikę gry
-
-Object.defineProperty(window, 'level', {
-  get: function() {
-    return internalLevel;
-  },
-  set: function(newValue) {
-    const expectedLevel = Math.floor(score / 50) + 1; // Poziom na podstawie punktów
-    if (newValue <= expectedLevel) {
-      internalLevel = newValue;
-      legitLevel = newValue;
-      log(`Level set to ${newValue}`); // Logujemy legalną zmianę
-    } else {
-      log("Cheating detected! Level reset.");
-      internalLevel = legitLevel; // Reset do legalnego poziomu
-      saveMessage = "Cheating blocked!";
-      saveMessageTimer = 3000;    // Komunikat na 3 sekundy
-    }
-  },
-  configurable: false // Chroni przed ponownym zdefiniowaniem
-});
 
 let gameContract = null;
 let scoreSaved = false; // Flaga zapobiegająca wielokrotnemu zapisowi
