@@ -1,6 +1,5 @@
 // Global Variables
 
-
 let gameContract = null;
 let scoreSaved = false; // Flaga zapobiegająca wielokrotnemu zapisowi
 
@@ -247,6 +246,5 @@ let bossSlayerEarned = false; // Czy gracz pokonał bossa
 let scoreMasterEarned = false; // Czy gracz zdobył 2000 punktów
 
 let showTechnicalInfo = false; // Deklaracja zmiennej globalnej
-
 
 

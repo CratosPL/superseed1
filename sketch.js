@@ -2047,7 +2047,7 @@ text("LEADERBOARD", sideButtonX + sideButtonWidth / 2, 525);
   }
 
   // Wir cząstek
-  if (random(1) < 0.2 && particles.length < 50) { // Maksymalnie 50 cząsteczek
+  if (random(1) < 0.2) {
     particles.push(new Particle(eventX, eventY, { r: 255, g: 255, b: 255 }));
   }
   particles.forEach(p => {
@@ -2893,13 +2893,12 @@ else if (gameState === "bossFight") {
   for (let i = playerBullets.length - 1; i >= 0; i--) {
     playerBullets[i].update();
     playerBullets[i].show();
-    if (dist(playerBullets[i].x, playerBullets[i].y, GAME_WIDTH / 2, GAME_HEIGHT / 2) < bossSize / 2) {
+    let d = dist(playerBullets[i].x, playerBullets[i].y, GAME_WIDTH / 2, GAME_HEIGHT / 2);
+    if (d < bossSize / 2) {
       bossHealth -= 5;
       score += 10;
-      if (particles.length < 50) { // Maksymalnie 50 cząsteczek
-        for (let j = 0; j < 5; j++) {
-          particles.push(new Particle(playerBullets[i].x, playerBullets[i].y, { r: 0, g: 255, b: 255 }));
-        }
+      for (let j = 0; j < 5; j++) {
+        particles.push(new Particle(playerBullets[i].x, playerBullets[i].y, { r: 0, g: 255, b: 255 }));
       }
       playerBullets.splice(i, 1);
     } else if (playerBullets[i].isOffScreen()) {
@@ -3580,7 +3579,6 @@ function startGame() {
 }
 
 
-
 // Funkcja pauseGame() – zaktualizowana o nowe zmienne
 function pauseGame() {
   savedGameState = {
@@ -3647,27 +3645,23 @@ function pauseGame() {
   };
   gameState = "howToPlay";
   if (soundInitialized) {
-    // Pauzuj aktualną muzykę tła w zależności od poziomu
     if (level === 10) {
       backgroundMusic3.pause();
-    } else if (level >= 5 && musicSwitched === "level5-9") {
+    } else if (level >= 5 && musicSwitched === "level5-8") { // Ujednolicamy na "level5-8"
       backgroundMusic2.pause();
     } else {
       backgroundMusic.pause();
     }
-    if (gameState === "bossFight") {
-      bossMusic.pause();
-    }
-    // Włącz muzykę z intra
     introMusic.loop();
   }
-  localStorage.setItem('savedGameState', JSON.stringify(savedGameState)); // NOWE: Zapis do localStorage
+  localStorage.setItem('savedGameState', JSON.stringify(savedGameState));
+  console.log("Pausing game – saved level:", savedGameState.level); // Debugowanie
 }
 
 // Funkcja resumeGame() – zaktualizowana o nowe zmienne
 function resumeGame() {
-  if (savedGameState && savedGameState.gameState === "playing") {
-    // Wznów tylko jeśli stan był "playing"
+  console.log("Attempting to resume – savedGameState:", savedGameState);
+  if (savedGameState) { // Usuwamy warunek gameState === "playing"
     score = savedGameState.score;
     combo = savedGameState.combo;
     comboBar = savedGameState.comboBar;
@@ -3700,7 +3694,7 @@ function resumeGame() {
     supernovaTimer = savedGameState.supernovaTimer;
     orbitShiftTimer = savedGameState.orbitShiftTimer;
     lastPulse = savedGameState.lastPulse;
-    gameState = savedGameState.gameState;
+    gameState = "playing"; // Zawsze wznawiamy do "playing"
     challengeActive = savedGameState.challengeActive;
     challengeTimer = savedGameState.challengeTimer;
     challengeClicks = savedGameState.challengeClicks;
@@ -3712,6 +3706,8 @@ function resumeGame() {
     mainnetChallengeGoal = savedGameState.mainnetChallengeGoal;
     mainnetChallengeScore = savedGameState.mainnetChallengeScore;
     mainnetBadgeEarned = savedGameState.mainnetBadgeEarned;
+    bossSlayerEarned = savedGameState.bossSlayerEarned;
+    scoreMasterEarned = savedGameState.scoreMasterEarned;
     mainnetChallengeTriggered = savedGameState.mainnetChallengeTriggered;
     gameStartTime = savedGameState.gameStartTime;
     stateStartTime = savedGameState.stateStartTime;
@@ -3725,33 +3721,21 @@ function resumeGame() {
     bossPhase = savedGameState.bossPhase;
     bossActive = savedGameState.bossActive;
     bossAttackTimer = savedGameState.bossAttackTimer;
-    musicSwitched = savedGameState.musicSwitched;
 
+    console.log("Resuming game – restored level:", level);
     savedGameState = null;
     if (soundInitialized) {
-      // Zatrzymaj wszystkie ścieżki
       introMusic.stop();
-      backgroundMusic.stop();
-      backgroundMusic2.stop();
-      backgroundMusic3.stop();
-      bossMusic.stop();
-      // Odtwórz odpowiednią muzykę w zależności od poziomu
       if (level === 10) {
-        backgroundMusic3.loop();
-        console.log("resumeGame: Level 10, backgroundMusic3 started");
-      } else if (level >= 9) {
-        backgroundMusic3.loop();
-        console.log("resumeGame: Level 9, backgroundMusic3 started");
-      } else if (level >= 5) {
-        backgroundMusic2.loop();
-        console.log("resumeGame: Level 5-8, backgroundMusic2 started");
+        backgroundMusic3.play();
+      } else if (level >= 5 && level <= 8 && musicSwitched === "level5-8") {
+        backgroundMusic2.play();
       } else {
-        backgroundMusic.loop();
-        console.log("resumeGame: Level 1-4, backgroundMusic started");
+        backgroundMusic.play();
       }
     }
   } else {
-    console.log("No valid saved game state or not in 'playing' – starting new game");
+    console.log("No saved state, starting new game");
     startGame();
   }
 }
