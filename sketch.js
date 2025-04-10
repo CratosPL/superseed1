@@ -1210,6 +1210,85 @@ text("LEADERBOARD", sideButtonX + sideButtonWidth / 2, 525);
     textStyle(NORMAL);
     textAlign(RIGHT, BOTTOM);
     text("Created by CratosPL", GAME_WIDTH - 20, GAME_HEIGHT - 10);
+
+  // Stopka "Technical Info"
+  let techInfoX = GAME_WIDTH / 2 - 60;
+  let techInfoY = GAME_HEIGHT - 50;
+  let techInfoWidth = 120;
+  let techInfoHeight = 20;
+
+  fill(147, 208, 207, 200);
+  textSize(12);
+  textStyle(NORMAL);
+  textAlign(CENTER, CENTER);
+  text("Technical Info", GAME_WIDTH / 2, techInfoY + 10);
+
+  // Modal "Technical Info" po kliknięciu
+  if (showTechnicalInfo) {
+    // Tło modala – twój rozmiar
+    fill(14, 39, 59, 240);
+    rect(GAME_WIDTH / 2 - 250, GAME_HEIGHT / 2 - 200, 500, 530, 10); // Twoja wysokość 530
+
+    // Tytuł
+    fill(255, 215, 0);
+    textSize(20);
+    textStyle(BOLD);
+    text("Technical Info", GAME_WIDTH / 2, GAME_HEIGHT / 2 - 160);
+
+    // Treść
+    fill(249, 249, 242);
+    textSize(14);
+    textStyle(NORMAL);
+    textAlign(CENTER, TOP);
+    
+    let textY = GAME_HEIGHT / 2 - 140;
+    let lineHeight = 28;
+
+    text("Work in progress – connection issues or", GAME_WIDTH / 2, textY);
+    textY += lineHeight;
+    text("performance drops may occur.", GAME_WIDTH / 2, textY);
+    textY += lineHeight;
+    
+    text("This game version is designed for desktop;", GAME_WIDTH / 2, textY);
+    textY += lineHeight;
+    text("mobile version is currently in development.", GAME_WIDTH / 2, textY);
+    textY += lineHeight;
+    text("If the wallet won't connect:", GAME_WIDTH / 2, textY);
+    textY += lineHeight;
+    text("- Manually add Superseed Sepolia Testnet:", GAME_WIDTH / 2, textY);
+    textY += lineHeight;
+    text("  https://chainlist.org/chain/53302", GAME_WIDTH / 2, textY);
+    textY += lineHeight;
+    text("- Sometimes you need to confirm login by", GAME_WIDTH / 2, textY);
+    textY += lineHeight;
+    text("  clicking LOGIN twice.", GAME_WIDTH / 2, textY);
+    textY += lineHeight;
+    text("- Tested on MetaMask, Rabby Wallet, Bitget Wallet.", GAME_WIDTH / 2, textY);
+    textY += lineHeight;
+    text("The game uses a single contract on", GAME_WIDTH / 2, textY);
+    textY += lineHeight;
+    text("Superseed Sepolia Testnet:", GAME_WIDTH / 2, textY);
+    textY += lineHeight;
+    text("0x2847ed1F9b57014Ac016aECf88267181572CB0E0", GAME_WIDTH / 2, textY);
+    textY += lineHeight;
+    text("for saving scores and fetching leaderboard data.", GAME_WIDTH / 2, textY);
+    textY += lineHeight;
+    text("Contact: https://x.com/sebbtgk", GAME_WIDTH / 2, textY);
+
+    // Przycisk zamknięcia – przesunięty na dół modala
+    fill(93, 208, 207);
+    let closeButtonX = GAME_WIDTH / 2 - 40;
+    let closeButtonY = GAME_HEIGHT / 2 + 302; // Nowa pozycja dla wysokości 530
+    let closeButtonWidth = 80;
+    let closeButtonHeight = 25;
+    rect(closeButtonX, closeButtonY, closeButtonWidth, closeButtonHeight, 5);
+
+    fill(255);
+    textSize(16);
+    textStyle(NORMAL);
+    textAlign(CENTER, CENTER);
+    text("Close", GAME_WIDTH / 2, closeButtonY + closeButtonHeight / 2);
+  }
   
     pop();
   }

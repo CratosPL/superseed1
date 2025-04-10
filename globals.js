@@ -267,7 +267,7 @@ let saveMessageTimer = 0; // Czas wyświetlania komunikatu (w ms)
 let bossSlayerEarned = false; // Czy gracz pokonał bossa
 let scoreMasterEarned = false; // Czy gracz zdobył 2000 punktów
 
-
+let showTechnicalInfo = false; // Deklaracja zmiennej globalnej
 
 
 
